@@ -89,6 +89,7 @@ class GeoLazyFrameNameSpace:
         allow_parallel: bool = True,
         force_parallel: bool = False,
     ) -> LazyFrame:
+        """Perform a spatial join operation with another LazyFrame."""
         if not isinstance(other, LazyFrame):
             msg = f"expected `other` join table to be a LazyFrame, not a {type(other).__name__!r}"
             raise TypeError(msg)

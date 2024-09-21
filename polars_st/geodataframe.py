@@ -137,7 +137,7 @@ class GeoDataFrameNameSpace:
         validate: JoinValidation = "m:m",
         coalesce: bool | None = None,
     ) -> GeoDataFrame:
-        """Perform a spatial join operation with another dataframe."""
+        """Perform a spatial join operation with another DataFrame."""
         if not isinstance(other, DataFrame):
             msg = f"expected `other` join table to be a DataFrame, got {type(other).__name__!r}"
             raise TypeError(msg)

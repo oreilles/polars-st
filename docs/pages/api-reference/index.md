@@ -117,6 +117,7 @@ hide:
 | `minimum_rotated_rectangle` | | [`root`][polars_st.minimum_rotated_rectangle], [`Expr`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle], [`Series`][polars_st.GeoSeriesNameSpace.minimum_rotated_rectangle] | |
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |
 | `shortest_line` | Return the shortest line between each geometry and other. | [`Expr`][polars_st.GeoExprNameSpace.shortest_line], [`Series`][polars_st.GeoSeriesNameSpace.shortest_line] |
+| `sjoin` | Perform a spatial join operation with another DataFrame. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.sjoin], [`LazyFrame`][polars_st.GeoLazyFrameNameSpace.sjoin] |
 | **LineString operations** | | |
 | `interpolate` | | [`root`][polars_st.interpolate], [`Expr`][polars_st.GeoExprNameSpace.interpolate], [`Series`][polars_st.GeoSeriesNameSpace.interpolate] |
 | `line_merge` | | [`root`][polars_st.line_merge], [`Expr`][polars_st.GeoExprNameSpace.line_merge], [`Series`][polars_st.GeoSeriesNameSpace.line_merge] |
