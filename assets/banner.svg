@@ -1,0 +1,74 @@
+<svg width="100%" height="100%" viewBox="0 0 200 46" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <defs>
+        <radialGradient id="radial" gradientUnits="userSpaceOnUse" cx="0" cy="40" r="130">
+            <stop class="stop1" offset="0%" stop-color="#FFF" stop-opacity="0.3" />
+            <stop class="stop4" offset="60%" stop-color="#FFF" stop-opacity="1"  />
+        </radialGradient>
+        <linearGradient id="linear">
+            <stop offset="0%" stop-color="#0075FF40" />
+            <stop offset="100%" stop-color="#FFFFFF40" />
+        </linearGradient>
+    </defs>
+    <rect rx="3" x="0" y="0" height="100%" width="100%" fill="#0075FF"/>
+    <g stroke="url(#linear)" stroke-width="4" stroke-linecap="round">
+        <line x1="94" y1="2" x2="170" y2="2.001"/>
+        <line x1="126" y1="6" x2="192" y2="6.001"/>
+        <line x1="116" y1="10" x2="182" y2="10.001"/>
+    </g>
+    <text
+        x="85" y="39"
+        font-weight="300"
+        font-family="Roboto, Helvetica, sans-serif"
+    >
+        <tspan font-size="26px" fill="#FFFA">Polars</tspan>
+        <tspan font-size="28px" fill="#FFF">ST</tspan>
+    </text>
+    <g transform="translate(4.5, 4)" fill="url(#radial)">
+        <rect rx="0.4" height="2.4" x="16.926" y="36" width="1.784"/>
+        <rect rx="0.4" height="2.4" x="16.369" y="32.4" width="2.958"/>
+        <rect rx="0.4" height="2.4" x="68.529" y="32.4" width="3.032"/>
+        <rect rx="0.4" height="2.4" x="16.195" y="28.8" width="5.54"/>
+        <rect rx="0.4" height="2.4" x="38.139" y="28.8" width="3.43"/>
+        <rect rx="0.4" height="2.4" x="62.99" y="28.8" width="10.805"/>
+        <rect rx="0.4" height="2.4" x="37.634" y="25.2" width="5.677"/>
+        <rect rx="0.4" height="2.4" x="45.364" y="25.2" width="2.035"/>
+        <rect rx="0.4" height="2.4" x="65.552" y="25.2" width="6.848"/>
+        <rect rx="0.4" height="2.4" x="15.555" y="25.2" width="8.02"/>
+        <rect rx="0.4" height="2.4" x="37.069" y="21.6" width="8.008"/>
+        <rect rx="0.4" height="2.4" x="60.856" y="21.6" width="1.454"/>
+        <rect rx="0.4" height="2.4" x="71.394" y="21.6" width="1.699"/>
+        <rect rx="0.4" height="2.4" x="68.975" y="21.6" width="1.048"/>
+        <rect rx="0.4" height="2.4" x="12.79" y="21.6" width="12"/>
+        <rect rx="0.4" height="2.4" x="32.674" y="18" width="14.501"/>
+        <rect rx="0.4" height="2.4" x="59.841" y="18" width="1.139"/>
+        <rect rx="0.4" height="2.4" x="63.848" y="18" width="1.454"/>
+        <rect rx="0.4" height="2.4" x="13.436" y="18" width="7.309"/>
+        <rect rx="0.4" height="2.4" x="29.764" y="14.4" width="14.689"/>
+        <rect rx="0.4" height="2.4" x="45.61" y="14.4" width="3.535"/>
+        <rect rx="0.4" height="2.4" x="52.822" y="14.4" width="3.859"/>
+        <rect rx="0.4" height="2.4" x="58.864" y="14.4" width="3.859"/>
+        <rect rx="0.4" height="2.4" x="65.468" y="14.4" width="0.946"/>
+        <rect rx="0.4" height="2.4" x="9.444" y="14.4" width="2.434"/>
+        <rect rx="0.4" height="2.4" x="14.069" y="14.4" width="1.073"/>
+        <rect rx="0.4" height="2.4" x="31.555" y="10.8" width="12.147"/>
+        <rect rx="0.4" height="2.4" x="45.04" y="10.8" width="20.216"/>
+        <rect rx="0.4" height="2.4" x="5.396" y="10.8" width="5.779"/>
+        <rect rx="0.4" height="2.4" x="32.052" y="7.2" width="2.397"/>
+        <rect rx="0.4" height="2.4" x="36.195" y="7.2" width="4.634"/>
+        <rect rx="0.4" height="2.4" x="68.093" y="7.2" width="1.203"/>
+        <rect rx="0.4" height="2.4" x="42.302" y="7.2" width="3.985"/>
+        <rect rx="0.4" height="2.4" x="48.27" y="7.2" width="18.322"/>
+        <rect rx="0.4" height="2.4" x="4.204" y="7.2" width="12.005"/>
+        <rect rx="0.4" height="2.4" x="4.477" y="3.6" width="16.247"/>
+        <rect rx="0.4" height="2.4" x="32.087" y="3.6" width="2.051"/>
+        <rect rx="0.4" height="2.4" x="35.216" y="3.6" width="7.826"/>
+        <rect rx="0.4" height="2.4" x="44.212" y="3.6" width="21.067"/>
+        <rect rx="0.4" height="2.4" x="69.251" y="3.6" width="1.515"/>
+        <rect rx="0.4" height="2.4" x="42.801" y="0" width="28.026"/>
+        <rect rx="0.4" height="2.4" x="36.527" y="0" width="2.051"/>
+        <rect rx="0.4" height="2.4" x="23.738" y="0" width="7.025"/>
+        <rect rx="0.4" height="2.4" x="39.609" y="0" width="2.051"/>
+        <rect rx="0.4" height="2.4" x="18.661" y="0" width="3.05"/>
+        <rect rx="0.4" height="2.4" x="0" y="0" width="16.607"/>
+    </g>
+</svg>

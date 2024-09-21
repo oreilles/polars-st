@@ -1,0 +1,12 @@
+.highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
+    user-select: none;
+}
+
+.doc-signature.highlight .n {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.doc-signature.highlight .kc {
+    font-style: italic;
+}

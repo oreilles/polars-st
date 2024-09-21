@@ -1,0 +1,3 @@
+__version__: str
+
+def get_crs_auth_code(definition: str) -> tuple[str, str]: ...
