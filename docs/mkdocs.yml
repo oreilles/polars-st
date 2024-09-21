@@ -53,8 +53,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
-  favicon: https://github.com/Oreilles/polars-st/blob/main/assets/logo.svg?raw=true
-  logo: https://github.com/Oreilles/polars-st/blob/main/assets/logo-blank.svg?raw=true
+  favicon: https://raw.githubusercontent.com/Oreilles/polars-st/main/assets/logo.svg
+  logo: https://raw.githubusercontent.com/Oreilles/polars-st/main/assets/logo-blank.svg
   icon:
     repo: fontawesome/brands/github
 
