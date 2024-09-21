@@ -2,7 +2,7 @@
 
 # Polars ST
 
-Polars ST provides spatial operations on Polars DataFrames, Series and Expressions. Just like [Shapely](https://github.com/shapely/shapely/) and [Geopandas](https://github.com/geopandas/geopandas), it make use of the library [GEOS](https://github.com/libgeos/geos), meaning that its API is mostly identical to theirs.
+Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/polars) DataFrames, Series and Expressions. Just like [Shapely](https://github.com/shapely/shapely/) and [Geopandas](https://github.com/geopandas/geopandas), it make use of the library [GEOS](https://github.com/libgeos/geos), meaning that its API is mostly identical to theirs.
 
 ```pycon
 >>> import polars as pl
