@@ -30,6 +30,7 @@ Geometries are stored as EWKB in regular Polars Binary columns. EWKB is a extens
 
 For every spatial operations, the WKB binary blob will be parsed into a Geometry object so the operation can be done. If the operation result is a geometry, it will then be serialized back to EWKB. Because of that round-trip, some operations might turn out to be slower than GeoPandas. In most cases however, the performance penalty of that round-trip will be marginal compared to the spatial operation, and you will fully benefit from the parallelization capabilities of Polars.
 
+
 ## About GeoPolars
 
 [GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
@@ -37,6 +38,11 @@ For every spatial operations, the WKB binary blob will be parsed into a Geometry
 Storing geometry as EWKB and delegating core functionality to GEOS allows `polars-st` to be ready now, and provide additional features such as XYZM coordinates, curved geometry types and per-geometry CRS information.
 
 I really hope Geopolars get there soon, and that maybe some of the API design explorations made here will have helped make it even more pleasant to use.
+
+## About Polars
+
+This project is not affiliated with Polars. The design language was made very close to that of Polars because I found it amazingly appealing and liked the challenge of adding geographic meaning to it, and to also hilight the fact that this project is an exclusive extension to Polars.
+
 
 ## About GEOS
 
