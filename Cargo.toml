@@ -2,7 +2,7 @@
 name = "polars-st"
 version = "0.1.0-alpha.0"
 edition = "2021"
-license = "GPL"
+license = "LGPL-2.1"
 categories = ["science::geo"]
 repository = "https://github.com/Oreilles/polars-st"
 keywords = ["polars", "dataframe", "gis", "geospatial", "geometry"]
