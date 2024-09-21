@@ -1043,7 +1043,7 @@ dependencies = [
 
 [[package]]
 name = "polars-st"
-version = "0.1.0-beta.0"
+version = "0.1.0-alpha.0"
 dependencies = [
  "geos",
  "num_enum",
