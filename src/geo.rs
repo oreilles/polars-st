@@ -1040,6 +1040,7 @@ pub fn minimum_rotated_rectangle(wkb: &BinaryChunked) -> GResult<BinaryChunked> 
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn apply_affine_transform(
     geom: &Geometry,
     m11: f64,
