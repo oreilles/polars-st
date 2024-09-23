@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="polars-st documentation">
+        <meta name="description" content="Polars ST Documentation">
       
       
       
@@ -385,6 +385,8 @@
       
         
           
+        
+      
         
       
         
@@ -1253,6 +1255,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.center" class="md-nav__link">
+    <span class="md-ellipsis">
+      center
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#polars_st.GeoExprNameSpace.clip_by_rect" class="md-nav__link">
     <span class="md-ellipsis">
       clip_by_rect
@@ -1400,6 +1411,42 @@
   <a href="#polars_st.GeoExprNameSpace.shortest_line" class="md-nav__link">
     <span class="md-ellipsis">
       shortest_line
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.affine_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      affine_transform
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.translate" class="md-nav__link">
+    <span class="md-ellipsis">
+      translate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.rotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      rotate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      scale
     </span>
   </a>
   
@@ -1605,6 +1652,27 @@
   
   <span class="md-ellipsis">
     GeoDataFrame
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geolazyframe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GeoLazyFrame
   </span>
   
 
@@ -2340,6 +2408,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.center" class="md-nav__link">
+    <span class="md-ellipsis">
+      center
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#polars_st.GeoExprNameSpace.clip_by_rect" class="md-nav__link">
     <span class="md-ellipsis">
       clip_by_rect
@@ -2487,6 +2564,42 @@
   <a href="#polars_st.GeoExprNameSpace.shortest_line" class="md-nav__link">
     <span class="md-ellipsis">
       shortest_line
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.affine_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      affine_transform
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.translate" class="md-nav__link">
+    <span class="md-ellipsis">
+      translate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.rotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      rotate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      scale
     </span>
   </a>
   
@@ -2846,7 +2959,7 @@
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="go">┌──────────┐</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="go">│ geometry │</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="go">│ ---      │</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="go">│ u32      │</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="go">│ i32      │</span>
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="go">╞══════════╡</span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="go">│ 0        │</span>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="go">│ 1        │</span>
@@ -4002,7 +4115,7 @@ outputs the most compact representation.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Return <code>True</code> when each geometry is within a given distance to other.</p>
+        <p>Return <code>True</code> when each geometry is within given distance to other.</p>
 
     </div>
 
@@ -4388,6 +4501,25 @@ outputs the most compact representation.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="polars_st.GeoExprNameSpace.center" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.center</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.center" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">center</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the bounding box center of each geometry.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="polars_st.GeoExprNameSpace.clip_by_rect" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.clip_by_rect</span>
 
@@ -4687,6 +4819,108 @@ outputs the most compact representation.</p>
     <div class="doc doc-contents ">
 
         <p>Return the shortest line between each geometry and other.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="polars_st.GeoExprNameSpace.affine_transform" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.affine_transform</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.affine_transform" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">affine_transform</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoExprColumn">IntoExprColumn</span></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Apply a 2D or 3D transformation matrix to the coordinates of each geometry.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code>matrix</code></b>
+              (<code><span title="polars_st.typing.IntoExprColumn">IntoExprColumn</span> | <a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>The transformation matrix to apply to coordinates. Should contains 6
+elements for a 2D transform or 12 for a 3D transform. The matrix elements
+order should be:
+- <code>m11</code>, <code>m12</code>, <code>m21</code>, <code>m22</code>, <code>tx</code>, <code>ty</code> for 2D transformations
+- <code>m11</code>, <code>m12</code>, <code>m13</code>, <code>m21</code>, <code>m22</code>, <code>m23</code>, <code>m31</code>, <code>m32</code>, <code>m33</code>, <code>tx</code>, <code>ty</code>, <code>tz</code>
+    for 3D transformations</p>
+          </div>
+        </li>
+    </ul>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="polars_st.GeoExprNameSpace.translate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.translate</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.translate" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">translate</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">x</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="polars_st.GeoExprNameSpace.rotate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.rotate</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.rotate" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">rotate</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">angle</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">origin</span><span class="p">:</span> <span class="p">(</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="polars.Expr">Expr</span></span> <span class="o">|</span> <span class="n"><span title="polars.Series">Series</span></span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="polars_st.GeoExprNameSpace.scale" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.scale</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.scale" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">scale</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">x</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">y</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">z</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">origin</span><span class="p">:</span> <span class="p">(</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="polars.Expr">Expr</span></span> <span class="o">|</span> <span class="n"><span title="polars.Series">Series</span></span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
 
     </div>
 

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="polars-st documentation">
+        <meta name="description" content="Polars ST Documentation">
       
       
       
@@ -385,6 +385,8 @@
       
         
           
+        
+      
         
       
         
@@ -991,6 +993,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#polars_st.center" class="md-nav__link">
+    <span class="md-ellipsis">
+      center
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#polars_st.clip_by_rect" class="md-nav__link">
     <span class="md-ellipsis">
       clip_by_rect
@@ -1120,6 +1131,42 @@
   <a href="#polars_st.minimum_rotated_rectangle" class="md-nav__link">
     <span class="md-ellipsis">
       minimum_rotated_rectangle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.affine_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      affine_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.translate" class="md-nav__link">
+    <span class="md-ellipsis">
+      translate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.rotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      rotate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      scale
     </span>
   </a>
   
@@ -1332,6 +1379,27 @@
   
   <span class="md-ellipsis">
     GeoDataFrame
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geolazyframe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GeoLazyFrame
   </span>
   
 
@@ -1826,6 +1894,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#polars_st.center" class="md-nav__link">
+    <span class="md-ellipsis">
+      center
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#polars_st.clip_by_rect" class="md-nav__link">
     <span class="md-ellipsis">
       clip_by_rect
@@ -1955,6 +2032,42 @@
   <a href="#polars_st.minimum_rotated_rectangle" class="md-nav__link">
     <span class="md-ellipsis">
       minimum_rotated_rectangle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.affine_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      affine_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.translate" class="md-nav__link">
+    <span class="md-ellipsis">
+      translate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.rotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      rotate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polars_st.scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      scale
     </span>
   </a>
   
@@ -3097,6 +3210,25 @@
 <div class="doc doc-object doc-function">
 
 
+<h2 id="polars_st.center" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.center</span>
+
+
+<a href="#polars_st.center" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">center</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.center">center()</a></code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="polars_st.clip_by_rect" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">polars_st.clip_by_rect</span>
 
@@ -3382,6 +3514,103 @@
     <div class="doc doc-contents ">
 
         <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.minimum_rotated_rectangle">minimum_rotated_rectangle()</a></code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="polars_st.affine_transform" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.affine_transform</span>
+
+
+<a href="#polars_st.affine_transform" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">affine_transform</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoExprColumn">IntoExprColumn</span></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.affine_transform">affine_transform(...)</a></code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="polars_st.translate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.translate</span>
+
+
+<a href="#polars_st.translate" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">translate</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">x</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">y</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">z</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.translate">translate(...)</a></code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="polars_st.rotate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.rotate</span>
+
+
+<a href="#polars_st.rotate" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">rotate</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">angle</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">origin</span><span class="p">:</span> <span class="p">(</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="polars.Expr">Expr</span></span> <span class="o">|</span> <span class="n"><span title="polars.Series">Series</span></span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.rotate">rotate(...)</a></code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="polars_st.scale" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.scale</span>
+
+
+<a href="#polars_st.scale" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">scale</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">x</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">y</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">z</span><span class="p">:</span> <span class="n"><span title="polars_st.typing.IntoDecimalExpr">IntoDecimalExpr</span></span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">origin</span><span class="p">:</span> <span class="p">(</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="polars.Expr">Expr</span></span> <span class="o">|</span> <span class="n"><span title="polars.Series">Series</span></span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" href="../geoexpr/#polars_st.GeoExprNameSpace.scale">scale(...)</a></code>.</p>
 
     </div>
 

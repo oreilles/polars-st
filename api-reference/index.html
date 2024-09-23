@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="polars-st documentation">
+        <meta name="description" content="Polars ST Documentation">
       
       
       
@@ -405,6 +405,8 @@
       
         
       
+        
+      
     
     
       
@@ -587,6 +589,27 @@
   
   <span class="md-ellipsis">
     GeoDataFrame
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="geolazyframe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GeoLazyFrame
   </span>
   
 
@@ -1029,7 +1052,7 @@
 </tr>
 <tr>
 <td><code>dwithin</code></td>
-<td>Return <code>True</code> when each geometry is within a given distance to other.</td>
+<td>Return <code>True</code> when each geometry is within given distance to other.</td>
 <td><a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.dwithin"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.dwithin"><code>Series</code></a></td>
 </tr>
 <tr>
@@ -1138,6 +1161,11 @@
 <td><a class="autorefs autorefs-internal" href="sugar/#polars_st.centroid"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.centroid"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.centroid"><code>Series</code></a></td>
 </tr>
 <tr>
+<td><code>center</code></td>
+<td>Return the center of each geometry.</td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.center"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.center"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.center"><code>Series</code></a></td>
+</tr>
+<tr>
 <td><code>clip_by_rect</code></td>
 <td>Clips each geometry by a bounding rectangle.</td>
 <td><a class="autorefs autorefs-internal" href="sugar/#polars_st.clip_by_rect"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.clip_by_rect"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.clip_by_rect"><code>Series</code></a></td>
@@ -1226,6 +1254,31 @@
 <td><code>sjoin</code></td>
 <td>Perform a spatial join operation with another DataFrame.</td>
 <td><a class="autorefs autorefs-internal" href="geodataframe/#polars_st.GeoDataFrameNameSpace.sjoin"><code>DataFrame</code></a>, <a class="autorefs autorefs-internal" href="geolazyframe/#polars_st.GeoLazyFrameNameSpace.sjoin"><code>LazyFrame</code></a></td>
+</tr>
+<tr>
+<td><strong>Affine transforms</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>affine_transform</code></td>
+<td></td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.affine_transform"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.affine_transform"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.affine_transform"><code>Series</code></a></td>
+</tr>
+<tr>
+<td><code>translate</code></td>
+<td></td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.translate"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.translate"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.translate"><code>Series</code></a></td>
+</tr>
+<tr>
+<td><code>rotate</code></td>
+<td></td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.rotate"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.rotate"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.rotate"><code>Series</code></a></td>
+</tr>
+<tr>
+<td><code>scale</code></td>
+<td></td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.scale"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.scale"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.scale"><code>Series</code></a></td>
 </tr>
 <tr>
 <td><strong>LineString operations</strong></td>
