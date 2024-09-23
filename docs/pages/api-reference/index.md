@@ -78,7 +78,7 @@ hide:
 | `covered_by` | Return `True` when each geometry is covered by other. | [`Expr`][polars_st.GeoExprNameSpace.covered_by], [`Series`][polars_st.GeoSeriesNameSpace.covered_by] |
 | `covers` | Return `True` when each geometry covers other. | [`Expr`][polars_st.GeoExprNameSpace.covers], [`Series`][polars_st.GeoSeriesNameSpace.covers] |
 | `disjoint` | Return `True` when each geometry is disjoint from other. | [`Expr`][polars_st.GeoExprNameSpace.disjoint], [`Series`][polars_st.GeoSeriesNameSpace.disjoint] |
-| `dwithin` | Return `True` when each geometry is within a given distance to other. | [`Expr`][polars_st.GeoExprNameSpace.dwithin], [`Series`][polars_st.GeoSeriesNameSpace.dwithin] |
+| `dwithin` | Return `True` when each geometry is within given distance to other. | [`Expr`][polars_st.GeoExprNameSpace.dwithin], [`Series`][polars_st.GeoSeriesNameSpace.dwithin] |
 | `intersects` | Return `True` when each geometry intersects other. | [`Expr`][polars_st.GeoExprNameSpace.intersects], [`Series`][polars_st.GeoSeriesNameSpace.intersects] |
 | `overlaps` |Return `True` when each geometry overlaps other. | [`Expr`][polars_st.GeoExprNameSpace.overlaps], [`Series`][polars_st.GeoSeriesNameSpace.overlaps] |
 | `touches` |Return `True` when each geometry touches other. | [`Expr`][polars_st.GeoExprNameSpace.touches], [`Series`][polars_st.GeoSeriesNameSpace.touches] |
@@ -100,6 +100,7 @@ hide:
 | `buffer` | Return a buffer around each geometry. | [`root`][polars_st.buffer], [`Expr`][polars_st.GeoExprNameSpace.buffer], [`Series`][polars_st.GeoSeriesNameSpace.buffer] |
 | `offset_curve` | Return a line at a given distance of each geometry. | [`root`][polars_st.offset_curve], [`Expr`][polars_st.GeoExprNameSpace.offset_curve], [`Series`][polars_st.GeoSeriesNameSpace.offset_curve] |
 | `centroid` | Return the centroid of each geometry. | [`root`][polars_st.centroid], [`Expr`][polars_st.GeoExprNameSpace.centroid], [`Series`][polars_st.GeoSeriesNameSpace.centroid] |
+| `center` | Return the center of each geometry. | [`root`][polars_st.center], [`Expr`][polars_st.GeoExprNameSpace.center], [`Series`][polars_st.GeoSeriesNameSpace.center] |
 | `clip_by_rect` | Clips each geometry by a bounding rectangle. | [`root`][polars_st.clip_by_rect], [`Expr`][polars_st.GeoExprNameSpace.clip_by_rect], [`Series`][polars_st.GeoSeriesNameSpace.clip_by_rect] |
 | `convex_hull` | Return the convex hull of each geometry. | [`root`][polars_st.convex_hull], [`Expr`][polars_st.GeoExprNameSpace.convex_hull], [`Series`][polars_st.GeoSeriesNameSpace.convex_hull] |
 | `concave_hull` | Return the concave hull of each geometry. | [`root`][polars_st.concave_hull], [`Expr`][polars_st.GeoExprNameSpace.concave_hull], [`Series`][polars_st.GeoSeriesNameSpace.concave_hull] |
@@ -118,6 +119,11 @@ hide:
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |
 | `shortest_line` | Return the shortest line between each geometry and other. | [`Expr`][polars_st.GeoExprNameSpace.shortest_line], [`Series`][polars_st.GeoSeriesNameSpace.shortest_line] |
 | `sjoin` | Perform a spatial join operation with another DataFrame. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.sjoin], [`LazyFrame`][polars_st.GeoLazyFrameNameSpace.sjoin] |
+| **Affine transforms** | | |
+| `affine_transform` | | [`root`][polars_st.affine_transform], [`Expr`][polars_st.GeoExprNameSpace.affine_transform], [`Series`][polars_st.GeoSeriesNameSpace.affine_transform] |
+| `translate` | | [`root`][polars_st.translate], [`Expr`][polars_st.GeoExprNameSpace.translate], [`Series`][polars_st.GeoSeriesNameSpace.translate] |
+| `rotate` | | [`root`][polars_st.rotate], [`Expr`][polars_st.GeoExprNameSpace.rotate], [`Series`][polars_st.GeoSeriesNameSpace.rotate] |
+| `scale` | | [`root`][polars_st.scale], [`Expr`][polars_st.GeoExprNameSpace.scale], [`Series`][polars_st.GeoSeriesNameSpace.scale] |
 | **LineString operations** | | |
 | `interpolate` | | [`root`][polars_st.interpolate], [`Expr`][polars_st.GeoExprNameSpace.interpolate], [`Series`][polars_st.GeoSeriesNameSpace.interpolate] |
 | `line_merge` | | [`root`][polars_st.line_merge], [`Expr`][polars_st.GeoExprNameSpace.line_merge], [`Series`][polars_st.GeoSeriesNameSpace.line_merge] |

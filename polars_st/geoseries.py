@@ -4,7 +4,6 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, Literal, ParamSpec, Union, cast
 
 import polars as pl
-from polars import Series
 from polars.api import register_series_namespace
 
 from polars_st.casting import st
@@ -29,13 +28,14 @@ if TYPE_CHECKING:
 
     from polars_st.typing import (
         IntoDecimalExpr,
+        IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
     )
 
     ArrayLike = Union[  # noqa: UP007
         Sequence[Any],
-        Series,
+        pl.Series,
         pa.Array,
         pa.ChunkedArray,
         np.ndarray[Any, Any],
@@ -54,7 +54,7 @@ __all__ = [
 ]
 
 
-class GeoSeries(Series):
+class GeoSeries(pl.Series):
     @property
     def st(self) -> GeoSeriesNameSpace:
         return GeoSeriesNameSpace(self)
@@ -68,7 +68,7 @@ class GeoSeries(Series):
         strict: bool = True,
         nan_to_null: bool = False,
     ) -> GeoSeries:
-        s = Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
+        s = pl.Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
         if s.name == "" and not (isinstance(name, str) and name == ""):
             s = s.rename(Config.get_geometry_column())
         if len(s) == 0 or s.dtype == pl.Null:
@@ -161,8 +161,8 @@ class GeoSeries(Series):
             ...     shapely.Point(1, 2),
             ... ])
             >>> gs2 = st.GeoSeries([
-            ...     '{"type": "Point", "coordinates": [0, 0]}'
-            ...     '{"type": "Point", "coordinates": [1, 2]}'
+            ...     '{"type": "Point", "coordinates": [0, 0]}',
+            ...     '{"type": "Point", "coordinates": [1, 2]}',
             ... ])
             >>> gs.equals(gs2)
             True
@@ -172,7 +172,7 @@ class GeoSeries(Series):
 
 def dispatch(func):  # noqa: ANN001, ANN202 to preserve pylance type hints
     @wraps(func)
-    def wrapper(self: GeoSeriesNameSpace, *args: P.args, **kwargs: P.kwargs) -> Series:
+    def wrapper(self: GeoSeriesNameSpace, *args: P.args, **kwargs: P.kwargs) -> pl.Series:
         f = getattr(getattr(pl.col(self._series.name), "st"), func.__name__)  # noqa: B009
         return self._series.to_frame().select_seq(f(*args, **kwargs)).to_series()
 
@@ -181,76 +181,76 @@ def dispatch(func):  # noqa: ANN001, ANN202 to preserve pylance type hints
 
 @register_series_namespace("st")
 class GeoSeriesNameSpace:
-    def __init__(self, series: Series) -> None:
+    def __init__(self, series: pl.Series) -> None:
         self._series = cast(GeoSeries, series)
 
     @dispatch
-    def geometry_type(self) -> Series:
+    def geometry_type(self) -> pl.Series:
         """See [`GeoExprNameSpace.geometry_type`][polars_st.GeoExprNameSpace.geometry_type]."""
         ...
 
     @dispatch
-    def dimensions(self) -> Series:
+    def dimensions(self) -> pl.Series:
         """See [`GeoExprNameSpace.dimensions`][polars_st.GeoExprNameSpace.dimensions]."""
         ...
 
     @dispatch
-    def coordinate_dimension(self) -> Series:
+    def coordinate_dimension(self) -> pl.Series:
         """See [`GeoExprNameSpace.coordinate_dimension`][polars_st.GeoExprNameSpace.coordinate_dimension]."""  # noqa: E501
         ...
 
     @dispatch
-    def area(self) -> Series:
+    def area(self) -> pl.Series:
         """See [`GeoExprNameSpace.area`][polars_st.GeoExprNameSpace.area]."""
         ...
 
     @dispatch
-    def bounds(self) -> Series:
+    def bounds(self) -> pl.Series:
         """See [`GeoExprNameSpace.bounds`][polars_st.GeoExprNameSpace.bounds]."""
         ...
 
     @dispatch
-    def length(self) -> Series:
+    def length(self) -> pl.Series:
         """See [`GeoExprNameSpace.length`][polars_st.GeoExprNameSpace.length]."""
         ...
 
     @dispatch
-    def minimum_clearance(self) -> Series:
+    def minimum_clearance(self) -> pl.Series:
         """See [`GeoExprNameSpace.minimum_clearance`][polars_st.GeoExprNameSpace.minimum_clearance]."""  # noqa: E501
         ...
 
     @dispatch
-    def x(self) -> Series:
+    def x(self) -> pl.Series:
         """See [`GeoExprNameSpace.x`][polars_st.GeoExprNameSpace.x]."""
         ...
 
     @dispatch
-    def y(self) -> Series:
+    def y(self) -> pl.Series:
         """See [`GeoExprNameSpace.y`][polars_st.GeoExprNameSpace.y]."""
         ...
 
     @dispatch
-    def z(self) -> Series:
+    def z(self) -> pl.Series:
         """See [`GeoExprNameSpace.z`][polars_st.GeoExprNameSpace.z]."""
         ...
 
     @dispatch
-    def m(self) -> Series:
+    def m(self) -> pl.Series:
         """See [`GeoExprNameSpace.m`][polars_st.GeoExprNameSpace.m]."""
         ...
 
     @dispatch
-    def count_coordinates(self) -> Series:
+    def count_coordinates(self) -> pl.Series:
         """See [`GeoExprNameSpace.count_coordinates`][polars_st.GeoExprNameSpace.count_coordinates]."""  # noqa: E501
         ...
 
     @dispatch
-    def coordinates(self, output_dimension: Literal[2, 3] = 2) -> Series:
+    def coordinates(self, output_dimension: Literal[2, 3] = 2) -> pl.Series:
         """See [`GeoExprNameSpace.coordinates`][polars_st.GeoExprNameSpace.coordinates]."""
         ...
 
     @dispatch
-    def count_geometries(self) -> Series:
+    def count_geometries(self) -> pl.Series:
         """See [`GeoExprNameSpace.count_geometries`][polars_st.GeoExprNameSpace.count_geometries]."""  # noqa: E501
         ...
 
@@ -260,7 +260,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def count_points(self) -> Series:
+    def count_points(self) -> pl.Series:
         """See [`GeoExprNameSpace.count_points`][polars_st.GeoExprNameSpace.count_points]."""
         ...
 
@@ -270,7 +270,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def count_interior_rings(self) -> Series:
+    def count_interior_rings(self) -> pl.Series:
         """See [`GeoExprNameSpace.count_interior_rings`][polars_st.GeoExprNameSpace.count_interior_rings]."""  # noqa: E501
         ...
 
@@ -285,17 +285,17 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def rings(self) -> Series:
+    def rings(self) -> pl.Series:
         """See [`GeoExprNameSpace.rings`][polars_st.GeoExprNameSpace.rings]."""
         ...
 
     @dispatch
-    def parts(self) -> Series:
+    def parts(self) -> pl.Series:
         """See [`GeoExprNameSpace.parts`][polars_st.GeoExprNameSpace.parts]."""
         ...
 
     @dispatch
-    def precision(self) -> Series:
+    def precision(self) -> pl.Series:
         """See [`GeoExprNameSpace.precision`][polars_st.GeoExprNameSpace.precision]."""
         ...
 
@@ -309,7 +309,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def distance(self, other: IntoGeoExprColumn) -> Series:
+    def distance(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.distance`][polars_st.GeoExprNameSpace.distance]."""
         ...
 
@@ -318,7 +318,7 @@ class GeoSeriesNameSpace:
         self,
         other: IntoGeoExprColumn,
         densify: float | None = None,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.hausdorff_distance`][polars_st.GeoExprNameSpace.hausdorff_distance]."""  # noqa: E501
         ...
 
@@ -327,14 +327,14 @@ class GeoSeriesNameSpace:
         self,
         other: IntoGeoExprColumn,
         densify: float | None = None,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.frechet_distance`][polars_st.GeoExprNameSpace.frechet_distance]."""  # noqa: E501
         ...
 
     # Projection operations
 
     @dispatch
-    def srid(self) -> Series:
+    def srid(self) -> pl.Series:
         """See [`GeoExprNameSpace.srid`][polars_st.GeoExprNameSpace.srid]."""
         ...
 
@@ -357,7 +357,7 @@ class GeoSeriesNameSpace:
         trim: bool = True,
         output_dimension: Literal[2, 3, 4] = 3,
         old_3d: bool = False,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.to_wkt`][polars_st.GeoExprNameSpace.to_wkt]."""
         ...
 
@@ -368,7 +368,7 @@ class GeoSeriesNameSpace:
         trim: bool = True,
         output_dimension: Literal[2, 3, 4] = 3,
         old_3d: bool = False,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.to_ewkt`][polars_st.GeoExprNameSpace.to_ewkt]."""
         ...
 
@@ -378,22 +378,22 @@ class GeoSeriesNameSpace:
         output_dimension: Literal[2, 3, 4] = 3,
         byte_order: Literal[0, 1] | None = None,
         include_srid: bool = False,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.to_wkb`][polars_st.GeoExprNameSpace.to_wkb]."""
         ...
 
     @dispatch
-    def to_geojson(self, indent: int | None = None) -> Series:
+    def to_geojson(self, indent: int | None = None) -> pl.Series:
         """See [`GeoExprNameSpace.to_geojson`][polars_st.GeoExprNameSpace.to_geojson]."""
         ...
 
     @dispatch
-    def to_shapely(self) -> Series:
+    def to_shapely(self) -> pl.Series:
         """See [`GeoExprNameSpace.to_shapely`][polars_st.GeoExprNameSpace.to_shapely]."""
         ...
 
     @dispatch
-    def to_dict(self) -> Series:
+    def to_dict(self) -> pl.Series:
         """See [`GeoExprNameSpace.to_dict`][polars_st.GeoExprNameSpace.to_dict]."""
         ...
 
@@ -403,7 +403,7 @@ class GeoSeriesNameSpace:
         use_pyarrow_extension_array: bool = False,
         **kwargs: Any,
     ) -> gpd.GeoSeries:
-        """Convert this Series to a geopandas GeoSeries."""
+        """Convert this pl.Series to a geopandas GeoSeries."""
         import geopandas as gpd
 
         return gpd.GeoSeries(
@@ -413,112 +413,120 @@ class GeoSeriesNameSpace:
             ),
         )
 
+    @property
+    def __geo_interface__(self) -> dict:
+        """Return a GeoJSON GeometryCollection [`dict`][] representation of the DataFrame."""
+        return {
+            "type": "GeometryCollection",
+            "geometries": self.to_dict().to_list(),
+        }
+
     #  Unary predicates
 
     @dispatch
-    def has_z(self) -> Series:
+    def has_z(self) -> pl.Series:
         """See [`GeoExprNameSpace.has_z`][polars_st.GeoExprNameSpace.has_z]."""
         ...
 
     @dispatch
-    def has_m(self) -> Series:
+    def has_m(self) -> pl.Series:
         """See [`GeoExprNameSpace.has_m`][polars_st.GeoExprNameSpace.has_m]."""
         ...
 
     @dispatch
-    def is_ccw(self) -> Series:
+    def is_ccw(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_ccw`][polars_st.GeoExprNameSpace.is_ccw]."""
         ...
 
     @dispatch
-    def is_closed(self) -> Series:
+    def is_closed(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_closed`][polars_st.GeoExprNameSpace.is_closed]."""
         ...
 
     @dispatch
-    def is_empty(self) -> Series:
+    def is_empty(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_empty`][polars_st.GeoExprNameSpace.is_empty]."""
         ...
 
     @dispatch
-    def is_ring(self) -> Series:
+    def is_ring(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_ring`][polars_st.GeoExprNameSpace.is_ring]."""
         ...
 
     @dispatch
-    def is_simple(self) -> Series:
+    def is_simple(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_simple`][polars_st.GeoExprNameSpace.is_simple]."""
         ...
 
     @dispatch
-    def is_valid(self) -> Series:
+    def is_valid(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_valid`][polars_st.GeoExprNameSpace.is_valid]."""
         ...
 
     @dispatch
-    def is_valid_reason(self) -> Series:
+    def is_valid_reason(self) -> pl.Series:
         """See [`GeoExprNameSpace.is_valid_reason`][polars_st.GeoExprNameSpace.is_valid_reason]."""
         ...
 
     # Binary predicates
 
     @dispatch
-    def crosses(self, other: IntoGeoExprColumn) -> Series:
+    def crosses(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.crosses`][polars_st.GeoExprNameSpace.crosses]."""
         ...
 
     @dispatch
-    def contains(self, other: IntoGeoExprColumn) -> Series:
+    def contains(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.contains`][polars_st.GeoExprNameSpace.contains]."""
         ...
 
     @dispatch
-    def contains_properly(self, other: IntoGeoExprColumn) -> Series:
+    def contains_properly(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.contains_properly`][polars_st.GeoExprNameSpace.contains_properly]."""  # noqa: E501
         ...
 
     @dispatch
-    def covered_by(self, other: IntoGeoExprColumn) -> Series:
+    def covered_by(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.covered_by`][polars_st.GeoExprNameSpace.covered_by]."""
         ...
 
     @dispatch
-    def covers(self, other: IntoGeoExprColumn) -> Series:
+    def covers(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.covers`][polars_st.GeoExprNameSpace.covers]."""
         ...
 
     @dispatch
-    def disjoint(self, other: IntoGeoExprColumn) -> Series:
+    def disjoint(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.disjoint`][polars_st.GeoExprNameSpace.disjoint]."""
         ...
 
     @dispatch
-    def dwithin(self, other: IntoGeoExprColumn, distance: float) -> Series:
+    def dwithin(self, other: IntoGeoExprColumn, distance: float) -> pl.Series:
         """See [`GeoExprNameSpace.dwithin`][polars_st.GeoExprNameSpace.dwithin]."""
         ...
 
     @dispatch
-    def intersects(self, other: IntoGeoExprColumn) -> Series:
+    def intersects(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.intersects`][polars_st.GeoExprNameSpace.intersects]."""
         ...
 
     @dispatch
-    def overlaps(self, other: IntoGeoExprColumn) -> Series:
+    def overlaps(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.overlaps`][polars_st.GeoExprNameSpace.overlaps]."""
         ...
 
     @dispatch
-    def touches(self, other: IntoGeoExprColumn) -> Series:
+    def touches(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.touches`][polars_st.GeoExprNameSpace.touches]."""
         ...
 
     @dispatch
-    def within(self, other: IntoGeoExprColumn) -> Series:
+    def within(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.within`][polars_st.GeoExprNameSpace.within]."""
         ...
 
     @dispatch
-    def equals(self, other: IntoGeoExprColumn) -> Series:
+    def equals(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.equals`][polars_st.GeoExprNameSpace.equals]."""
         ...
 
@@ -527,17 +535,17 @@ class GeoSeriesNameSpace:
         self,
         other: IntoGeoExprColumn,
         tolerance: float = 0.0,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.equals_exact`][polars_st.GeoExprNameSpace.equals_exact]."""
         ...
 
     @dispatch
-    def equals_identical(self, other: IntoGeoExprColumn) -> Series:
+    def equals_identical(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.equals_identical`][polars_st.GeoExprNameSpace.equals_identical]."""  # noqa: E501
         ...
 
     @dispatch
-    def relate(self, other: IntoGeoExprColumn) -> Series:
+    def relate(self, other: IntoGeoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.relate`][polars_st.GeoExprNameSpace.relate]."""
         ...
 
@@ -546,7 +554,7 @@ class GeoSeriesNameSpace:
         self,
         other: IntoGeoExprColumn,
         pattern: str,
-    ) -> Series:
+    ) -> pl.Series:
         """See [`GeoExprNameSpace.relate_pattern`][polars_st.GeoExprNameSpace.relate_pattern]."""
         ...
 
@@ -632,6 +640,11 @@ class GeoSeriesNameSpace:
     @dispatch
     def centroid(self) -> GeoSeries:
         """See [`GeoExprNameSpace.centroid`][polars_st.GeoExprNameSpace.centroid]."""
+        ...
+
+    @dispatch
+    def center(self) -> GeoSeries:
+        """See [`GeoExprNameSpace.center`][polars_st.GeoExprNameSpace.center]."""
         ...
 
     @dispatch
@@ -733,6 +746,42 @@ class GeoSeriesNameSpace:
         """See [`GeoExprNameSpace.shortest_line`][polars_st.GeoExprNameSpace.shortest_line]."""
         ...
 
+    # Affine transforms
+
+    @dispatch
+    def affine_transform(self, matrix: IntoExprColumn | Sequence[float]) -> GeoSeries:
+        """See [`GeoExprNameSpace.affine_transform`][polars_st.GeoExprNameSpace.affine_transform]."""  # noqa: E501
+        ...
+
+    @dispatch
+    def translate(
+        self,
+        x: IntoDecimalExpr = 0.0,
+        y: IntoDecimalExpr = 0.0,
+        z: IntoDecimalExpr = 0.0,
+    ) -> GeoSeries:
+        """See [`GeoExprNameSpace.translate`][polars_st.GeoExprNameSpace.translate]."""
+        ...
+
+    def rotate(
+        self,
+        angle: IntoDecimalExpr,
+        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    ) -> GeoSeries:
+        """See [`GeoExprNameSpace.rotate`][polars_st.GeoExprNameSpace.rotate]."""
+        ...
+
+    @dispatch
+    def scale(
+        self,
+        x: IntoDecimalExpr = 1.0,
+        y: IntoDecimalExpr = 1.0,
+        z: IntoDecimalExpr = 1.0,
+        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    ) -> GeoSeries:
+        """See [`GeoExprNameSpace.scale`][polars_st.GeoExprNameSpace.scale]."""
+        ...
+
     # LineString operations
 
     @dispatch
@@ -760,7 +809,7 @@ class GeoSeriesNameSpace:
     # Aggregations
 
     @dispatch
-    def total_bounds(self) -> Series:
+    def total_bounds(self) -> pl.Series:
         """See [`GeoExprNameSpace.total_bounds`][polars_st.GeoExprNameSpace.total_bounds]."""
         ...
 
@@ -837,14 +886,6 @@ class GeoSeriesNameSpace:
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.delaunay_triangles`][polars_st.GeoExprNameSpace.delaunay_triangles]."""  # noqa: E501
         ...
-
-    @property
-    def __geo_interface__(self) -> dict:
-        """Return a GeoJSON GeometryCollection [`dict`][] representation of the DataFrame."""
-        return {
-            "type": "GeometryCollection",
-            "geometries": self.to_dict().to_list(),
-        }
 
     def plot(self, **kwargs: Unpack[EncodeKwds]) -> alt.Chart:
         """Draw map plot.

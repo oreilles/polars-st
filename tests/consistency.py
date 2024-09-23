@@ -48,7 +48,10 @@ def test_series_signatures_matches_expr():
     assert set(expr_funcs.keys()) == set(series_funcs.keys())
     for expr_func, series_func in zip(expr_funcs.values(), series_funcs.values(), strict=True):
         assert expr_func.__name__ == series_func.__name__
-        assert signature_matches(inspect.signature(expr_func), inspect.signature(series_func))
+        assert signature_matches(
+            inspect.signature(expr_func),
+            inspect.signature(series_func),
+        ), expr_func.__name__
 
 
 def test_sugar_signatures_matches_expr():

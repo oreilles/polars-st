@@ -55,6 +55,7 @@ The following functions can be used that way:
             - buffer
             - offset_curve
             - centroid
+            - center
             - clip_by_rect
             - convex_hull
             - concave_hull
@@ -70,6 +71,10 @@ The following functions can be used that way:
             - reverse
             - simplify
             - minimum_rotated_rectangle
+            - affine_transform
+            - translate
+            - rotate
+            - scale
             - interpolate
             - line_merge
             - total_bounds

@@ -19,6 +19,7 @@ nav:
     - GeoExpr: api-reference/geoexpr.md
     - GeoSeries: api-reference/geoseries.md
     - GeoDataFrame: api-reference/geodataframe.md
+    - GeoLazyFrame: api-reference/geolazyframe.md
     - Configuration: api-reference/config.md
 
 theme:

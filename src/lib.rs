@@ -1,3 +1,4 @@
+#![feature(downcast_unchecked)]
 #![feature(iterator_try_reduce)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::match_bool)]

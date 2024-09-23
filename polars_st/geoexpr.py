@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import json
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
 import polars as pl
+from polars._utils.parse import parse_into_expression
+from polars._utils.wrap import wrap_expr
 from polars.api import register_expr_namespace
 from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
+
+from polars_st.typing import IntoExprColumn
 
 if TYPE_CHECKING:
     from polars_st.typing import (
@@ -104,7 +109,7 @@ class GeoExprNameSpace:
             ┌──────────┐
             │ geometry │
             │ ---      │
-            │ u32      │
+            │ i32      │
             ╞══════════╡
             │ 0        │
             │ 1        │
@@ -673,7 +678,7 @@ class GeoExprNameSpace:
         )
 
     def dwithin(self, other: IntoGeoExprColumn, distance: float) -> pl.Expr:
-        """Return `True` when each geometry is within a given distance to other."""
+        """Return `True` when each geometry is within given distance to other."""
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="dwithin",
@@ -910,6 +915,15 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast(GeoExpr, e))
 
+    def center(self) -> GeoExpr:
+        """Return the bounding box center of each geometry."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="center",
+            args=[self._expr],
+            is_elementwise=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
     def clip_by_rect(
         self,
         xmin: float,
@@ -1075,6 +1089,102 @@ class GeoExprNameSpace:
             function_name="shortest_line",
             args=[self._expr, other],
             is_elementwise=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
+    # Affine tranforms
+
+    def affine_transform(self, matrix: IntoExprColumn | Sequence[float]) -> GeoExpr:
+        """Apply a 2D or 3D transformation matrix to the coordinates of each geometry.
+
+        Args:
+            matrix:
+                The transformation matrix to apply to coordinates. Should contains 6
+                elements for a 2D transform or 12 for a 3D transform. The matrix elements
+                order should be:
+                - `m11`, `m12`, `m21`, `m22`, `tx`, `ty` for 2D transformations
+                - `m11`, `m12`, `m13`, `m21`, `m22`, `m23`, `m31`, `m32`, `m33`, `tx`, `ty`, `tz`
+                    for 3D transformations
+
+        """
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="affine_transform",
+            args=[
+                self._expr,
+                matrix
+                if isinstance(matrix, IntoExprColumn)
+                else pl.lit(matrix, dtype=pl.Array(pl.Float64, len(matrix))),
+            ],
+            returns_scalar=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
+    def translate(
+        self,
+        x: IntoDecimalExpr = 0.0,
+        y: IntoDecimalExpr = 0.0,
+        z: IntoDecimalExpr = 0.0,
+    ) -> GeoExpr:
+        matrix = pl.concat_list(
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
+            x, y, z,
+        ).cast(pl.Array(pl.Float64, 12))  # fmt: off
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="affine_transform",
+            args=[self._expr, matrix],
+            returns_scalar=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
+    def rotate(
+        self,
+        angle: IntoDecimalExpr,
+        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    ) -> GeoExpr:
+        _origin = _interpret_origin(self._expr, origin)
+        x0 = _origin.list.get(0)
+        y0 = _origin.list.get(1)
+
+        angle = wrap_expr(parse_into_expression(angle)).radians()
+        cosp = angle.cos()
+        sinp = angle.sin()
+        matrix = pl.concat_list(
+            cosp, -sinp, 0.0,
+            sinp, cosp, 0.0,
+            0.0, 0.0, 1.0,
+            x0 - x0 * cosp + y0 * sinp, y0 - x0 * sinp - y0 * cosp, 0.0,
+        ).cast(pl.Array(pl.Float64, 12))  # fmt: off
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="affine_transform",
+            args=[self._expr, matrix],
+            returns_scalar=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
+    def scale(
+        self,
+        x: IntoDecimalExpr = 1.0,
+        y: IntoDecimalExpr = 1.0,
+        z: IntoDecimalExpr = 1.0,
+        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    ) -> GeoExpr:
+        _origin = _interpret_origin(self._expr, origin)
+        x0 = _origin.list.get(0)
+        y0 = _origin.list.get(1)
+        z0 = pl.when(_origin.list.len().ge(3)).then(_origin.list.get(2)).otherwise(0)
+
+        matrix = pl.concat_list(
+            x, 0.0, 0.0,
+            0.0, y, 0.0,
+            0.0, 0.0, z,
+            x0 - x0 * x, y0 - y0 * y, z0 - z0 * z,
+        ).cast(pl.Array(pl.Float64, 12))  # fmt: off
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="affine_transform",
+            args=[self._expr, matrix],
+            returns_scalar=True,
         ).pipe(lambda e: cast(GeoExpr, e))
 
     # Linestring operations
@@ -1257,3 +1367,21 @@ class GeoExprNameSpace:
             },
             returns_scalar=True,
         ).pipe(lambda e: cast(GeoExpr, e))
+
+
+def _interpret_origin(
+    geom: GeoExpr,
+    origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series,
+) -> pl.Expr:
+    match origin:
+        case "center":
+            coord = geom.st.center().st.coordinates().list.get(0)
+            return coord.cast(pl.List(pl.Float64))
+        case "centroid":
+            coord = geom.st.centroid().st.coordinates().list.get(0)
+            return coord.cast(pl.List(pl.Float64))
+        case origin if isinstance(origin, pl.Expr | pl.Series):
+            return wrap_expr(parse_into_expression(origin)).cast(pl.List(pl.Float64))
+        case _:
+            origin = cast(Sequence[float], origin)  # Shouldn't be needed
+            return pl.lit(origin, dtype=pl.List(pl.Float64))

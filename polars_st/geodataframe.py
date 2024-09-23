@@ -96,14 +96,14 @@ class GeoDataFrame(DataFrame):
             ...     ]
             ... })
             >>> gdf.schema
-            Schema([('geometry', Binary)])
+            Schema({'geometry': Binary})
 
             >>> gdf = st.GeoDataFrame([
             ...     "POINT(0 0)",
             ...     "POINT(1 2)",
             ... ])
             >>> gdf.schema
-            Schema([('geometry', Binary)])
+            Schema({'geometry': Binary})
         """
         ...
 
@@ -263,6 +263,30 @@ class GeoDataFrameNameSpace:
             ),
         )
 
+    @property
+    def __geo_interface__(self) -> dict:
+        """Return a GeoJSON FeatureCollection [`dict`][] representation of the DataFrame.
+
+        Examples:
+            >>> gdf = st.GeoDataFrame({
+            ...     "geometry": ["POINT(0 0)", "POINT(1 2)"],
+            ...     "name": ["Alice", "Bob"]
+            ... })
+            >>> interface = gdf.st.__geo_interface__
+            >>> pprint.pp(interface)
+            {'type': 'FeatureCollection',
+             'features': [{'type': 'Feature',
+                           'geometry': {'type': 'Point', 'coordinates': [0.0, 0.0]},
+                           'properties': {'name': 'Alice'}},
+                          {'type': 'Feature',
+                           'geometry': {'type': 'Point', 'coordinates': [1.0, 2.0]},
+                           'properties': {'name': 'Bob'}}]}
+        """
+        return {
+            "type": "FeatureCollection",
+            "features": self.to_dicts(),
+        }
+
     def write_file(
         self,
         path: str | BytesIO,
@@ -371,7 +395,7 @@ class GeoDataFrameNameSpace:
     def write_geojson(self, file: IOBase | str | Path) -> None: ...
 
     def write_geojson(self, file: IOBase | str | Path | None = None) -> str | None:
-        """Serialize to GeoJSON FeatureCollection representation.
+        r"""Serialize to GeoJSON FeatureCollection representation.
 
         The result will be invalid if the geometry column contains different geometry types.
 
@@ -383,6 +407,7 @@ class GeoDataFrameNameSpace:
             >>> geojson = gdf.st.write_geojson()
             >>> print(geojson)
             {"type":"FeatureCollection","features":[{"properties":{"name":"Alice"},"geometry":{"type":"Point","coordinates":[0.0,0.0]}},{"properties":{"name":"Bob"},"geometry":{"type":"Point","coordinates":[1.0,2.0]}}]}
+            <BLANKLINE>
         """
         return (
             self._df.select(
@@ -418,35 +443,12 @@ class GeoDataFrameNameSpace:
             >>> print(geojsonseq)
             {"properties":{"name":"Alice"},"geometry":{"type":"Point","coordinates":[0.0,0.0]}}
             {"properties":{"name":"Bob"},"geometry":{"type":"Point","coordinates":[1.0,2.0]}}
+            <BLANKLINE>
         """
         return self._df.select(
             properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
             geometry=geom().st.to_geojson().str.json_decode(),
         ).write_ndjson(file)
-
-    @property
-    def __geo_interface__(self) -> dict:
-        """Return a GeoJSON FeatureCollection [`dict`][] representation of the DataFrame.
-
-        Examples:
-            >>> gdf = st.GeoDataFrame({
-            ...     "geometry": ["POINT(0 0)", "POINT(1 2)"],
-            ...     "name": ["Alice", "Bob"]
-            ... })
-            >>> interface = gdf.st.__geo_interface__
-            >>> interface
-            {'type': 'FeatureCollection',
-             'features': [{'type': 'Feature',
-               'geometry': {'type': 'Point', 'coordinates': [0.0, 0.0]},
-               'properties': {'name': 'Alice'}},
-              {'type': 'Feature',
-               'geometry': {'type': 'Point', 'coordinates': [1.0, 2.0]},
-               'properties': {'name': 'Bob'}}]}
-        """
-        return {
-            "type": "FeatureCollection",
-            "features": self.to_dicts(),
-        }
 
     def plot(self, **kwargs: Unpack[EncodeKwds]) -> alt.Chart:
         """Draw map plot.

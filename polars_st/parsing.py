@@ -30,11 +30,11 @@ def from_wkb(expr: IntoExprColumn) -> GeoExpr:
     """Parse geometries from Well-Known Binary (WKB) representation.
 
     Examples:
-        >>> df = pl.read_database(
+        >>> gdf = pl.read_database(
         ...     query="SELECT ST_AsEWKB(geom) AS geometry FROM test_data",
         ...     connection=user_conn,
-        ... )
-        >>> gdf = df.select(st.from_wkb("geometry"))
+        ... ) # doctest: +SKIP
+        >>> gdf = df.select(st.from_wkb("geometry"))  # doctest: +SKIP
     """
     return cast(GeoExpr, wrap_expr(parse_into_expression(expr)))
 
@@ -70,7 +70,7 @@ def from_ewkt(expr: IntoExprColumn) -> GeoExpr:
     expr = wrap_expr(parse_into_expression(expr))
     s = expr.str.extract_groups(r"^(SRID=(.*);)?(.+)$")
     wkt = s.struct[2]
-    srid = s.struct[1].replace(dict.fromkeys((None, ""), 0))
+    srid = s.struct[1].replace(dict.fromkeys((None, ""), "0"))
     return from_wkt(wkt).st.set_srid(srid)
 
 

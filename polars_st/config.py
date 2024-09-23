@@ -51,7 +51,7 @@ class Config(contextlib.ContextDecorator):
             >>> with st.Config(geometry_column="my_geometry"):
             ...     x = gdf.select(st.x())
             >>> x.schema
-            Schema([('my_geometry', Float64)])
+            Schema({'my_geometry': Float64})
 
             Use as a context decorator:
 
@@ -60,15 +60,16 @@ class Config(contextlib.ContextDecorator):
             ...     return gdf.select(st.bounds())
             >>> gdf = st.GeoSeries("my_geometry", ["POINT(1 2)"]).to_frame()
             >>> bounds = get_my_bounds(gdf)
-            >>> x.schema
+            >>> bounds.schema
             Schema({'my_geometry': Array(Float64, shape=(4,))})
 
             Use as a global configuration object:
 
             >>> st.Config.set_geometry_column("my_geometry")
+            <class 'polars_st.config.Config'>
             >>> gdf = st.GeoSeries(["POINT(1 2)"]).to_frame()
             >>> gdf.schema
-            Schema([('my_geometry', Binary)])
+            Schema({'my_geometry': Binary})
         """
         if geometry_column is None:
             geometry_column = ConfigValues.model_fields["geometry_column"].default

@@ -5,10 +5,13 @@ from typing import TYPE_CHECKING, Literal
 from polars_st.selectors import geom
 
 if TYPE_CHECKING:
-    from polars import Expr
+    from collections.abc import Sequence
+
+    import polars as pl
 
     from polars_st.typing import (
         IntoDecimalExpr,
+        IntoExprColumn,
         IntoIntegerExpr,
     )
 
@@ -64,6 +67,7 @@ __all__ = [
     "buffer",
     "offset_curve",
     "centroid",
+    "center",
     "clip_by_rect",
     "convex_hull",
     "concave_hull",
@@ -79,6 +83,10 @@ __all__ = [
     "reverse",
     "simplify",
     "minimum_rotated_rectangle",
+    "affine_transform",
+    "translate",
+    "rotate",
+    "scale",
     "interpolate",
     "line_merge",
     "total_bounds",
@@ -98,72 +106,72 @@ __all__ = [
 ]
 
 
-def geometry_type(*columns: str) -> Expr:
+def geometry_type(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[geometry_type()][polars_st.GeoExprNameSpace.geometry_type]</code>."""  # noqa: E501
     return geom(*columns).st.geometry_type()
 
 
-def dimensions(*columns: str) -> Expr:
+def dimensions(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[dimensions()][polars_st.GeoExprNameSpace.dimensions]</code>."""  # noqa: E501
     return geom(*columns).st.dimensions()
 
 
-def coordinate_dimension(*columns: str) -> Expr:
+def coordinate_dimension(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[coordinate_dimension()][polars_st.GeoExprNameSpace.coordinate_dimension]</code>."""  # noqa: E501
     return geom(*columns).st.coordinate_dimension()
 
 
-def area(*columns: str) -> Expr:
+def area(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[area()][polars_st.GeoExprNameSpace.area]</code>."""  # noqa: E501
     return geom(*columns).st.area()
 
 
-def bounds(*columns: str) -> Expr:
+def bounds(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[bounds()][polars_st.GeoExprNameSpace.bounds]</code>."""  # noqa: E501
     return geom(*columns).st.bounds()
 
 
-def length(*columns: str) -> Expr:
+def length(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[length()][polars_st.GeoExprNameSpace.length]</code>."""  # noqa: E501
     return geom(*columns).st.length()
 
 
-def minimum_clearance(*columns: str) -> Expr:
+def minimum_clearance(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[minimum_clearance()][polars_st.GeoExprNameSpace.minimum_clearance]</code>."""  # noqa: E501
     return geom(*columns).st.minimum_clearance()
 
 
-def x(*columns: str) -> Expr:
+def x(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[x()][polars_st.GeoExprNameSpace.x]</code>."""  # noqa: E501
     return geom(*columns).st.x()
 
 
-def y(*columns: str) -> Expr:
+def y(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[y()][polars_st.GeoExprNameSpace.y]</code>."""  # noqa: E501
     return geom(*columns).st.y()
 
 
-def z(*columns: str) -> Expr:
+def z(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[z()][polars_st.GeoExprNameSpace.z]</code>."""  # noqa: E501
     return geom(*columns).st.z()
 
 
-def m(*columns: str) -> Expr:
+def m(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[m()][polars_st.GeoExprNameSpace.m]</code>."""  # noqa: E501
     return geom(*columns).st.m()
 
 
-def count_coordinates(*columns: str) -> Expr:
+def count_coordinates(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[count_coordinates()][polars_st.GeoExprNameSpace.count_coordinates]</code>."""  # noqa: E501
     return geom(*columns).st.count_coordinates()
 
 
-def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> Expr:
+def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[coordinates(...)][polars_st.GeoExprNameSpace.coordinates]</code>."""  # noqa: E501
     return geom(*columns).st.coordinates(output_dimension)
 
 
-def count_geometries(*columns: str) -> Expr:
+def count_geometries(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[count_geometries()][polars_st.GeoExprNameSpace.count_geometries]</code>."""  # noqa: E501
     return geom(*columns).st.count_geometries()
 
@@ -173,7 +181,7 @@ def get_geometry(*columns: str, index: IntoIntegerExpr) -> GeoExpr:
     return geom(*columns).st.get_geometry(index)
 
 
-def count_points(*columns: str) -> Expr:
+def count_points(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[count_points()][polars_st.GeoExprNameSpace.count_points]</code>."""  # noqa: E501
     return geom(*columns).st.count_points()
 
@@ -183,7 +191,7 @@ def get_point(*columns: str, index: IntoIntegerExpr) -> GeoExpr:
     return geom(*columns).st.get_point(index)
 
 
-def count_interior_rings(*columns: str) -> Expr:
+def count_interior_rings(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[count_interior_rings()][polars_st.GeoExprNameSpace.count_interior_rings]</code>."""  # noqa: E501
     return geom(*columns).st.count_interior_rings()
 
@@ -198,17 +206,17 @@ def exterior_ring(*columns: str) -> GeoExpr:
     return geom(*columns).st.exterior_ring()
 
 
-def rings(*columns: str) -> Expr:
+def rings(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[rings()][polars_st.GeoExprNameSpace.rings]</code>."""  # noqa: E501
     return geom(*columns).st.rings()
 
 
-def parts(*columns: str) -> Expr:
+def parts(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[parts()][polars_st.GeoExprNameSpace.parts]</code>."""  # noqa: E501
     return geom(*columns).st.parts()
 
 
-def precision(*columns: str) -> Expr:
+def precision(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[precision()][polars_st.GeoExprNameSpace.precision]</code>."""  # noqa: E501
     return geom(*columns).st.precision()
 
@@ -222,7 +230,7 @@ def set_precision(
     return geom(*columns).st.set_precision(grid_size, mode)
 
 
-def srid(*columns: str) -> Expr:
+def srid(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[srid()][polars_st.GeoExprNameSpace.srid]</code>."""  # noqa: E501
     return geom(*columns).st.srid()
 
@@ -243,7 +251,7 @@ def to_wkt(
     trim: bool = True,
     output_dimension: Literal[2, 3, 4] = 3,
     old_3d: bool = False,
-) -> Expr:
+) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_wkt(...)][polars_st.GeoExprNameSpace.to_wkt]</code>."""  # noqa: E501
     return geom(*columns).st.to_wkt(rounding_precision, trim, output_dimension, old_3d)
 
@@ -254,7 +262,7 @@ def to_ewkt(
     trim: bool = True,
     output_dimension: Literal[2, 3, 4] = 3,
     old_3d: bool = False,
-) -> Expr:
+) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_ewkt(...)][polars_st.GeoExprNameSpace.to_ewkt]</code>."""  # noqa: E501
     return geom(*columns).st.to_ewkt(rounding_precision, trim, output_dimension, old_3d)
 
@@ -264,67 +272,67 @@ def to_wkb(
     output_dimension: Literal[2, 3, 4] = 3,
     byte_order: Literal[0, 1] | None = None,
     include_srid: bool = False,
-) -> Expr:
+) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_wkb(...)][polars_st.GeoExprNameSpace.to_wkb]</code>."""  # noqa: E501
     return geom(*columns).st.to_wkb(output_dimension, byte_order, include_srid)
 
 
-def to_geojson(*columns: str, indent: int | None = None) -> Expr:
+def to_geojson(*columns: str, indent: int | None = None) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_geojson(...)][polars_st.GeoExprNameSpace.to_geojson]</code>."""  # noqa: E501
     return geom(*columns).st.to_geojson(indent)
 
 
-def to_shapely(*columns: str) -> Expr:
+def to_shapely(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_shapely()][polars_st.GeoExprNameSpace.to_shapely]</code>."""  # noqa: E501
     return geom(*columns).st.to_shapely()
 
 
-def to_dict(*columns: str) -> Expr:
+def to_dict(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_dict()][polars_st.GeoExprNameSpace.to_dict]</code>."""  # noqa: E501
     return geom(*columns).st.to_dict()
 
 
-def has_z(*columns: str) -> Expr:
+def has_z(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[has_z()][polars_st.GeoExprNameSpace.has_z]</code>."""  # noqa: E501
     return geom(*columns).st.has_z()
 
 
-def has_m(*columns: str) -> Expr:
+def has_m(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[has_m()][polars_st.GeoExprNameSpace.has_m]</code>."""  # noqa: E501
     return geom(*columns).st.has_m()
 
 
-def is_ccw(*columns: str) -> Expr:
+def is_ccw(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_ccw()][polars_st.GeoExprNameSpace.is_ccw]</code>."""  # noqa: E501
     return geom(*columns).st.is_ccw()
 
 
-def is_closed(*columns: str) -> Expr:
+def is_closed(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_closed()][polars_st.GeoExprNameSpace.is_closed]</code>."""  # noqa: E501
     return geom(*columns).st.is_closed()
 
 
-def is_empty(*columns: str) -> Expr:
+def is_empty(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_empty()][polars_st.GeoExprNameSpace.is_empty]</code>."""  # noqa: E501
     return geom(*columns).st.is_empty()
 
 
-def is_ring(*columns: str) -> Expr:
+def is_ring(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_ring()][polars_st.GeoExprNameSpace.is_ring]</code>."""  # noqa: E501
     return geom(*columns).st.is_ring()
 
 
-def is_simple(*columns: str) -> Expr:
+def is_simple(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_simple()][polars_st.GeoExprNameSpace.is_simple]</code>."""  # noqa: E501
     return geom(*columns).st.is_simple()
 
 
-def is_valid(*columns: str) -> Expr:
+def is_valid(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_valid()][polars_st.GeoExprNameSpace.is_valid]</code>."""  # noqa: E501
     return geom(*columns).st.is_valid()
 
 
-def is_valid_reason(*columns: str) -> Expr:
+def is_valid_reason(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[is_valid_reason()][polars_st.GeoExprNameSpace.is_valid_reason]</code>."""  # noqa: E501
     return geom(*columns).st.is_valid_reason()
 
@@ -378,6 +386,11 @@ def offset_curve(
 def centroid(*columns: str) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[centroid()][polars_st.GeoExprNameSpace.centroid]</code>."""  # noqa: E501
     return geom(*columns).st.centroid()
+
+
+def center(*columns: str) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[center()][polars_st.GeoExprNameSpace.center]</code>."""  # noqa: E501
+    return geom(*columns).st.center()
 
 
 def clip_by_rect(
@@ -465,6 +478,41 @@ def minimum_rotated_rectangle(*columns: str) -> GeoExpr:
     return geom(*columns).st.minimum_rotated_rectangle()
 
 
+def affine_transform(*columns: str, matrix: IntoExprColumn | Sequence[float]) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[affine_transform(...)][polars_st.GeoExprNameSpace.affine_transform]</code>."""  # noqa: E501
+    return geom(*columns).st.affine_transform(matrix)
+
+
+def translate(
+    *columns: str,
+    x: IntoDecimalExpr = 0.0,
+    y: IntoDecimalExpr = 0.0,
+    z: IntoDecimalExpr = 0.0,
+) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[translate(...)][polars_st.GeoExprNameSpace.translate]</code>."""  # noqa: E501
+    return geom(*columns).st.translate(x, y, z)
+
+
+def rotate(
+    *columns: str,
+    angle: IntoDecimalExpr,
+    origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[rotate(...)][polars_st.GeoExprNameSpace.rotate]</code>."""  # noqa: E501
+    return geom(*columns).st.rotate(angle, origin)
+
+
+def scale(
+    *columns: str,
+    x: IntoDecimalExpr = 1.0,
+    y: IntoDecimalExpr = 1.0,
+    z: IntoDecimalExpr = 1.0,
+    origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[scale(...)][polars_st.GeoExprNameSpace.scale]</code>."""  # noqa: E501
+    return geom(*columns).st.scale(x, y, z, origin)
+
+
 def interpolate(
     *columns: str,
     distance: IntoDecimalExpr,
@@ -479,7 +527,7 @@ def line_merge(*columns: str, directed: bool = False) -> GeoExpr:
     return geom(*columns).st.line_merge(directed)
 
 
-def total_bounds(*columns: str) -> Expr:
+def total_bounds(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[total_bounds()][polars_st.GeoExprNameSpace.total_bounds]</code>."""  # noqa: E501
     return geom(*columns).st.total_bounds()
 

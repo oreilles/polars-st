@@ -59,8 +59,8 @@ class GeoLazyFrame(LazyFrame):
 
 @register_lazyframe_namespace("st")
 class GeoLazyFrameNameSpace:
-    def __init__(self, df: LazyFrame) -> None:
-        self.df = df
+    def __init__(self, lf: LazyFrame) -> None:
+        self._lf = lf
 
     def sjoin(
         self,
@@ -96,7 +96,7 @@ class GeoLazyFrameNameSpace:
 
         if how == "cross":
             msg = """Use of `how="cross" not supported on sjoin.`"""
-            self.df.join(
+            self._lf.join(
                 other=other,
                 on=on,
                 how=how,
@@ -131,7 +131,7 @@ class GeoLazyFrameNameSpace:
         sjoin_index = (
             pl.concat(
                 [
-                    self.df.select(_sjoin_geom_left=left_expr),
+                    self._lf.select(_sjoin_geom_left=left_expr),
                     other.select(_sjoin_geom_right=right_expr),
                 ],
                 how="horizontal",
@@ -153,7 +153,7 @@ class GeoLazyFrameNameSpace:
 
         return (
             sjoin_index.join(
-                self.df.with_row_index("_sjoin_index_left"),
+                self._lf.with_row_index("_sjoin_index_left"),
                 on="_sjoin_index_left",
                 how="full",
                 suffix=suffix,

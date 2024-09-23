@@ -55,7 +55,7 @@ where
 }
 
 #[inline]
-pub fn try_ternary_elementwise_values<T, U, V, G, F, K, E>(
+pub fn try_ternary_elementwise_values<T, U, G, V, F, K, E>(
     ca1: &ChunkedArray<T>,
     ca2: &ChunkedArray<U>,
     ca3: &ChunkedArray<G>,

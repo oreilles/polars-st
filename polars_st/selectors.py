@@ -33,11 +33,11 @@ def geom(name: str | Iterable[str] | None = None, *more_names: str) -> GeoExpr:
     Examples:
         Pass a single column name to represent that column:
 
-        >>> gdf = st.GeoSeries("geom", ["POINT(0 0)"]).to_frame()
-        >>> gdf.select(st.geom().st.to_wkt())
+        >>> gdf = st.GeoSeries("my_geom", ["POINT(0 0)"]).to_frame()
+        >>> gdf.select(st.geom("my_geom").st.to_wkt())
         shape: (1, 1)
         ┌─────────────┐
-        │ geom        │
+        │ my_geom     │
         │ ---         │
         │ str         │
         ╞═════════════╡

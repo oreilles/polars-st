@@ -134,7 +134,8 @@ fn srid(inputs: &[Series]) -> PolarsResult<Series> {
 fn set_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = inputs[0].binary()?;
-    let srid = inputs[1].i32()?;
+    let srid = inputs[1].cast(&DataType::Int32)?;
+    let srid = srid.i32()?;
     geo::set_srid(wkb, srid)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
@@ -957,6 +958,14 @@ fn centroid(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Binary)]
+fn center(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    geo::get_center(inputs[0].binary()?)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
 fn delaunay_triangles(
     inputs: &[Series],
     kwargs: kwargs::DelaunayTrianlesKwargs,
@@ -1094,6 +1103,28 @@ pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
     geo::minimum_rotated_rectangle(inputs[0].binary()?)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    let matrix = &inputs[1];
+    let matrix_size = match matrix.dtype() {
+        DataType::Array(.., 6) => Ok(6),
+        DataType::Array(.., 12) => Ok(12),
+        _ => Err(to_compute_err(
+            "matrix parameter should be an numeric array with shape (6 | 12)",
+        )),
+    }?;
+    let matrix = matrix.cast(&DataType::Array(DataType::Float64.into(), matrix_size))?;
+    match matrix_size {
+        6 => geo::affine_transform_2d(wkb, matrix.array()?),
+        12 => geo::affine_transform_3d(wkb, matrix.array()?),
+        _ => unreachable!(),
+    }
+    .map_err(to_compute_err)
+    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]

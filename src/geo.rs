@@ -17,6 +17,7 @@ use geos::{
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
 use proj::Proj;
+use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 fn ewkb_writer() -> GResult<WKBWriter> {
     let mut writer = WKBWriter::new()?;
@@ -907,6 +908,21 @@ pub fn get_centroid(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     })
 }
 
+pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return Geometry::create_empty_point()?.to_ewkb();
+        };
+        let x_min = geom.get_x_min()?;
+        let x_max = geom.get_x_max()?;
+        let y_min = geom.get_y_min()?;
+        let y_max = geom.get_y_max()?;
+        let coords = CoordSeq::new_from_vec(&[&[(x_min + x_max) / 2.0, (y_min + y_max) / 2.0]])?;
+        Geometry::create_point(coords)?.to_ewkb()
+    })
+}
+
 pub fn clip_by_rect(wkb: &BinaryChunked, params: &ClipByRectKwargs) -> GResult<BinaryChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         Geometry::new_from_wkb(wkb)?
@@ -1021,6 +1037,82 @@ pub fn minimum_rotated_rectangle(wkb: &BinaryChunked) -> GResult<BinaryChunked> 
         Geometry::new_from_wkb(wkb)?
             .minimum_rotated_rectangle()?
             .to_ewkb()
+    })
+}
+
+fn apply_affine_transform(
+    geom: &Geometry,
+    m11: f64,
+    m12: f64,
+    m13: f64,
+    m21: f64,
+    m22: f64,
+    m23: f64,
+    m31: f64,
+    m32: f64,
+    m33: f64,
+    tx: f64,
+    ty: f64,
+    tz: f64,
+) -> GResult<Geometry> {
+    let dims: i32 = geom.get_coordinate_dimension()?.into();
+    if dims < 3 {
+        geom.transform_xy(|x, y| {
+            *x = *x * m11 + *y * m12 + tx;
+            *y = *x * m21 + *y * m22 + ty;
+            1
+        })
+    } else {
+        geom.transform_xyz(|x, y, z| {
+            *x = *x * m11 + *y * m12 + m13 * *z + tx;
+            *y = *x * m21 + *y * m22 + m23 * *z + ty;
+            *z = *x * m31 + *y * m32 + m33 * *z + tz;
+            1
+        })
+    }
+}
+
+pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
+        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        apply_affine_transform(
+            &Geometry::new_from_wkb(wkb)?,
+            unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
+            0.0,
+            unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
+            0.0,
+        )?
+        .to_ewkb()
+    })
+}
+
+pub fn affine_transform_3d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
+        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        apply_affine_transform(
+            &Geometry::new_from_wkb(wkb)?,
+            unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(6) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(7) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(8) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(9) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(10) }.unwrap_or(f64::NAN),
+            unsafe { matrix.get_unchecked(11) }.unwrap_or(f64::NAN),
+        )?
+        .to_ewkb()
     })
 }
 
@@ -1168,7 +1260,7 @@ pub fn sjoin(
     Ok((left_index_builder.finish(), right_index_builder.finish()))
 }
 
-fn apply_transformation(geometry: &Geometry, transformation: &Proj) -> GResult<Geometry> {
+fn apply_proj_transformation(geometry: &Geometry, transformation: &Proj) -> GResult<Geometry> {
     geometry.transform_xyz(|x, y, z| match transformation.convert((*x, *y, *z)) {
         Ok(projected) => {
             *x = projected.0;
@@ -1190,7 +1282,7 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int32Chunked) -> GResult<BinaryChunke
                 let err = format!("Couldn't create transformation from {from_crs} to {to_crs}");
                 geos::Error::GenericError(err)
             })?;
-        apply_transformation(&geom, &transformation)?
+        apply_proj_transformation(&geom, &transformation)?
             .to_ewkb()
             .map_err(Into::into)
     })
@@ -1205,7 +1297,7 @@ pub fn to_srid_known(wkb: &BinaryChunked, from_srid: i32, to_srid: i32) -> GResu
     })?;
     wkb.try_apply_nonnull_values_generic(|wkb| {
         Geometry::new_from_wkb(wkb)
-            .and_then(|geom| apply_transformation(&geom, &transformation))?
+            .and_then(|geom| apply_proj_transformation(&geom, &transformation))?
             .to_ewkb()
     })
     .map_err(Into::into)
