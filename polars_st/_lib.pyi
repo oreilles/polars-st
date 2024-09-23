@@ -1,3 +1,10 @@
+from collections.abc import Callable
+
+import polars as pl
+
 __version__: str
 
-def get_crs_auth_code(definition: str) -> tuple[str, str]: ...
+def apply_coordinates(
+    series: pl.Series,
+    transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+) -> tuple[str, str]: ...

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -13,6 +13,7 @@ from polars.api import register_expr_namespace
 from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
 
+from polars_st import _lib
 from polars_st.typing import IntoExprColumn
 
 if TYPE_CHECKING:
@@ -223,13 +224,14 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
-    def set_coordinates(self, coords: IntoExprColumn) -> pl.Expr:
+    def apply_coordinates(
+        self,
+        transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+    ) -> pl.GeoExpr:
         """Replace the coordinates of each geometry with new ones."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="set_coordinates",
-            args=[self._expr, coords],
-            is_elementwise=True,
+        return self._expr.map_batches(
+            lambda s: _lib.apply_coordinates(s, transform),
+            return_dtype=pl.Binary,
         )
 
     def count_geometries(self) -> pl.Expr:
@@ -295,11 +297,11 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast(GeoExpr, e))
 
-    def rings(self) -> pl.Expr:
-        """Return the list of rings for Polygon geometries."""
+    def interior_rings(self) -> pl.Expr:
+        """Return the list of interior rings for Polygon geometries."""
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
-            function_name="rings",
+            function_name="interior_rings",
             args=self._expr,
             is_elementwise=True,
         )
@@ -396,19 +398,6 @@ class GeoExprNameSpace:
             args=[self._expr, srid],
             is_elementwise=True,
         ).pipe(lambda s: cast(GeoExpr, s))
-
-    def to_srid(self, srid: IntoIntegerExpr) -> GeoExpr:
-        """Transform the coordinates of each geometry into a new CRS.
-
-        Args:
-            srid: The geometry new SRID
-        """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_srid",
-            args=[self._expr, srid],
-            is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
 
     # Serialization
 

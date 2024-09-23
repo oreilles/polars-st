@@ -16,8 +16,7 @@ use geos::{
 };
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
-use proj::Proj;
-use pyo3_polars::export::polars_core::utils::arrow::array::{FixedSizeListArray, Float64Array};
+use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 fn ewkb_writer() -> GResult<WKBWriter> {
     let mut writer = WKBWriter::new()?;
@@ -158,6 +157,25 @@ pub fn get_exterior_ring(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     })
 }
 
+pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
+    fn get_geometry_rings(wkb: &[u8]) -> GResult<Series> {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.geometry_type()? != Polygon {
+            return Ok(Series::new_empty("", &DataType::Binary));
+        }
+        let num_rings = geom.get_num_interior_rings()?;
+        let mut rings = BinaryChunkedBuilder::new("", num_rings + 1);
+        for n in 0..num_rings {
+            let ring = geom.get_interior_ring_n(n as u32)?;
+            rings.append_value(ring.to_ewkb()?);
+        }
+        Ok(rings.finish().into_series())
+    }
+    wkb.into_iter()
+        .map(|wkb| wkb.map(get_geometry_rings).transpose())
+        .collect()
+}
+
 pub fn get_num_points(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
@@ -241,48 +259,28 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
         .collect()
 }
 
-pub fn set_coordinates(
-    wkb: &BinaryChunked,
-    coords: &ListChunked,
-    coords_dims: usize,
-) -> GResult<BinaryChunked> {
-    broadcast_try_binary_elementwise_values(wkb, coords, |wkb, coords| {
+pub fn apply_coordinates<F>(wkb: &BinaryChunked, lambda: F) -> GResult<BinaryChunked>
+where
+    F: Fn(f64, f64, Option<f64>) -> Vec<Option<f64>>,
+{
+    wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.get_num_coordinates()? != coords.len() {
-            let msg = "Coordinates should be the same length as input geometry";
-            return Err(geos::Error::GenericError(msg.into()));
-        }
-        let coords = coords
-            .as_any()
-            .downcast_ref::<FixedSizeListArray>()
-            .unwrap();
-        let mut i = 0;
-        match coords_dims {
-            2 => geom.transform_xy(|x, y| {
-                match unsafe { coords.get_unchecked(i).as_ref() } {
-                    Some(coord) => {
-                        *x = unsafe { coord.get_unchecked(0) }.try_extract().unwrap();
-                        *y = unsafe { coord.get_unchecked(1) }.try_extract().unwrap();
-                    }
-                    None => (),
-                }
-                i += 1;
-                1
-            })?,
-            3 => geom.transform_xyz(|x, y, z| {
-                match unsafe { coords.get_unchecked(i).as_ref() } {
-                    Some(coord) => {
-                        *x = unsafe { coord.get_unchecked(0) }.try_extract().unwrap();
-                        *y = unsafe { coord.get_unchecked(1) }.try_extract().unwrap();
-                        *z = unsafe { coord.get_unchecked(2) }.try_extract().unwrap();
-                    }
-                    None => (),
-                }
-                i += 1;
-                1
-            })?,
-            _ => unreachable!(),
-        }
+        geom.transform_xyz(|x, y, z| {
+            let transformed = lambda(*x, *y, if f64::is_nan(*z) { None } else { Some(*z) });
+            *x = transformed
+                .get(0)
+                .unwrap_or(&Some(f64::NAN))
+                .unwrap_or(f64::NAN);
+            *y = transformed
+                .get(1)
+                .unwrap_or(&Some(f64::NAN))
+                .unwrap_or(f64::NAN);
+            *z = transformed
+                .get(2)
+                .unwrap_or(&Some(f64::NAN))
+                .unwrap_or(f64::NAN);
+            1
+        })?
         .to_ewkb()
     })
 }
@@ -341,26 +339,6 @@ pub fn get_parts(wkb: &BinaryChunked) -> GResult<ListChunked> {
     }
     wkb.into_iter()
         .map(|wkb| wkb.map(get_geometry_parts).transpose())
-        .collect()
-}
-
-pub fn get_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    fn get_geometry_rings(wkb: &[u8]) -> GResult<Series> {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? != Polygon {
-            return Ok(Series::new_empty("", &DataType::Binary));
-        }
-        let num_rings = geom.get_num_interior_rings()?;
-        let mut rings = BinaryChunkedBuilder::new("", num_rings + 1);
-        rings.append_value(geom.get_exterior_ring()?.to_ewkb()?);
-        for n in 0..num_rings {
-            let ring = geom.get_interior_ring_n(n as u32)?;
-            rings.append_value(ring.to_ewkb()?);
-        }
-        Ok(rings.finish().into_series())
-    }
-    wkb.into_iter()
-        .map(|wkb| wkb.map(get_geometry_rings).transpose())
         .collect()
 }
 
@@ -1305,47 +1283,4 @@ pub fn sjoin(
         });
     }
     Ok((left_index_builder.finish(), right_index_builder.finish()))
-}
-
-fn apply_proj_transformation(geometry: &Geometry, transformation: &Proj) -> GResult<Geometry> {
-    geometry.transform_xyz(|x, y, z| match transformation.convert((*x, *y, *z)) {
-        Ok(projected) => {
-            *x = projected.0;
-            *y = projected.1;
-            *z = projected.2;
-            1
-        }
-        Err(_) => 0,
-    })
-}
-
-pub fn to_srid(wkb: &BinaryChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
-    broadcast_try_binary_elementwise_values(wkb, srid, |wkb, srid| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        let from_crs = format!("EPSG:{}", geom.get_srid()?);
-        let to_crs = format!("EPSG:{srid}");
-        let transformation =
-            Proj::try_from((from_crs.as_str(), to_crs.as_str())).map_err(|_| {
-                let err = format!("Couldn't create transformation from {from_crs} to {to_crs}");
-                geos::Error::GenericError(err)
-            })?;
-        apply_proj_transformation(&geom, &transformation)?
-            .to_ewkb()
-            .map_err(Into::into)
-    })
-}
-
-pub fn to_srid_known(wkb: &BinaryChunked, from_srid: i32, to_srid: i32) -> GResult<BinaryChunked> {
-    let from_crs = format!("EPSG:{from_srid}");
-    let to_crs = format!("EPSG:{to_srid}");
-    let transformation = Proj::try_from((from_crs.as_str(), to_crs.as_str())).map_err(|_| {
-        let err = format!("Couldn't create transformation from {from_crs} to {to_crs}");
-        geos::Error::GenericError(err)
-    })?;
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        Geometry::new_from_wkb(wkb)
-            .and_then(|geom| apply_proj_transformation(&geom, &transformation))?
-            .to_ewkb()
-    })
-    .map_err(Into::into)
 }

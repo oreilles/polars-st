@@ -1,6 +1,7 @@
 #![feature(downcast_unchecked)]
 #![feature(iterator_try_reduce)]
 #![deny(clippy::pedantic)]
+#![allow(clippy::get_first)]
 #![allow(clippy::match_bool)]
 #![allow(clippy::unused_unit)]
 #![allow(clippy::enum_glob_use)]
@@ -14,7 +15,6 @@
 use pyo3::prelude::*;
 
 mod arity;
-mod crs;
 mod expressions;
 mod geo;
 mod kwargs;
@@ -23,6 +23,6 @@ mod wkb;
 #[pymodule]
 fn _lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add_function(wrap_pyfunction!(crs::get_crs_auth_code, m)?)?;
+    m.add_function(wrap_pyfunction!(expressions::apply_coordinates, m)?)?;
     Ok(())
 }

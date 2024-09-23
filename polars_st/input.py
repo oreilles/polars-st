@@ -8,7 +8,6 @@ from polars import DataFrame
 from polars.dependencies import pandas as pd
 from pyogrio import read_arrow
 
-from polars_st._lib import get_crs_auth_code
 from polars_st.casting import st
 from polars_st.config import Config
 from polars_st.selectors import geom
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
 
     import geopandas as gpd
     from polars._typing import SchemaDict
+    from pyproj import CRS
 
     from polars_st.geodataframe import GeoDataFrame
     from polars_st.geoseries import GeoSeries
@@ -30,17 +30,17 @@ __all__ = [
 ]
 
 
-def get_crs_srid_or_warn(crs: str) -> int | None:
-    try:
-        _auth, code = get_crs_auth_code(crs)
+def get_crs_srid_or_warn(crs: CRS) -> int | None:
+    if authority := crs.to_authority():
+        _auth, code = authority
         if code.isdigit():
             return int(code, base=10)
         warning.warn(
-            f"Found a matching crs for {crs} but couldn't"
+            f"Found an authority for {crs} but couldn't"
             f'convert code "{code}" to an integer srid',
         )
-    except ValueError:
-        warning.warn(f"Couldn't find a matching crs for {crs}.")
+    else:
+        warning.warn(f'Couldn\'t find an authority for crs "{crs}".')
     return None
 
 
@@ -153,10 +153,12 @@ def read_file(
         sql_dialect=sql_dialect,
         return_fids=return_fids,
     )
+    from pyproj import CRS
+
     geometry_name = metadata["geometry_name"] or "wkb_geometry"
     res = cast(DataFrame, pl.from_arrow(table))
     if geometry_name in table.column_names:
-        if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(crs)):
+        if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(CRS(crs))):
             res = res.with_columns(geom(geometry_name).st.set_srid(srid))
         if not metadata["geometry_name"]:
             res = res.rename({"wkb_geometry": Config.get_geometry_column()})
@@ -220,13 +222,13 @@ def from_geopandas(
             nan_to_null=nan_to_null,
             include_index=include_index,
         )
-        if (crs := data.crs) and (srid := get_crs_srid_or_warn(str(crs))):
+        if (crs := data.crs) and (srid := get_crs_srid_or_warn(crs)):
             res = st(res).set_srid(srid)
         return st(res)._series  # noqa: SLF001
 
     res = cast(DataFrame, res).with_columns(
         geom(str(col)).st.set_srid(srid)
         for col in data.dtypes.index[data.dtypes == "geometry"]
-        if (crs := data.get(col).crs) and (srid := get_crs_srid_or_warn(str(crs)))
+        if (crs := data.get(col).crs) and (srid := get_crs_srid_or_warn(crs))
     )
     return st(res)._df  # noqa: SLF001

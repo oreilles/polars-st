@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal
 
 from polars_st.selectors import geom
@@ -32,6 +33,7 @@ __all__ = [
     "m",
     "count_coordinates",
     "coordinates",
+    "apply_coordinates",
     "count_geometries",
     "get_geometry",
     "count_points",
@@ -39,13 +41,12 @@ __all__ = [
     "count_interior_rings",
     "get_interior_ring",
     "exterior_ring",
-    "rings",
+    "interior_rings",
     "parts",
     "precision",
     "set_precision",
     "srid",
     "set_srid",
-    "to_srid",
     "to_wkt",
     "to_ewkt",
     "to_wkb",
@@ -171,9 +172,12 @@ def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
     return geom(*columns).st.coordinates(output_dimension)
 
 
-def set_coordinates(*columns: str, coords: IntoExprColumn) -> pl.Expr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[set_coordinates(...)][polars_st.GeoExprNameSpace.set_coordinates]</code>."""  # noqa: E501
-    return geom(*columns).st.set_coordinates(coords)
+def apply_coordinates(
+    *columns: str,
+    transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+) -> pl.GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[apply_coordinates(...)][polars_st.GeoExprNameSpace.apply_coordinates]</code>."""  # noqa: E501
+    return geom(*columns).st.apply_coordinates(transform)
 
 
 def count_geometries(*columns: str) -> pl.Expr:
@@ -211,9 +215,9 @@ def exterior_ring(*columns: str) -> GeoExpr:
     return geom(*columns).st.exterior_ring()
 
 
-def rings(*columns: str) -> pl.Expr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[rings()][polars_st.GeoExprNameSpace.rings]</code>."""  # noqa: E501
-    return geom(*columns).st.rings()
+def interior_rings(*columns: str) -> pl.Expr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[interior_rings()][polars_st.GeoExprNameSpace.interior_rings]</code>."""  # noqa: E501
+    return geom(*columns).st.interior_rings()
 
 
 def parts(*columns: str) -> pl.Expr:
@@ -243,11 +247,6 @@ def srid(*columns: str) -> pl.Expr:
 def set_srid(*columns: str, srid: IntoIntegerExpr) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[set_srid(...)][polars_st.GeoExprNameSpace.set_srid]</code>."""  # noqa: E501
     return geom(*columns).st.set_srid(srid)
-
-
-def to_srid(*columns: str, srid: IntoIntegerExpr) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[to_srid(...)][polars_st.GeoExprNameSpace.to_srid]</code>."""  # noqa: E501
-    return geom(*columns).st.to_srid(srid)
 
 
 def to_wkt(

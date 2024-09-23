@@ -96,7 +96,6 @@ functions = [
     Function(Geo.coordinate_dimension, pl.UInt32()),
     Function(Geo.srid, pl.Int32()),
     Function(Geo.set_srid, pl.Binary(), {"srid": 3857}),
-    Function(Geo.to_srid, pl.Binary(), {"srid": 4326}),
     Function(Geo.x, pl.Float64()),
     Function(Geo.y, pl.Float64()),
     Function(Geo.z, pl.Float64()),
@@ -109,7 +108,7 @@ functions = [
     Function(Geo.get_interior_ring, pl.Binary(), {"index": 0}),
     Function(Geo.get_geometry, pl.Binary(), {"index": 0}),
     Function(Geo.parts, pl.List(pl.Binary())),
-    Function(Geo.rings, pl.List(pl.Binary())),
+    Function(Geo.interior_rings, pl.List(pl.Binary())),
     Function(Geo.precision, pl.Float64()),
     Function(Geo.set_precision, pl.Binary(), {"grid_size": 1.0, "mode": "valid_output"}),
     Function(Geo.set_precision, pl.Binary(), {"grid_size": 1.0, "mode": "no_topo"}),
@@ -389,9 +388,6 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         with pytest.raises(pl.exceptions.ComputeError, match=match):
             frame.select(func.call(st.geom().st, **func.args))
         return
-
-    if func.call in {Geo.to_srid}:
-        frame = frame.select(st.geom().st.set_srid(4326))
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="invalid value encountered in voronoi_polygons")

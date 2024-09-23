@@ -33,7 +33,6 @@ The following functions can be used that way:
             - set_precision
             - srid
             - set_srid
-            - to_srid
             - to_wkt
             - to_ewkt
             - to_wkb

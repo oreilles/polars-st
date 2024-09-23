@@ -4,11 +4,8 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
-use polars_plan::{
-    plans::{Literal, NULL},
-    prelude::{ApplyOptions, FunctionFlags, FunctionOptions},
-};
-use pyo3_polars::derive::polars_expr;
+use pyo3::prelude::*;
+use pyo3_polars::{derive::polars_expr, PySeries};
 
 fn first_field_name(fields: &[Field]) -> PolarsResult<&SmartString> {
     fields
@@ -122,27 +119,6 @@ fn coordinates(inputs: &[Series], kwargs: kwargs::GetCoordinatesKwargs) -> Polar
         ))
 }
 
-#[polars_expr(output_type=Binary)]
-fn set_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<2>(inputs)?;
-    let wkb = inputs[0].binary()?;
-    let coords = &inputs[1];
-    let coords_dims = match coords.dtype() {
-        DataType::List(dt) if matches!(**dt, DataType::Array(.., 2)) => Ok(2),
-        DataType::List(dt) if matches!(**dt, DataType::Array(.., 3)) => Ok(3),
-        _ => Err(to_compute_err(format!(
-            "coordinates parameter should be List(Array(Numeric, 2 | 3))"
-        ))),
-    }?;
-    let coords = coords.cast(&DataType::List(
-        DataType::Array(DataType::Float64.into(), coords_dims).into(),
-    ))?;
-    let coords = coords.list()?;
-    geo::set_coordinates(wkb, coords, coords_dims)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
-}
-
 #[polars_expr(output_type=Int32)]
 fn srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
@@ -200,6 +176,17 @@ fn exterior_ring(inputs: &[Series]) -> PolarsResult<Series> {
     geo::get_exterior_ring(inputs[0].binary()?)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type_func=output_type_geometry_list)]
+fn interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    geo::get_interior_rings(wkb)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)?
+        .with_name(wkb.name())
+        .cast(&DataType::List(DataType::Binary.into()))
 }
 
 #[polars_expr(output_type=UInt32)]
@@ -272,17 +259,6 @@ fn parts(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = inputs[0].binary()?;
     geo::get_parts(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)?
-        .with_name(wkb.name())
-        .cast(&DataType::List(DataType::Binary.into()))
-}
-
-#[polars_expr(output_type_func=output_type_geometry_list)]
-fn rings(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let wkb = inputs[0].binary()?;
-    geo::get_rings(wkb)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)?
         .with_name(wkb.name())
@@ -1210,69 +1186,25 @@ pub fn sjoin(inputs: &[Series], kwargs: kwargs::SpatialJoinKwargs) -> PolarsResu
         })?
 }
 
-#[polars_expr(output_type=Binary)]
-pub fn to_srid(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<2>(inputs)?;
-    let wkb = inputs[0].binary()?;
-    let srid = inputs[1].i32()?;
-    match srid.len() {
-        1 => match srid.get(0) {
-            Some(srid) => to_unique_srid(inputs, srid),
-            None => Ok(BinaryChunked::full_null_like(wkb, wkb.len()).into_series()),
-        },
-        _ => geo::to_srid(wkb, srid)
+#[pyfunction]
+pub fn apply_coordinates(py: Python, pyseries: PySeries, func: PyObject) -> PyResult<PySeries> {
+    fn apply_coordinates<F>(inputs: &[Series], func: F) -> PolarsResult<Series>
+    where
+        F: Fn(f64, f64, Option<f64>) -> Vec<Option<f64>>,
+    {
+        let wkb = inputs[0].binary()?;
+        geo::apply_coordinates(wkb, func)
             .map_err(to_compute_err)
-            .map(IntoSeries::into_series),
-    }
-}
-
-fn to_unique_srid(inputs: &[Series; 2], to_srid: i32) -> PolarsResult<Series> {
-    let wkb = inputs[0].binary()?;
-
-    if wkb.len() == wkb.null_count() {
-        return Ok(Series::full_null(wkb.name(), wkb.len(), wkb.dtype()));
+            .map(IntoSeries::into_series)
     }
 
-    let srids = geo::get_srid(wkb).map_err(to_compute_err)?;
-    let unique_srids = srids.unique()?.drop_nulls();
+    let res = apply_coordinates(&[pyseries.0], |x, y, z| {
+        func.call1(py, (x, y, z))
+            .unwrap()
+            .extract(py)
+            .expect("Function didn't return tuple")
+    })
+    .expect("failed to apply transform");
 
-    if unique_srids.len() == 1 {
-        return geo::to_srid_known(wkb, unique_srids.get(0).unwrap(), to_srid)
-            .map_err(to_compute_err)
-            .map(IntoSeries::into_series);
-    }
-
-    let chained_then = unique_srids.into_iter().flatten().fold(
-        // Must repeat this twice to get left ChainedThen expression
-        when(false).then(NULL.lit()).when(false).then(NULL.lit()),
-        |chain, srid| {
-            let function = move |s: &mut [Series]| {
-                geo::to_srid_known(s[0].binary()?, srid, to_srid)
-                    .map_err(to_compute_err)
-                    .map(IntoSeries::into_series)
-                    .map(Some)
-            };
-            chain
-                .when(col("srid").eq(srid))
-                .then(Expr::AnonymousFunction {
-                    input: vec![col("wkb")],
-                    function: SpecialEq::new(Arc::new(function)),
-                    output_type: GetOutput::from_type(DataType::Binary),
-                    options: FunctionOptions {
-                        collect_groups: ApplyOptions::ElementWise,
-                        fmt_str: "transform_xy",
-                        flags: FunctionFlags::default() | FunctionFlags::OPTIONAL_RE_ENTRANT,
-                        ..Default::default()
-                    },
-                })
-        },
-    );
-
-    let res = df! {"wkb" => &inputs[0], "srid" => srids }?
-        .lazy()
-        .select([chained_then.otherwise(NULL.lit())])
-        .collect()?;
-
-    let res = &res.get_columns()[0];
-    Ok(res.to_owned())
+    Ok(PySeries(res))
 }

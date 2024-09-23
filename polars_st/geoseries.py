@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Literal, ParamSpec, Union, cast
 
@@ -200,10 +201,6 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def set_coordinates(self, coords: IntoExprColumn) -> pl.GeoSeries:
-        """See [`GeoExprNameSpace.set_coordinates`][polars_st.GeoExprNameSpace.set_coordinates]."""
-
-    @dispatch
     def area(self) -> pl.Series:
         """See [`GeoExprNameSpace.area`][polars_st.GeoExprNameSpace.area]."""
         ...
@@ -254,6 +251,14 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def apply_coordinates(
+        self,
+        transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+    ) -> pl.GeoSeries:
+        """See [`GeoExprNameSpace.apply_coordinates`][polars_st.GeoExprNameSpace.apply_coordinates]."""
+        ...
+
+    @dispatch
     def count_geometries(self) -> pl.Series:
         """See [`GeoExprNameSpace.count_geometries`][polars_st.GeoExprNameSpace.count_geometries]."""  # noqa: E501
         ...
@@ -289,8 +294,8 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def rings(self) -> pl.Series:
-        """See [`GeoExprNameSpace.rings`][polars_st.GeoExprNameSpace.rings]."""
+    def interior_rings(self) -> pl.Series:
+        """See [`GeoExprNameSpace.interior_rings`][polars_st.GeoExprNameSpace.interior_rings]."""
         ...
 
     @dispatch
@@ -345,11 +350,6 @@ class GeoSeriesNameSpace:
     @dispatch
     def set_srid(self, srid: IntoIntegerExpr) -> GeoSeries:
         """See [`GeoExprNameSpace.set_srid`][polars_st.GeoExprNameSpace.set_srid]."""
-        ...
-
-    @dispatch
-    def to_srid(self, srid: IntoIntegerExpr) -> GeoSeries:
-        """See [`GeoExprNameSpace.to_srid`][polars_st.GeoExprNameSpace.to_srid]."""
         ...
 
     # Serialization

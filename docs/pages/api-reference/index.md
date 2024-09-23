@@ -60,7 +60,6 @@ hide:
 | **Projection operations** | | |
 | `srid` | Return the SRID of each geometry. | [`root`][polars_st.srid], [`Expr`][polars_st.GeoExprNameSpace.srid], [`Series`][polars_st.GeoSeriesNameSpace.srid] |
 | `set_srid` | Set the SRID of each geometry to a given value. | [`root`][polars_st.set_srid], [`Expr`][polars_st.GeoExprNameSpace.set_srid], [`Series`][polars_st.GeoSeriesNameSpace.set_srid] |
-| `to_srid` | Transform the coordinates of each into a new CRS. | [`root`][polars_st.to_srid], [`Expr`][polars_st.GeoExprNameSpace.to_srid], [`Series`][polars_st.GeoSeriesNameSpace.to_srid] |
 | **Unary predicates** | | |
 | `has_z` | Return `True` for geometries that has `z` coordinate values. | [`root`][polars_st.has_z], [`Expr`][polars_st.GeoExprNameSpace.has_z], [`Series`][polars_st.GeoSeriesNameSpace.has_z] |
 | `has_m` | Return `True` for geometries that has `m` coordinate values. | [`root`][polars_st.has_m], [`Expr`][polars_st.GeoExprNameSpace.has_m], [`Series`][polars_st.GeoSeriesNameSpace.has_m] |
