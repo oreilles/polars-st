@@ -171,6 +171,11 @@ def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
     return geom(*columns).st.coordinates(output_dimension)
 
 
+def set_coordinates(*columns: str, coords: IntoExprColumn) -> pl.Expr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[set_coordinates(...)][polars_st.GeoExprNameSpace.set_coordinates]</code>."""  # noqa: E501
+    return geom(*columns).st.set_coordinates(coords)
+
+
 def count_geometries(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[count_geometries()][polars_st.GeoExprNameSpace.count_geometries]</code>."""  # noqa: E501
     return geom(*columns).st.count_geometries()

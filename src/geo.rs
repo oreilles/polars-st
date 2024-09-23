@@ -17,7 +17,7 @@ use geos::{
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
 use proj::Proj;
-use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
+use pyo3_polars::export::polars_core::utils::arrow::array::{FixedSizeListArray, Float64Array};
 
 fn ewkb_writer() -> GResult<WKBWriter> {
     let mut writer = WKBWriter::new()?;
@@ -239,6 +239,52 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
         .iter()
         .map(|wkb| wkb.map(|wkb| get_coordinates(wkb, dimension)).transpose())
         .collect()
+}
+
+pub fn set_coordinates(
+    wkb: &BinaryChunked,
+    coords: &ListChunked,
+    coords_dims: usize,
+) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, coords, |wkb, coords| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.get_num_coordinates()? != coords.len() {
+            let msg = "Coordinates should be the same length as input geometry";
+            return Err(geos::Error::GenericError(msg.into()));
+        }
+        let coords = coords
+            .as_any()
+            .downcast_ref::<FixedSizeListArray>()
+            .unwrap();
+        let mut i = 0;
+        match coords_dims {
+            2 => geom.transform_xy(|x, y| {
+                match unsafe { coords.get_unchecked(i).as_ref() } {
+                    Some(coord) => {
+                        *x = unsafe { coord.get_unchecked(0) }.try_extract().unwrap();
+                        *y = unsafe { coord.get_unchecked(1) }.try_extract().unwrap();
+                    }
+                    None => (),
+                }
+                i += 1;
+                1
+            })?,
+            3 => geom.transform_xyz(|x, y, z| {
+                match unsafe { coords.get_unchecked(i).as_ref() } {
+                    Some(coord) => {
+                        *x = unsafe { coord.get_unchecked(0) }.try_extract().unwrap();
+                        *y = unsafe { coord.get_unchecked(1) }.try_extract().unwrap();
+                        *z = unsafe { coord.get_unchecked(2) }.try_extract().unwrap();
+                    }
+                    None => (),
+                }
+                i += 1;
+                1
+            })?,
+            _ => unreachable!(),
+        }
+        .to_ewkb()
+    })
 }
 
 pub fn get_point_n(wkb: &BinaryChunked, index: &UInt32Chunked) -> GResult<BinaryChunked> {

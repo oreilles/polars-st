@@ -200,6 +200,10 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def set_coordinates(self, coords: IntoExprColumn) -> pl.GeoSeries:
+        """See [`GeoExprNameSpace.set_coordinates`][polars_st.GeoExprNameSpace.set_coordinates]."""
+
+    @dispatch
     def area(self) -> pl.Series:
         """See [`GeoExprNameSpace.area`][polars_st.GeoExprNameSpace.area]."""
         ...

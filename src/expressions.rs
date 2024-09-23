@@ -122,6 +122,27 @@ fn coordinates(inputs: &[Series], kwargs: kwargs::GetCoordinatesKwargs) -> Polar
         ))
 }
 
+#[polars_expr(output_type=Binary)]
+fn set_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    let coords = &inputs[1];
+    let coords_dims = match coords.dtype() {
+        DataType::List(dt) if matches!(**dt, DataType::Array(.., 2)) => Ok(2),
+        DataType::List(dt) if matches!(**dt, DataType::Array(.., 3)) => Ok(3),
+        _ => Err(to_compute_err(format!(
+            "coordinates parameter should be List(Array(Numeric, 2 | 3))"
+        ))),
+    }?;
+    let coords = coords.cast(&DataType::List(
+        DataType::Array(DataType::Float64.into(), coords_dims).into(),
+    ))?;
+    let coords = coords.list()?;
+    geo::set_coordinates(wkb, coords, coords_dims)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
 #[polars_expr(output_type=Int32)]
 fn srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;

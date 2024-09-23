@@ -223,6 +223,15 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    def set_coordinates(self, coords: IntoExprColumn) -> pl.Expr:
+        """Replace the coordinates of each geometry with new ones."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="set_coordinates",
+            args=[self._expr, coords],
+            is_elementwise=True,
+        )
+
     def count_geometries(self) -> pl.Expr:
         """Return the number of parts in multipart geometries."""
         return register_plugin_function(
