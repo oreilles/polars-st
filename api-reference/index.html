@@ -407,6 +407,8 @@
       
         
       
+        
+      
     
     
       
@@ -631,6 +633,27 @@
   
   <span class="md-ellipsis">
     Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="typing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Typing
   </span>
   
 
@@ -911,9 +934,9 @@
 <td><a class="autorefs autorefs-internal" href="sugar/#polars_st.exterior_ring"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.exterior_ring"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.exterior_ring"><code>Series</code></a></td>
 </tr>
 <tr>
-<td><code>rings</code></td>
-<td>Return a list of rings for Polygon geometries.</td>
-<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.rings"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.rings"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.rings"><code>Series</code></a></td>
+<td><code>interior_rings</code></td>
+<td>Return the list of interior rings for Polygon geometries.</td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.interior_rings"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.interior_rings"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.interior_rings"><code>Series</code></a></td>
 </tr>
 <tr>
 <td><code>parts</code></td>
@@ -961,9 +984,9 @@
 <td><a class="autorefs autorefs-internal" href="sugar/#polars_st.set_srid"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.set_srid"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.set_srid"><code>Series</code></a></td>
 </tr>
 <tr>
-<td><code>to_srid</code></td>
-<td>Transform the coordinates of each into a new CRS.</td>
-<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.to_srid"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.to_srid"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.to_srid"><code>Series</code></a></td>
+<td><code>to_crs</code></td>
+<td>Transform the coordinates of each geometry into a new CRS.</td>
+<td><a class="autorefs autorefs-internal" href="sugar/#polars_st.to_crs"><code>root</code></a>, <a class="autorefs autorefs-internal" href="geoexpr/#polars_st.GeoExprNameSpace.to_crs"><code>Expr</code></a>, <a class="autorefs autorefs-internal" href="geoseries/#polars_st.GeoSeriesNameSpace.to_crs"><code>Series</code></a></td>
 </tr>
 <tr>
 <td><strong>Unary predicates</strong></td>
