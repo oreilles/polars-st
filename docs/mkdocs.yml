@@ -21,6 +21,7 @@ nav:
     - GeoDataFrame: api-reference/geodataframe.md
     - GeoLazyFrame: api-reference/geolazyframe.md
     - Configuration: api-reference/config.md
+    - Typing: api-reference/typing.md
 
 theme:
   name: material

@@ -8,10 +8,11 @@ from typing import Any, Concatenate, ParamSpec
 import numpy as np
 import polars as pl
 import pytest
+from pyproj import CRS
 
 import polars_st as st
 from polars_st.geoexpr import GeoExprNameSpace as Geo
-from polars_st.typing import GeometryType
+from polars_st.geometry import GeometryType
 
 
 def gdf(values: list[str | None]):
@@ -96,6 +97,7 @@ functions = [
     Function(Geo.coordinate_dimension, pl.UInt32()),
     Function(Geo.srid, pl.Int32()),
     Function(Geo.set_srid, pl.Binary(), {"srid": 3857}),
+    Function(Geo.to_crs, pl.Binary(), {"crs": CRS(3857)}),
     Function(Geo.x, pl.Float64()),
     Function(Geo.y, pl.Float64()),
     Function(Geo.z, pl.Float64()),
@@ -389,6 +391,8 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
             frame.select(func.call(st.geom().st, **func.args))
         return
 
+    if func.call in {Geo.to_crs}:
+        frame = frame.select(st.geom().st.set_srid(4326))
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="invalid value encountered in voronoi_polygons")
         result = frame.select(func.call(st.geom().st, **func.args))

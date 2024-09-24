@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from logging import warning
 from typing import TYPE_CHECKING, cast, overload
 
 import polars as pl
@@ -11,6 +10,7 @@ from pyogrio import read_arrow
 from polars_st.casting import st
 from polars_st.config import Config
 from polars_st.selectors import geom
+from polars_st.utils.srid import get_crs_srid_or_warn
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 
     import geopandas as gpd
     from polars._typing import SchemaDict
-    from pyproj import CRS
 
     from polars_st.geodataframe import GeoDataFrame
     from polars_st.geoseries import GeoSeries
@@ -28,20 +27,6 @@ __all__ = [
     "read_file",
     "from_geopandas",
 ]
-
-
-def get_crs_srid_or_warn(crs: CRS) -> int | None:
-    if authority := crs.to_authority():
-        _auth, code = authority
-        if code.isdigit():
-            return int(code, base=10)
-        warning.warn(
-            f"Found an authority for {crs} but couldn't"
-            f'convert code "{code}" to an integer srid',
-        )
-    else:
-        warning.warn(f'Couldn\'t find an authority for crs "{crs}".')
-    return None
 
 
 def read_file(

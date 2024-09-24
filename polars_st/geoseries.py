@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Literal, ParamSpec, Union, cast
 
@@ -25,9 +24,11 @@ if TYPE_CHECKING:
         ArrowStreamExportable,
         PolarsDataType,
     )
+    from pyproj import CRS
     from typing_extensions import Unpack
 
     from polars_st.typing import (
+        CoordinatesApply,
         IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
@@ -251,14 +252,28 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def apply_coordinates(
-        self,
-        transform: Callable[
-            [pl.Series, pl.Series, pl.Series | None],
-            tuple[pl.Series, pl.Series, pl.Series | None],
-        ],
-    ) -> pl.GeoSeries:
-        """See [`GeoExprNameSpace.apply_coordinates`][polars_st.GeoExprNameSpace.apply_coordinates]."""
+    def apply_coordinates(self, transform: CoordinatesApply) -> pl.GeoSeries:
+        """See [`GeoExprNameSpace.apply_coordinates`][polars_st.GeoExprNameSpace.apply_coordinates]."""  # noqa: E501
+        ...
+
+    @dispatch
+    def exterior_ring(self) -> GeoSeries:
+        """See [`GeoExprNameSpace.exterior_ring`][polars_st.GeoExprNameSpace.exterior_ring]."""
+        ...
+
+    @dispatch
+    def interior_rings(self) -> pl.Series:
+        """See [`GeoExprNameSpace.interior_rings`][polars_st.GeoExprNameSpace.interior_rings]."""
+        ...
+
+    @dispatch
+    def count_interior_rings(self) -> pl.Series:
+        """See [`GeoExprNameSpace.count_interior_rings`][polars_st.GeoExprNameSpace.count_interior_rings]."""  # noqa: E501
+        ...
+
+    @dispatch
+    def get_interior_ring(self, index: IntoIntegerExpr) -> GeoSeries:
+        """See [`GeoExprNameSpace.get_interior_ring`][polars_st.GeoExprNameSpace.get_interior_ring]."""  # noqa: E501
         ...
 
     @dispatch
@@ -279,26 +294,6 @@ class GeoSeriesNameSpace:
     @dispatch
     def get_point(self, index: IntoIntegerExpr) -> GeoSeries:
         """See [`GeoExprNameSpace.get_point`][polars_st.GeoExprNameSpace.get_point]."""
-        ...
-
-    @dispatch
-    def count_interior_rings(self) -> pl.Series:
-        """See [`GeoExprNameSpace.count_interior_rings`][polars_st.GeoExprNameSpace.count_interior_rings]."""  # noqa: E501
-        ...
-
-    @dispatch
-    def get_interior_ring(self, index: IntoIntegerExpr) -> GeoSeries:
-        """See [`GeoExprNameSpace.get_interior_ring`][polars_st.GeoExprNameSpace.get_interior_ring]."""  # noqa: E501
-        ...
-
-    @dispatch
-    def exterior_ring(self) -> GeoSeries:
-        """See [`GeoExprNameSpace.exterior_ring`][polars_st.GeoExprNameSpace.exterior_ring]."""
-        ...
-
-    @dispatch
-    def interior_rings(self) -> pl.Series:
-        """See [`GeoExprNameSpace.interior_rings`][polars_st.GeoExprNameSpace.interior_rings]."""
         ...
 
     @dispatch
@@ -353,6 +348,11 @@ class GeoSeriesNameSpace:
     @dispatch
     def set_srid(self, srid: IntoIntegerExpr) -> GeoSeries:
         """See [`GeoExprNameSpace.set_srid`][polars_st.GeoExprNameSpace.set_srid]."""
+        ...
+
+    @dispatch
+    def to_crs(self, crs: CRS, always_xy: bool = True) -> GeoSeries:
+        """See [`GeoExprNameSpace.to_crs`][polars_st.GeoExprNameSpace.to_crs]."""
         ...
 
     # Serialization

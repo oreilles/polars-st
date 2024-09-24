@@ -24,15 +24,16 @@ The following functions can be used that way:
             - get_geometry
             - count_points
             - get_point
+            - exterior_ring
+            - interior_rings
             - count_interior_rings
             - get_interior_ring
-            - exterior_ring
-            - rings
             - parts
             - precision
             - set_precision
             - srid
             - set_srid
+            - to_crs
             - to_wkt
             - to_ewkt
             - to_wkb

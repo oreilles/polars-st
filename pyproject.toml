@@ -30,6 +30,7 @@ dev-dependencies = [
     "mkdocs>=1.6.1",
     "mkdocstrings-python>=1.11.1",
     "pyarrow>=17.0.0",
+    "pyproj>=3.6.1",
     "pyright>=1.1.380",
     "pytest>=8.3.3",
     "ruff>=0.6.4",

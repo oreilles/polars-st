@@ -50,7 +50,7 @@ hide:
 | `count_interior_rings` | Return the number of interior rings in Polygon geometries. | [`root`][polars_st.count_interior_rings], [`Expr`][polars_st.GeoExprNameSpace.count_interior_rings], [`Series`][polars_st.GeoSeriesNameSpace.count_interior_rings] |
 | `get_interior_ring` | Return the nth ring of Polygon geometries. | [`root`][polars_st.get_interior_ring], [`Expr`][polars_st.GeoExprNameSpace.get_interior_ring], [`Series`][polars_st.GeoSeriesNameSpace.get_interior_ring] |
 | `exterior_ring` | Return the exterior ring of Polygon geometries. | [`root`][polars_st.exterior_ring], [`Expr`][polars_st.GeoExprNameSpace.exterior_ring], [`Series`][polars_st.GeoSeriesNameSpace.exterior_ring] |
-| `rings` | Return a list of rings for Polygon geometries. | [`root`][polars_st.rings], [`Expr`][polars_st.GeoExprNameSpace.rings], [`Series`][polars_st.GeoSeriesNameSpace.rings] |
+| `interior_rings` | Return the list of interior rings for Polygon geometries. | [`root`][polars_st.interior_rings], [`Expr`][polars_st.GeoExprNameSpace.interior_rings], [`Series`][polars_st.GeoSeriesNameSpace.interior_rings] |
 | `parts` | Return a list of parts for multipart geometries. | [`root`][polars_st.parts], [`Expr`][polars_st.GeoExprNameSpace.parts], [`Series`][polars_st.GeoSeriesNameSpace.parts] |
 | `precision` | Return the precision of each geometry. | [`root`][polars_st.precision], [`Expr`][polars_st.GeoExprNameSpace.precision], [`Series`][polars_st.GeoSeriesNameSpace.precision] |
 | `set_precision` | Set the precision of each geometry to a certain grid size. | [`root`][polars_st.set_precision], [`Expr`][polars_st.GeoExprNameSpace.set_precision], [`Series`][polars_st.GeoSeriesNameSpace.set_precision] |
@@ -60,6 +60,7 @@ hide:
 | **Projection operations** | | |
 | `srid` | Return the SRID of each geometry. | [`root`][polars_st.srid], [`Expr`][polars_st.GeoExprNameSpace.srid], [`Series`][polars_st.GeoSeriesNameSpace.srid] |
 | `set_srid` | Set the SRID of each geometry to a given value. | [`root`][polars_st.set_srid], [`Expr`][polars_st.GeoExprNameSpace.set_srid], [`Series`][polars_st.GeoSeriesNameSpace.set_srid] |
+| `to_crs` | Transform the coordinates of each geometry into a new CRS. | [`root`][polars_st.to_crs], [`Expr`][polars_st.GeoExprNameSpace.to_crs], [`Series`][polars_st.GeoSeriesNameSpace.to_crs] |
 | **Unary predicates** | | |
 | `has_z` | Return `True` for geometries that has `z` coordinate values. | [`root`][polars_st.has_z], [`Expr`][polars_st.GeoExprNameSpace.has_z], [`Series`][polars_st.GeoSeriesNameSpace.has_z] |
 | `has_m` | Return `True` for geometries that has `m` coordinate values. | [`root`][polars_st.has_m], [`Expr`][polars_st.GeoExprNameSpace.has_m], [`Series`][polars_st.GeoSeriesNameSpace.has_m] |
