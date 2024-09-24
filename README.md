@@ -8,9 +8,9 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 >>> import polars as pl
 >>> import polars_st as st
 >>> gdf = st.GeoDataFrame([
-... "POINT (0 0)",
-... "LINESTRING (0 0, 1 1, 2 2)",
-... "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+...     "POINT (0 0)",
+...     "LINESTRING (0 0, 1 1, 2 2)",
+...     "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
 ... ])
 >>> gdf.select(st.centroid().st.to_geojson())
 ┌──────────────────────────────────────────┐
