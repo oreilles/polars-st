@@ -16,6 +16,7 @@ use geos::{
 };
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
+use proj::Proj;
 use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 fn ewkb_writer() -> GResult<WKBWriter> {
@@ -1315,4 +1316,49 @@ pub fn sjoin(
         });
     }
     Ok((left_index_builder.finish(), right_index_builder.finish()))
+}
+
+fn apply_proj_transformation(geometry: Geometry, transformation: &Proj) -> GResult<Geometry> {
+    if geometry.is_empty()? {
+        return Ok(geometry);
+    }
+    if 3 > geometry.get_coordinate_dimension()?.into() {
+        geometry.transform_xy(|x, y| match transformation.convert((*x, *y)) {
+            Ok(projected) => {
+                *x = projected.0;
+                *y = projected.1;
+                1
+            }
+            Err(_) => 0,
+        })
+    } else {
+        geometry.transform_xyz(|x, y, z| match transformation.convert((*x, *y, *z)) {
+            Ok(projected) => {
+                *x = projected.0;
+                *y = projected.1;
+                *z = projected.2;
+                1
+            }
+            Err(_) => 0,
+        })
+    }
+}
+
+pub fn to_srid(wkb: &BinaryChunked, from_srid: i32, to_srid: i32) -> GResult<BinaryChunked> {
+    let from_crs = format!("EPSG:{from_srid}");
+    let to_crs = format!("EPSG:{to_srid}");
+    let transformation = Proj::try_from((from_crs.as_str(), to_crs.as_str())).map_err(|_| {
+        let err = format!("Couldn't create transformation from {from_crs} to {to_crs}");
+        geos::Error::GenericError(err)
+    })?;
+
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        Geometry::new_from_wkb(wkb)
+            .and_then(|geom| apply_proj_transformation(geom, &transformation))
+            .and_then(|mut geom| {
+                geom.set_srid(to_srid);
+                Ok(geom)
+            })?
+            .to_ewkb()
+    })
 }

@@ -24,7 +24,6 @@ if TYPE_CHECKING:
         ArrowStreamExportable,
         PolarsDataType,
     )
-    from pyproj import CRS
     from typing_extensions import Unpack
 
     from polars_st.typing import (
@@ -351,8 +350,8 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def to_crs(self, crs: CRS, always_xy: bool = True) -> GeoSeries:
-        """See [`GeoExprNameSpace.to_crs`][polars_st.GeoExprNameSpace.to_crs]."""
+    def to_srid(self, srid: int) -> GeoSeries:
+        """See [`GeoExprNameSpace.to_srid`][polars_st.GeoExprNameSpace.to_srid]."""
         ...
 
     # Serialization

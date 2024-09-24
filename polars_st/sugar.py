@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import polars as pl
-    from pyproj import CRS
 
     from polars_st.typing import (
         CoordinatesApply,
@@ -48,7 +47,7 @@ __all__ = [
     "set_precision",
     "srid",
     "set_srid",
-    "to_crs",
+    "to_srid",
     "to_wkt",
     "to_ewkt",
     "to_wkb",
@@ -251,9 +250,9 @@ def set_srid(*columns: str, srid: IntoIntegerExpr) -> GeoExpr:
     return geom(*columns).st.set_srid(srid)
 
 
-def to_crs(*columns: str, crs: CRS, always_xy: bool = True) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[to_crs(...)][polars_st.GeoExprNameSpace.to_crs]</code>."""  # noqa: E501
-    return geom(*columns).st.to_crs(crs, always_xy)
+def to_srid(*columns: str, srid: int) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[to_srid(...)][polars_st.GeoExprNameSpace.to_srid]</code>."""  # noqa: E501
+    return geom(*columns).st.to_srid(srid)
 
 
 def to_wkt(

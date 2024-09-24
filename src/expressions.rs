@@ -4,6 +4,10 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
+use polars_plan::{
+    plans::{Literal, NULL},
+    prelude::{ApplyOptions, FunctionFlags, FunctionOptions},
+};
 use pyo3::prelude::*;
 use pyo3_polars::{derive::polars_expr, PySeries};
 
@@ -1213,4 +1217,55 @@ pub fn apply_coordinates(py: Python, pyseries: PySeries, pyfunc: PyObject) -> Py
     .expect("failed to apply transform");
 
     Ok(PySeries(res))
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn to_srid(inputs: &[Series], kwargs: kwargs::ToSridKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = inputs[0].binary()?;
+
+    if wkb.len() == wkb.null_count() {
+        return Ok(Series::full_null(wkb.name(), wkb.len(), wkb.dtype()));
+    }
+
+    let srids = geo::get_srid(wkb).map_err(to_compute_err)?;
+    let unique_srids = srids.unique()?.drop_nulls();
+
+    if unique_srids.len() == 1 {
+        return geo::to_srid(wkb, unique_srids.get(0).unwrap(), kwargs.srid)
+            .map_err(to_compute_err)
+            .map(IntoSeries::into_series);
+    }
+
+    let chained_then = unique_srids.into_iter().flatten().fold(
+        // Must repeat this twice to get a ChainedThen expression
+        when(false).then(NULL.lit()).when(false).then(NULL.lit()),
+        |chain, srid| {
+            let function = move |s: &mut [Series]| {
+                geo::to_srid(s[0].binary()?, srid, kwargs.srid)
+                    .map_err(to_compute_err)
+                    .map(IntoSeries::into_series)
+                    .map(Some)
+            };
+            chain
+                .when(col("srid").eq(srid))
+                .then(Expr::AnonymousFunction {
+                    input: vec![col("wkb")],
+                    function: SpecialEq::new(Arc::new(function)),
+                    output_type: GetOutput::from_type(DataType::Binary),
+                    options: FunctionOptions {
+                        collect_groups: ApplyOptions::ElementWise,
+                        fmt_str: "transform_xy",
+                        flags: FunctionFlags::default(),
+                        ..Default::default()
+                    },
+                })
+        },
+    );
+    let res = df! {"wkb" => &inputs[0], "srid" => srids }?
+        .lazy()
+        .select([chained_then.otherwise(NULL.lit())])
+        .collect()?;
+
+    Ok(res.get_columns()[0].to_owned())
 }

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import warnings
-from functools import reduce
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -14,16 +13,11 @@ from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
 
 from polars_st import _lib
-from polars_st.casting import st
 from polars_st.typing import IntoExprColumn
-from polars_st.utils.srid import get_crs_srid_or_warn
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
-    from pyproj import CRS, Transformer
-
-    from polars_st.geoseries import GeoSeries
     from polars_st.typing import (
         CoordinatesApply,
         IntoDecimalExpr,
@@ -404,55 +398,20 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda s: cast(GeoExpr, s))
 
-    def to_crs(self, crs: CRS, always_xy: bool = True) -> GeoExpr:
+    def to_srid(self, srid: int) -> GeoExpr:
         """Transform the coordinates of each geometry into a new CRS.
 
         Args:
-            crs: The geometry new CRS
-            always_xy: Set to `True` to preserve (long, lat) coordinates order
+            srid: The srid code of the new CRS
+            authority: The authority of the new CRS
         """
-        from pyproj import CRS, Transformer
-
-        def transformer_apply(transformer: Transformer) -> CoordinatesApply:
-            def apply(x: pl.Series, y: pl.Series, z: pl.Series | None):  # noqa: ANN202
-                xyz = transformer.transform(x, y, z)
-                return (
-                    pl.Series(xyz[0]),
-                    pl.Series(xyz[1]),
-                    pl.Series(xyz[2]) if len(xyz) > 2 else None,
-                )
-
-            return apply
-
-        def transform_from(s: pl.Series, from_crs: CRS, to_crs: CRS) -> GeoSeries:
-            t = Transformer.from_crs(from_crs, to_crs, always_xy=always_xy)
-            apply = transformer_apply(t)
-            new_srid = get_crs_srid_or_warn(to_crs) or 0
-            return st(s).set_srid(new_srid).st.apply_coordinates(apply)
-
-        def transform(to_crs: CRS) -> Callable[[pl.Series], pl.Series]:
-            def apply(s: pl.Series) -> pl.Series:
-                if s.null_count() == len(s):
-                    return s
-                srids = st(s).srid()
-                unique_srids = srids.unique().drop_nulls()
-                if 0 in unique_srids:
-                    msg = "GeoSeries contains geometries without srid. Please use `set_srid` first."
-                    raise ValueError(msg)
-                if len(unique_srids) == 1:
-                    return transform_from(s, CRS(unique_srids[0]), to_crs)
-                res = reduce(
-                    lambda expr, srid: expr.when(srids.eq(srid)).then(
-                        transform_from(s, CRS(srid), to_crs)
-                    ),
-                    unique_srids,
-                    pl.when(False).then(None),
-                )
-                return pl.select(res).to_series()
-
-            return apply
-
-        return self._expr.map_batches(transform(crs)).pipe(lambda s: cast(GeoExpr, s))
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="to_srid",
+            args=self._expr,
+            kwargs={"srid": srid},
+            is_elementwise=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
 
     # Serialization
 

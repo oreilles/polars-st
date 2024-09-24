@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from logging import warning
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from pyproj import CRS
+from polars_st._lib import get_crs_auth_code
 
 
-def get_crs_srid_or_warn(crs: CRS) -> int | None:
-    if authority := crs.to_authority():
-        _auth, code = authority
+def get_crs_srid_or_warn(crs: str) -> int | None:
+    try:
+        _auth, code = get_crs_auth_code(crs)
         if code.isdigit():
             return int(code, base=10)
         warning.warn(
@@ -17,8 +15,8 @@ def get_crs_srid_or_warn(crs: CRS) -> int | None:
             f'convert code "{code}" to an integer srid. ',
             "The geometries SRID will be set to 0.",
         )
-    else:
+    except ValueError:
         warning.warn(
-            f'Couldn\'t find an authority for crs "{crs}". The geometries SRID will be set to 0.'
+            f'Couldn\'t find a matching crs for "{crs}". The geometries SRID will be set to 0.'
         )
     return None
