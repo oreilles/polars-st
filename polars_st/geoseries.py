@@ -253,7 +253,10 @@ class GeoSeriesNameSpace:
     @dispatch
     def apply_coordinates(
         self,
-        transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+        transform: Callable[
+            [pl.Series, pl.Series, pl.Series | None],
+            tuple[pl.Series, pl.Series, pl.Series | None],
+        ],
     ) -> pl.GeoSeries:
         """See [`GeoExprNameSpace.apply_coordinates`][polars_st.GeoExprNameSpace.apply_coordinates]."""
         ...

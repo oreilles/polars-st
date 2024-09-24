@@ -226,7 +226,10 @@ class GeoExprNameSpace:
 
     def apply_coordinates(
         self,
-        transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+        transform: Callable[
+            [pl.Series, pl.Series, pl.Series | None],
+            tuple[pl.Series, pl.Series, pl.Series | None],
+        ],
     ) -> pl.GeoExpr:
         """Replace the coordinates of each geometry with new ones."""
         return self._expr.map_batches(

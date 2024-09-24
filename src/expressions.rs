@@ -1187,10 +1187,10 @@ pub fn sjoin(inputs: &[Series], kwargs: kwargs::SpatialJoinKwargs) -> PolarsResu
 }
 
 #[pyfunction]
-pub fn apply_coordinates(py: Python, pyseries: PySeries, func: PyObject) -> PyResult<PySeries> {
+pub fn apply_coordinates(py: Python, pyseries: PySeries, pyfunc: PyObject) -> PyResult<PySeries> {
     fn apply_coordinates<F>(inputs: &[Series], func: F) -> PolarsResult<Series>
     where
-        F: Fn(f64, f64, Option<f64>) -> Vec<Option<f64>>,
+        F: Fn(Series, Series, Option<Series>) -> PolarsResult<(Series, Series, Option<Series>)>,
     {
         let wkb = inputs[0].binary()?;
         geo::apply_coordinates(wkb, func)
@@ -1199,10 +1199,16 @@ pub fn apply_coordinates(py: Python, pyseries: PySeries, func: PyObject) -> PyRe
     }
 
     let res = apply_coordinates(&[pyseries.0], |x, y, z| {
-        func.call1(py, (x, y, z))
+        let (tx, ty, tz): (PySeries, PySeries, Option<PySeries>) = pyfunc
+            .call1(py, (PySeries(x), PySeries(y), z.map(PySeries)))
             .unwrap()
             .extract(py)
-            .expect("Function didn't return tuple")
+            .map_err(to_compute_err)?;
+        Ok((
+            tx.0.cast(&DataType::Float64)?,
+            ty.0.cast(&DataType::Float64)?,
+            tz.map(|tz| tz.0.cast(&DataType::Float64)).transpose()?,
+        ))
     })
     .expect("failed to apply transform");
 

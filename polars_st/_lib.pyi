@@ -6,5 +6,8 @@ __version__: str
 
 def apply_coordinates(
     series: pl.Series,
-    transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+    transform: Callable[
+        [pl.Series, pl.Series, pl.Series | None],
+        tuple[pl.Series, pl.Series, pl.Series | None],
+    ],
 ) -> tuple[str, str]: ...

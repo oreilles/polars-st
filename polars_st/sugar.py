@@ -174,7 +174,10 @@ def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
 
 def apply_coordinates(
     *columns: str,
-    transform: Callable[[float, float, float | None], tuple[float, float, float | None]],
+    transform: Callable[
+        [pl.Series, pl.Series, pl.Series | None],
+        tuple[pl.Series, pl.Series, pl.Series | None],
+    ],
 ) -> pl.GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[apply_coordinates(...)][polars_st.GeoExprNameSpace.apply_coordinates]</code>."""  # noqa: E501
     return geom(*columns).st.apply_coordinates(transform)
