@@ -1,4 +1,4 @@
-![banner](https://raw.githubusercontent.com/Oreilles/polars-st/main/assets/banner.svg)
+[![Banner](https://raw.githubusercontent.com/Oreilles/polars-st/main/assets/banner.svg)](#)
 
 # Polars ST
 
