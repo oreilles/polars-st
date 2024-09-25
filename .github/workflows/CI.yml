@@ -7,8 +7,6 @@ name: CI
 
 on:
   push:
-    # branches:
-    #   - main
     tags:
       - '*'
   pull_request:
@@ -21,6 +19,7 @@ jobs:
   linux:
     runs-on: ${{ matrix.platform.runner }}
     strategy:
+      fail-fast: false
       matrix:
         platform:
           - runner: ubuntu-latest
@@ -31,10 +30,6 @@ jobs:
             target: aarch64
           - runner: ubuntu-latest
             target: armv7
-          # - runner: ubuntu-latest
-          #   target: s390x
-          # - runner: ubuntu-latest
-          #   target: ppc64le
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,7 +40,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --zig --release --out dist
-          sccache: true
+          sccache: 'true'
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -56,6 +51,7 @@ jobs:
   musllinux:
     runs-on: ${{ matrix.platform.runner }}
     strategy:
+      fail-fast: false
       matrix:
         platform:
           - runner: ubuntu-latest
@@ -76,7 +72,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --zig --release --out dist
-          sccache: true
+          sccache: 'true'
           manylinux: musllinux_1_2
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -87,6 +83,7 @@ jobs:
   macos:
     runs-on: ${{ matrix.platform.runner }}
     strategy:
+      fail-fast: false
       matrix:
         platform:
           - runner: macos-12
@@ -103,7 +100,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist
-          sccache: true
+          sccache: 'true'
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -128,14 +125,16 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, macos, sdist]
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [linux, musllinux, macos, sdist]
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          MATURIN_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}
         with:
           command: upload
           args: --non-interactive --skip-existing wheels-*/*
