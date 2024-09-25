@@ -888,9 +888,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.to_crs" class="md-nav__link">
+  <a href="#polars_st.GeoExprNameSpace.to_srid" class="md-nav__link">
     <span class="md-ellipsis">
-      to_crs
+      to_srid
     </span>
   </a>
   
@@ -2071,9 +2071,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.to_crs" class="md-nav__link">
+  <a href="#polars_st.GeoExprNameSpace.to_srid" class="md-nav__link">
     <span class="md-ellipsis">
-      to_crs
+      to_srid
     </span>
   </a>
   
@@ -3567,12 +3567,12 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="polars_st.GeoExprNameSpace.to_crs" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.to_crs</span>
+<h3 id="polars_st.GeoExprNameSpace.to_srid" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.to_srid</span>
 
 
-<a href="#polars_st.GeoExprNameSpace.to_crs" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">to_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">:</span> <span class="n"><span title="pyproj.CRS">CRS</span></span><span class="p">,</span> <span class="n">always_xy</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
+<a href="#polars_st.GeoExprNameSpace.to_srid" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">to_srid</span><span class="p">(</span><span class="n">srid</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="polars_st.geoexpr.GeoExpr" href="#polars_st.GeoExpr">GeoExpr</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3583,21 +3583,11 @@
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-          <b><code>crs</code></b>
-              (<code><span title="pyproj.CRS">CRS</span></code>)
+          <b><code>srid</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
           –
           <div class="doc-md-description">
-            <p>The geometry new CRS</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>always_xy</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Set to <code>True</code> to preserve (long, lat) coordinates order</p>
+            <p>The srid code of the new CRS</p>
           </div>
         </li>
     </ul>
