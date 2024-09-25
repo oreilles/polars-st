@@ -13,7 +13,6 @@ from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
 
 from polars_st import _lib
-from polars_st.typing import IntoExprColumn
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
     from polars_st.typing import (
         CoordinatesApply,
         IntoDecimalExpr,
+        IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
     )
@@ -403,7 +403,6 @@ class GeoExprNameSpace:
 
         Args:
             srid: The srid code of the new CRS
-            authority: The authority of the new CRS
         """
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
@@ -1124,7 +1123,7 @@ class GeoExprNameSpace:
             args=[
                 self._expr,
                 matrix
-                if isinstance(matrix, IntoExprColumn)
+                if isinstance(matrix, pl.Expr | pl.Series | str)
                 else pl.lit(matrix, dtype=pl.Array(pl.Float64, len(matrix))),
             ],
             returns_scalar=True,

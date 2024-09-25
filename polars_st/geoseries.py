@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Literal, ParamSpec, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, ParamSpec, cast
 
 import polars as pl
 from polars.api import register_series_namespace
@@ -15,36 +15,18 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
-    import numpy as np
-    import pandas as pd
-    import pyarrow as pa
     from altair.typing import EncodeKwds
-    from polars._typing import (
-        ArrowArrayExportable,
-        ArrowStreamExportable,
-        PolarsDataType,
-    )
+    from polars._typing import PolarsDataType
     from typing_extensions import Unpack
 
     from polars_st.typing import (
+        ArrayLike,
         CoordinatesApply,
         IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
     )
-
-    ArrayLike = Union[  # noqa: UP007
-        Sequence[Any],
-        pl.Series,
-        pa.Array,
-        pa.ChunkedArray,
-        np.ndarray[Any, Any],
-        pd.Series[Any],
-        pd.DatetimeIndex,
-        ArrowArrayExportable,
-        ArrowStreamExportable,
-    ]
 
     P = ParamSpec("P")
 
@@ -68,31 +50,31 @@ class GeoSeries(pl.Series):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
+        geometry_format: Literal["wkb", "wkt", "ewkt", "geojson", "shapely", "xy"] | None = None,
     ) -> GeoSeries:
         s = pl.Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
         if s.name == "" and not (isinstance(name, str) and name == ""):
             s = s.rename(Config.get_geometry_column())
         if len(s) == 0 or s.dtype == pl.Null:
             return cast(GeoSeries, s.cast(pl.Binary))
-        geometry_format: Literal["wkb", "wkt", "ewkt", "geojson", "shapely", "xy"] | None = None
-        if s.dtype == pl.Binary:
-            geometry_format = "wkb"
-        if s.dtype == pl.String:
-            first_value: str | None = s[cast(int, s.is_not_null().arg_max())]
-            if first_value is None:
-                return cast(GeoSeries, s.cast(pl.Binary))
-            if first_value.startswith("{"):
-                geometry_format = "geojson"
-            elif first_value.startswith("SRID="):
-                geometry_format = "ewkt"
-            else:
-                geometry_format = "wkt"
-        elif s.dtype == pl.Object:
-            geometry_format = "shapely"
-        elif s.dtype == pl.Array:
-            shape = cast(pl.Array, s.dtype).shape
-            if len(shape) == 1 and shape[0] in {2, 3}:
-                geometry_format = "xy"
+        if geometry_format is None:
+            match s.dtype:
+                case pl.Binary:
+                    geometry_format = "wkb"
+                case pl.String:
+                    first_value: str | None = s[cast(int, s.is_not_null().arg_max())]
+                    if first_value is None:
+                        return cast(GeoSeries, s.cast(pl.Binary))
+                    if first_value.startswith("{"):
+                        geometry_format = "geojson"
+                    elif first_value.startswith("SRID="):
+                        geometry_format = "ewkt"
+                    else:
+                        geometry_format = "wkt"
+                case pl.Object:
+                    geometry_format = "shapely"
+                case pl.Struct:
+                    geometry_format = "xy"
         match geometry_format:
             case None:
                 msg = f"Couldn't infer geometry format from dtype {s.dtype}"
@@ -110,9 +92,9 @@ class GeoSeries(pl.Series):
             case "xy":
                 result = pl.select(
                     from_xy(
-                        x=s.arr.get(0).rename("x"),
-                        y=s.arr.get(1).rename("y"),
-                        z=s.arr.get(2).rename("z") if shape[0] > 2 else None,
+                        x=s.struct["x"],
+                        y=s.struct["y"],
+                        z=s.struct["z"] if "z" in s.struct.fields else None,
                     ),
                 ).to_series()
         return cast(GeoSeries, result)
@@ -125,6 +107,7 @@ class GeoSeries(pl.Series):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
+        geometry_format: Literal["wkb", "wkt", "ewkt", "geojson", "shapely", "xy"] | None = None,
     ) -> None:
         """Create a new GeoSeries.
 
@@ -134,10 +117,11 @@ class GeoSeries(pl.Series):
         EWKB format.
 
         You can create a GeoSeries from a list of WKB, WKT, EWKT or GeoJSON strings, or Shapely
-            objects. Geometries will be created by infering the correct deserialization operation.
-            It is also possible to create a GeoSeries of Points from a Polars
-            [`Array`](https://docs.pola.rs/user-guide/expressions/lists/#polars-arrays) with shape
-            (2 | 3, n).
+            objects. If `geometry_format` is not set, the geometries will be created by infering
+            the correct deserialization operation from its datatype. It is also possible to create
+            a GeoSeries of points from a Polars
+            [`Struct`](https://docs.pola.rs/user-guide/expressions/structs/) with fields
+            "x", "y" (, "z").
 
         See [`pl.Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html)
         for parameters documentation.
@@ -147,10 +131,11 @@ class GeoSeries(pl.Series):
             ...     "POINT(0 0)",
             ...     "POINT(1 2)",
             ... ])
-            >>> gs2 = st.GeoSeries([
-            ...     [0, 0],
-            ...     [1, 2],
-            ... ], dtype=pl.Array(pl.Float64, 2))
+            >>> gs2 = st.GeoSeries(pl.struct(
+            ...     x=pl.Series([0, 1]),
+            ...     y=pl.Series([0, 2]),
+            ...     eager=True,
+            ... ))
             >>> gs.equals(gs2)
             True
             >>> gs.dtype

@@ -4,6 +4,7 @@
 __pycache__/
 docs/site/
 target/
+dist/
 *.so
 .venv/
 .idea
