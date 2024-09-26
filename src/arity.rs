@@ -20,7 +20,7 @@ where
     if lhs.len() == rhs.len() && (lhs.null_count() == lhs.len() || rhs.null_count() == rhs.len()) {
         let arr = V::Array::full_null(lhs.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
 
-        return Ok(ChunkedArray::with_chunk(lhs.name(), arr));
+        return Ok(ChunkedArray::with_chunk(lhs.name().clone(), arr));
     }
 
     try_binary_elementwise(lhs, rhs, |a, b| match (a, b) {
@@ -45,7 +45,7 @@ where
     if lhs.len() == rhs.len() && (lhs.null_count() == lhs.len() || rhs.null_count() == rhs.len()) {
         let arr = V::Array::full_null(lhs.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
 
-        return Ok(ChunkedArray::with_chunk(lhs.name(), arr));
+        return Ok(ChunkedArray::with_chunk(lhs.name().clone(), arr));
     }
 
     broadcast_try_binary_elementwise(lhs, rhs, |a, b| match (a, b) {
@@ -76,7 +76,7 @@ where
     {
         let arr = V::Array::full_null(ca1.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
 
-        return Ok(ChunkedArray::with_chunk(ca1.name(), arr));
+        return Ok(ChunkedArray::with_chunk(ca1.name().clone(), arr));
     }
 
     try_ternary_elementwise(ca1, ca2, ca3, |a, b, c| match (a, b, c) {
@@ -111,12 +111,12 @@ where
         (1, 1, _) => {
             let a = unsafe { ca1.get_unchecked(0) };
             let b = unsafe { ca2.get_unchecked(0) };
-            Ok(try_unary_elementwise(ca3, |c| op(a.clone(), b.clone(), c))?.with_name(ca1.name()))
+            Ok(try_unary_elementwise(ca3, |c| op(a.clone(), b.clone(), c))?.with_name(ca1.name().clone()))
         }
         (1, _, 1) => {
             let a = unsafe { ca1.get_unchecked(0) };
             let c = unsafe { ca3.get_unchecked(0) };
-            Ok(try_unary_elementwise(ca2, |b| op(a.clone(), b, c.clone()))?.with_name(ca1.name()))
+            Ok(try_unary_elementwise(ca2, |b| op(a.clone(), b, c.clone()))?.with_name(ca1.name().clone()))
         }
         (_, 1, 1) => {
             let b = unsafe { ca2.get_unchecked(0) };

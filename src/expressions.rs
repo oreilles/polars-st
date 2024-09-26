@@ -11,7 +11,7 @@ use polars_plan::{
 use pyo3::prelude::*;
 use pyo3_polars::{derive::polars_expr, PySeries};
 
-fn first_field_name(fields: &[Field]) -> PolarsResult<&SmartString> {
+fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
     fields
         .first()
         .map(Field::name)
@@ -20,24 +20,24 @@ fn first_field_name(fields: &[Field]) -> PolarsResult<&SmartString> {
 
 fn output_type_bounds(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
-        first_field_name(input_fields)?,
+        first_field_name(input_fields)?.clone(),
         DataType::Array(DataType::Float64.into(), 4),
     ))
 }
 
 fn output_type_geometry_list(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
-        first_field_name(input_fields)?,
+        first_field_name(input_fields)?.clone(),
         DataType::List(DataType::Binary.into()),
     ))
 }
 
 fn output_type_sjoin(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
-        first_field_name(input_fields)?,
+        first_field_name(input_fields)?.clone(),
         DataType::Struct(vec![
-            Field::new("left_index", DataType::Float64),
-            Field::new("right_index", DataType::Float64),
+            Field::new("left_index".into(), DataType::Float64),
+            Field::new("right_index".into(), DataType::Float64),
         ]),
     ))
 }
@@ -117,7 +117,7 @@ fn coordinates(inputs: &[Series], kwargs: kwargs::GetCoordinatesKwargs) -> Polar
     geo::get_coordinates(wkb, kwargs.output_dimension)
         .map_err(to_compute_err)?
         .into_series()
-        .with_name(wkb.name())
+        .with_name(wkb.name().clone())
         .cast(&DataType::List(
             DataType::Array(DataType::Float64.into(), 2).into(),
         ))
@@ -189,7 +189,7 @@ fn interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
     geo::get_interior_rings(wkb)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)?
-        .with_name(wkb.name())
+        .with_name(wkb.name().clone())
         .cast(&DataType::List(DataType::Binary.into()))
 }
 
@@ -265,7 +265,7 @@ fn parts(inputs: &[Series]) -> PolarsResult<Series> {
     geo::get_parts(wkb)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)?
-        .with_name(wkb.name())
+        .with_name(wkb.name().clone())
         .cast(&DataType::List(DataType::Binary.into()))
 }
 
@@ -335,7 +335,7 @@ fn bounds(inputs: &[Series]) -> PolarsResult<Series> {
     geo::bounds(wkb)
         .map_err(to_compute_err)?
         .into_series()
-        .with_name(wkb.name())
+        .with_name(wkb.name().clone())
         .cast(&DataType::Array(DataType::Float64.into(), 4))
 }
 
@@ -355,7 +355,7 @@ fn total_bounds(inputs: &[Series]) -> PolarsResult<Series> {
         .cast(&DataType::List(DataType::Float64.into()))?;
     let bounds = bounds.list()?;
     let mut builder =
-        ListPrimitiveChunkedBuilder::<Float64Type>::new(bounds.name(), 1, 4, DataType::Float64);
+        ListPrimitiveChunkedBuilder::<Float64Type>::new(bounds.name().clone(), 1, 4, DataType::Float64);
     builder.append_slice(&[
         bounds.lst_get(0, false)?.min()?.unwrap_or(f64::NAN),
         bounds.lst_get(1, false)?.min()?.unwrap_or(f64::NAN),
@@ -716,7 +716,7 @@ fn difference_all(inputs: &[Series], kwargs: kwargs::SetOperationKwargs) -> Pola
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
-    .map(|res| Series::new(wkb.name(), [res]))
+    .map(|res| Series::new(wkb.name().clone(), [res]))
     .map_err(to_compute_err)
 }
 
@@ -745,7 +745,7 @@ fn intersection_all(inputs: &[Series], kwargs: kwargs::SetOperationKwargs) -> Po
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
     .map_err(to_compute_err)
-    .map(|res| Series::new(wkb.name(), [res]))
+    .map(|res| Series::new(wkb.name().clone(), [res]))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -779,7 +779,7 @@ fn symmetric_difference_all(
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
     .map_err(to_compute_err)
-    .map(|res| Series::new(wkb.name(), [res]))
+    .map(|res| Series::new(wkb.name().clone(), [res]))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -829,7 +829,7 @@ fn union_all(inputs: &[Series], kwargs: kwargs::SetOperationKwargs) -> PolarsRes
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
     .map_err(to_compute_err)
-    .map(|wkb| Series::new(geom.name(), [wkb]))
+    .map(|wkb| Series::new(geom.name().clone(), [wkb]))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1183,7 +1183,7 @@ pub fn sjoin(inputs: &[Series], kwargs: kwargs::SpatialJoinKwargs) -> PolarsResu
         .map_err(to_compute_err)
         .map(|(left_index, right_index)| {
             StructChunked::from_series(
-                left.name(),
+                left.name().clone(),
                 &[left_index.into_series(), right_index.into_series()],
             )
             .map(IntoSeries::into_series)
@@ -1225,7 +1225,7 @@ pub fn to_srid(inputs: &[Series], kwargs: kwargs::ToSridKwargs) -> PolarsResult<
     let wkb = inputs[0].binary()?;
 
     if wkb.len() == wkb.null_count() {
-        return Ok(Series::full_null(wkb.name(), wkb.len(), wkb.dtype()));
+        return Ok(Series::full_null(wkb.name().clone(), wkb.len(), wkb.dtype()));
     }
 
     let srids = geo::get_srid(wkb).map_err(to_compute_err)?;

@@ -162,10 +162,10 @@ pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
     fn get_geometry_rings(wkb: &[u8]) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.geometry_type()? != Polygon {
-            return Ok(Series::new_empty("", &DataType::Binary));
+            return Ok(Series::new_empty("".into(), &DataType::Binary));
         }
         let num_rings = geom.get_num_interior_rings()?;
-        let mut rings = BinaryChunkedBuilder::new("", num_rings + 1);
+        let mut rings = BinaryChunkedBuilder::new("".into(), num_rings + 1);
         for n in 0..num_rings {
             let ring = geom.get_interior_ring_n(n as u32)?;
             rings.append_value(ring.to_ewkb()?);
@@ -218,19 +218,19 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             let dt = &DataType::Array(DataType::Float64.into(), dimension);
-            return Ok(Series::new_empty("", dt));
+            return Ok(Series::new_empty("".into(), dt));
         }
         match geom.geometry_type()? {
             Point | LineString | CircularString => {
                 let seq = geom.get_coord_seq()?;
-                Series::new("", seq.as_buffer(Some(dimension))?)
+                Series::new("".into(), seq.as_buffer(Some(dimension))?)
                     .reshape_array(&[seq.size()? as i64, dimension as _])
                     .map_err(|_| geos::Error::GenericError("Invalid coordinate sequence".into()))
             }
             _ => {
                 let n_coords = wkb.len() / 8 * dimension;
                 let mut builder = ListPrimitiveChunkedBuilder::<Float64Type>::new(
-                    "",
+                    "".into(),
                     n_coords,
                     n_coords * dimension,
                     DataType::Float64,
@@ -268,8 +268,8 @@ where
         let geom = Geometry::new_from_wkb(wkb)?;
         let coords_len = geom.get_num_coordinates()?;
         let transformed = if 3 > geom.get_coordinate_dimension()?.into() {
-            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x", coords_len);
-            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y", coords_len);
+            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x".into(), coords_len);
+            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y".into(), coords_len);
             geom.transform_xy(|x, y| {
                 coords_x.append_value(*x);
                 coords_y.append_value(*y);
@@ -281,9 +281,9 @@ where
                 None,
             )
         } else {
-            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x", coords_len);
-            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y", coords_len);
-            let mut coords_z = PrimitiveChunkedBuilder::<Float64Type>::new("z", coords_len);
+            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x".into(), coords_len);
+            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y".into(), coords_len);
+            let mut coords_z = PrimitiveChunkedBuilder::<Float64Type>::new("z".into(), coords_len);
             geom.transform_xyz(|x, y, z| {
                 coords_x.append_value(*x);
                 coords_y.append_value(*y);
@@ -363,7 +363,7 @@ pub fn get_parts(wkb: &BinaryChunked) -> GResult<ListChunked> {
     fn get_geometry_parts(wkb: &[u8]) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
         let num_geom = geom.get_num_geometries()?;
-        let mut parts = BinaryChunkedBuilder::new("", num_geom);
+        let mut parts = BinaryChunkedBuilder::new("".into(), num_geom);
         for n in 0..num_geom {
             let part = geom.get_geometry_n(n)?;
             parts.append_value(part.to_ewkb()?);
@@ -452,13 +452,13 @@ pub fn bounds(wkb: &BinaryChunked) -> GResult<ListChunked> {
     fn get_bounds(wkb: &[u8]) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
         let res = if geom.is_empty()? {
-            Series::new("", [f64::NAN, f64::NAN, f64::NAN, f64::NAN])
+            Series::new("".into(), [f64::NAN, f64::NAN, f64::NAN, f64::NAN])
         } else {
             let x_min = geom.get_x_min()?;
             let y_min = geom.get_y_min()?;
             let x_max = geom.get_x_max()?;
             let y_max = geom.get_y_max()?;
-            Series::new("", [x_min, y_min, x_max, y_max])
+            Series::new("".into(), [x_min, y_min, x_max, y_max])
         };
         Ok(res)
     }
@@ -867,14 +867,14 @@ pub fn coverage_union_all(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
         .and_then(Geometry::create_geometry_collection)
         .and_then(|geom| geom.coverage_union())
         .and_then(|geom| geom.to_ewkb())
-        .map(|res| BinaryChunked::from_slice(wkb.name(), &[res]))
+        .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
 pub fn polygonize(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     collect_geometry_vec(wkb)
         .and_then(|vec| Geometry::polygonize(&vec))
         .and_then(|geom| geom.to_ewkb())
-        .map(|res| BinaryChunked::from_slice(wkb.name(), &[res]))
+        .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
 fn aggregate_with<F>(wkb: &BinaryChunked, func: F) -> GResult<BinaryChunked>
@@ -884,7 +884,7 @@ where
     collect_geometry_vec(wkb)
         .and_then(func)
         .and_then(|geom| geom.to_ewkb())
-        .map(|res| BinaryChunked::from_slice(wkb.name(), &[res]))
+        .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
 pub fn multipoint(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
@@ -1010,7 +1010,7 @@ pub fn delaunay_triangulation(
         .and_then(Geometry::create_geometry_collection)
         .and_then(|geom| geom.delaunay_triangulation(params.tolerance, params.only_edges))
         .and_then(|geom| geom.to_ewkb())
-        .map(|res| BinaryChunked::from_slice(wkb.name(), &[res]))
+        .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
 pub fn densify(wkb: &BinaryChunked, tolerance: &Float64Chunked) -> GResult<BinaryChunked> {
@@ -1249,7 +1249,7 @@ pub fn voronoi_polygons(wkb: &BinaryChunked, params: &VoronoiKwargs) -> GResult<
         .and_then(Geometry::create_geometry_collection)
         .and_then(|geom| geom.voronoi(extend_to.as_ref(), params.tolerance, params.only_edges))
         .and_then(|geom| geom.to_ewkb())
-        .map(|res| BinaryChunked::from_slice(wkb.name(), &[res]))
+        .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
 fn strtree(geoms: &[Option<Geometry>]) -> GResult<STRtree<usize>> {
@@ -1292,11 +1292,11 @@ pub fn sjoin(
         .map(|v| v.as_ref().map(Geom::to_prepared_geom).transpose())
         .collect::<GResult<Vec<_>>>()?;
     let mut left_index_builder = PrimitiveChunkedBuilder::<UInt32Type>::new(
-        "left_index",
+        "left_index".into(),
         core::cmp::max(left.len(), right.len()),
     );
     let mut right_index_builder = PrimitiveChunkedBuilder::<UInt32Type>::new(
-        "right_index",
+        "right_index".into(),
         core::cmp::max(left.len(), right.len()),
     );
 
