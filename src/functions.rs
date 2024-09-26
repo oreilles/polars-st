@@ -1,12 +1,12 @@
 use crate::{
-    arity::{
-        broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
-        try_binary_elementwise_values, try_ternary_elementwise_values,
-    },
     args::{
         BufferKwargs, ClipByRectKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs,
         OffsetCurveKwargs, SetPrecisionKwargs, SpatialJoinPredicate, ToGeoJsonKwargs, ToWkbKwargs,
         ToWktKwargs, VoronoiKwargs,
+    },
+    arity::{
+        broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
+        try_binary_elementwise_values, try_ternary_elementwise_values,
     },
     wkb::{read_ewkb_header, WKBGeometryType},
 };
@@ -1355,9 +1355,9 @@ pub fn to_srid(wkb: &BinaryChunked, from_srid: i32, to_srid: i32) -> GResult<Bin
     wkb.try_apply_nonnull_values_generic(|wkb| {
         Geometry::new_from_wkb(wkb)
             .and_then(|geom| apply_proj_transformation(geom, &transformation))
-            .and_then(|mut geom| {
+            .map(|mut geom| {
                 geom.set_srid(to_srid);
-                Ok(geom)
+                geom
             })?
             .to_ewkb()
     })

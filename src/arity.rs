@@ -111,12 +111,14 @@ where
         (1, 1, _) => {
             let a = unsafe { ca1.get_unchecked(0) };
             let b = unsafe { ca2.get_unchecked(0) };
-            Ok(try_unary_elementwise(ca3, |c| op(a.clone(), b.clone(), c))?.with_name(ca1.name().clone()))
+            try_unary_elementwise(ca3, |c| op(a.clone(), b.clone(), c))
+                .map(|ca| ca.with_name(ca1.name().clone()))
         }
         (1, _, 1) => {
             let a = unsafe { ca1.get_unchecked(0) };
             let c = unsafe { ca3.get_unchecked(0) };
-            Ok(try_unary_elementwise(ca2, |b| op(a.clone(), b, c.clone()))?.with_name(ca1.name().clone()))
+            try_unary_elementwise(ca2, |b| op(a.clone(), b, c.clone()))
+                .map(|ca| ca.with_name(ca1.name().clone()))
         }
         (_, 1, 1) => {
             let b = unsafe { ca2.get_unchecked(0) };
