@@ -3,7 +3,7 @@ use crate::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
         try_binary_elementwise_values, try_ternary_elementwise_values,
     },
-    kwargs::{
+    args::{
         BufferKwargs, ClipByRectKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs,
         OffsetCurveKwargs, SetPrecisionKwargs, SpatialJoinPredicate, ToGeoJsonKwargs, ToWkbKwargs,
         ToWktKwargs, VoronoiKwargs,

@@ -14,11 +14,11 @@
 
 use pyo3::prelude::*;
 
+mod args;
 mod arity;
 mod crs;
 mod expressions;
-mod geo;
-mod kwargs;
+mod functions;
 mod wkb;
 
 #[pymodule]
