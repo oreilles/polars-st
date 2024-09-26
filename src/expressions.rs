@@ -9,7 +9,7 @@ use polars_plan::{
     prelude::{ApplyOptions, FunctionFlags, FunctionOptions},
 };
 use pyo3::prelude::*;
-use pyo3_polars::{derive::polars_expr, PySeries};
+use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
 
 fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
     fields
@@ -1191,7 +1191,7 @@ pub fn sjoin(inputs: &[Series], kwargs: kwargs::SpatialJoinKwargs) -> PolarsResu
 }
 
 #[pyfunction]
-pub fn apply_coordinates(py: Python, pyseries: PySeries, pyfunc: PyObject) -> PyResult<PySeries> {
+pub fn apply_coordinates(py: Python, pyseries: PySeries, pyfunc: PyObject) -> Result<PySeries, PyPolarsErr> {
     fn apply_coordinates<F>(inputs: &[Series], func: F) -> PolarsResult<Series>
     where
         F: Fn(Series, Series, Option<Series>) -> PolarsResult<(Series, Series, Option<Series>)>,
@@ -1213,8 +1213,7 @@ pub fn apply_coordinates(py: Python, pyseries: PySeries, pyfunc: PyObject) -> Py
             ty.0.cast(&DataType::Float64)?,
             tz.map(|tz| tz.0.cast(&DataType::Float64)).transpose()?,
         ))
-    })
-    .expect("failed to apply transform");
+    })?;
 
     Ok(PySeries(res))
 }
@@ -1267,5 +1266,5 @@ pub fn to_srid(inputs: &[Series], kwargs: kwargs::ToSridKwargs) -> PolarsResult<
         .select([chained_then.otherwise(NULL.lit())])
         .collect()?;
 
-    Ok(res.get_columns()[0].to_owned())
+    Ok(res.get_columns()[0].clone())
 }
