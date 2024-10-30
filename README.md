@@ -24,6 +24,14 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 └──────────────────────────────────────────┘
 ```
 
+## Installation
+
+Polars ST is published on PyPi so you can install it with your preferred package manager.
+
+```sh
+pip install polars-st
+```
+
 ## How it works
 
 Geometries are stored as EWKB in regular Polars Binary columns. EWKB is a extension to the WKB standard popularized by PostGIS, that can also store information about the CRS of each geometry as an integer code called SRID.
