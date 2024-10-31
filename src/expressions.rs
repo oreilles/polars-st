@@ -1213,7 +1213,7 @@ pub fn apply_coordinates(
     let res = apply_coordinates(&[pyseries.0], |x, y, z| {
         let (tx, ty, tz): (PySeries, PySeries, Option<PySeries>) = pyfunc
             .call1(py, (PySeries(x), PySeries(y), z.map(PySeries)))
-            .unwrap()
+            .map_err(to_compute_err)?
             .extract(py)
             .map_err(to_compute_err)?;
         Ok((
