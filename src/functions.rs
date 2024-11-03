@@ -260,6 +260,17 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
         .collect()
 }
 
+pub fn flip_coordinates(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        Geometry::new_from_wkb(wkb)?
+            .transform_xy(|x, y| {
+                (*x, *y) = (*y, *x);
+                1
+            })?
+            .to_ewkb()
+    })
+}
+
 pub fn apply_coordinates<F>(wkb: &BinaryChunked, transform: F) -> GResult<BinaryChunked>
 where
     F: Fn(Series, Series, Option<Series>) -> PolarsResult<(Series, Series, Option<Series>)>,

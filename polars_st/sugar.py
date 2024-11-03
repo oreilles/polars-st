@@ -483,6 +483,11 @@ def simplify(
     return geom(*columns).st.simplify(tolerance, preserve_topology)
 
 
+def flip_coordinates(*columns: str) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[flip_coordinates()][polars_st.GeoExprNameSpace.flip_coordinates]</code>."""  # noqa: E501
+    return geom(*columns).st.flip_coordinates()
+
+
 def minimum_rotated_rectangle(*columns: str) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[minimum_rotated_rectangle()][polars_st.GeoExprNameSpace.minimum_rotated_rectangle]</code>."""  # noqa: E501
     return geom(*columns).st.minimum_rotated_rectangle()

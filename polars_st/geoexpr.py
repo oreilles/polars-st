@@ -1073,6 +1073,15 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast(GeoExpr, e))
 
+    def flip_coordinates(self) -> GeoExpr:
+        """Flip the x and y coordinates of each geometry."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="flip_coordinates",
+            args=[self._expr],
+            is_elementwise=True,
+        ).pipe(lambda e: cast(GeoExpr, e))
+
     def minimum_rotated_rectangle(self) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,

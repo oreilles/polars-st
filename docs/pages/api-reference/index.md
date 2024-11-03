@@ -115,6 +115,7 @@ hide:
 | `remove_repeated_points` | Remove the repeated points for each geometry. | [`root`][polars_st.remove_repeated_points], [`Expr`][polars_st.GeoExprNameSpace.remove_repeated_points], [`Series`][polars_st.GeoSeriesNameSpace.remove_repeated_points] |
 | `reverse` | Reverse the coordinates order of each geometry. | [`root`][polars_st.reverse], [`Expr`][polars_st.GeoExprNameSpace.reverse], [`Series`][polars_st.GeoSeriesNameSpace.reverse] |
 | `simplify` | Simplify each geometry with a given tolerance. | [`root`][polars_st.simplify], [`Expr`][polars_st.GeoExprNameSpace.simplify], [`Series`][polars_st.GeoSeriesNameSpace.simplify] |
+| `flip_coordinates` | Flip the x and y coordinates of each geometry. | [`root`][polars_st.flip_coordinates], [`Expr`][polars_st.GeoExprNameSpace.flip_coordinates], [`Series`][polars_st.GeoSeriesNameSpace.flip_coordinates] |
 | `minimum_rotated_rectangle` | | [`root`][polars_st.minimum_rotated_rectangle], [`Expr`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle], [`Series`][polars_st.GeoSeriesNameSpace.minimum_rotated_rectangle] | |
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |
 | `shortest_line` | Return the shortest line between each geometry and other. | [`Expr`][polars_st.GeoExprNameSpace.shortest_line], [`Series`][polars_st.GeoSeriesNameSpace.shortest_line] |

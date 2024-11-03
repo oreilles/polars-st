@@ -1194,6 +1194,15 @@ pub fn sjoin(inputs: &[Series], kwargs: args::SpatialJoinKwargs) -> PolarsResult
         })?
 }
 
+#[polars_expr(output_type=Binary)]
+pub fn flip_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    functions::flip_coordinates(wkb)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
 #[pyfunction]
 pub fn apply_coordinates(
     py: Python,

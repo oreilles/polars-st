@@ -719,6 +719,11 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def flip_coordinates(self) -> GeoSeries:
+        """See [`GeoExprNameSpace.flip_coordinates`][polars_st.GeoExprNameSpace.flip_coordinates]."""  # noqa: E501
+        ...
+
+    @dispatch
     def minimum_rotated_rectangle(self) -> GeoSeries:
         """See [`GeoExprNameSpace.minimum_rotated_rectangle`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle]."""  # noqa: E501
         ...
