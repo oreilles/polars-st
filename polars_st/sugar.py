@@ -84,6 +84,7 @@ __all__ = [
     "remove_repeated_points",
     "reverse",
     "simplify",
+    "flip_coordinates",
     "minimum_rotated_rectangle",
     "affine_transform",
     "translate",

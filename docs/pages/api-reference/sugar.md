@@ -70,6 +70,7 @@ The following functions can be used that way:
             - remove_repeated_points
             - reverse
             - simplify
+            - flip_coordinates
             - minimum_rotated_rectangle
             - affine_transform
             - translate
