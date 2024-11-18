@@ -16,9 +16,9 @@ pip install polars-st
 >>> import polars as pl
 >>> import polars_st as st
 >>> df = pl.DataFrame({
-...     "wkt": [
-...         "POINT(0 0)",
-...         "POINT(1 2)",
+...     "geometry": [
+...         "POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))",
+...         "POLYGON ((0 0, 0 1, 1 1, 0 0))",
 ...     ]
 ... })
 >>> gdf = df.select(geometry=st.from_wkt("geometry"))
