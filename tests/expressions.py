@@ -186,6 +186,7 @@ functions = [
     Function(Geo.snap, pl.Binary(), {"other": dummy_point, "tolerance": 1.0}),
     Function(Geo.simplify, pl.Binary(), {"tolerance": 1.0, "preserve_topology": False}),
     Function(Geo.simplify, pl.Binary(), {"tolerance": 1.0, "preserve_topology": True}),
+    Function(Geo.flip_coordinates, pl.Binary()),
     Function(Geo.minimum_rotated_rectangle, pl.Binary()),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": False}),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": True}),
