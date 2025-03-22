@@ -18,6 +18,11 @@ dependencies = [
     "pyogrio>=0.9.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Oreilles/polars-st"
+Documentation = "https://oreilles.github.io/polars-st/"
+Issues = "https://github.com/Oreilles/polars-st/issues"
+
 [tool.uv]
 dev-dependencies = [
     "altair>=5.4.1",

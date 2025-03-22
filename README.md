@@ -2,7 +2,9 @@
 
 # Polars ST
 
-Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/polars) DataFrames, Series and Expressions. Just like [Shapely](https://github.com/shapely/shapely/) and [Geopandas](https://github.com/geopandas/geopandas), it make use of the library [GEOS](https://github.com/libgeos/geos), meaning that its API is mostly identical to theirs.
+Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/polars) DataFrames, Series, and Expressions. Just like [Shapely](https://github.com/shapely/shapely/) and [GeoPandas](https://github.com/geopandas/geopandas), it make use of the [GEOS](https://github.com/libgeos/geos) library, meaning that its API is mostly identical to theirs.
+
+* Documentation: https://oreilles.github.io/polars-st/
 
 ```pycon
 >>> import polars as pl
@@ -26,7 +28,7 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 
 ## Installation
 
-Polars ST is published on PyPi so you can install it with your preferred package manager.
+Polars ST is published on PyPI so you can install it with your preferred package manager.
 
 ```sh
 pip install polars-st
@@ -41,7 +43,7 @@ For every spatial operations, the WKB binary blob will be parsed into a Geometry
 
 ## About GeoPolars
 
-[GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
+[GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising, but pre-alpha, tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
 
 Storing geometry as EWKB and delegating core functionality to GEOS allows `polars-st` to be ready now, and provide additional features such as XYZM coordinates, curved geometry types and per-geometry CRS information.
 
@@ -49,7 +51,7 @@ I really hope Geopolars get there soon, and that maybe some of the API design ex
 
 ## About Polars
 
-This project is not affiliated with Polars. The design language was made very close to that of Polars because I found it amazingly appealing and liked the challenge of adding geographic meaning to it, and to also hilight the fact that this project is an exclusive extension to Polars.
+This project is not affiliated with Polars. The design language was made very close to that of Polars because I found it amazingly appealing and liked the challenge of adding geographic meaning to it, and to also highlight the fact that this project is an exclusive extension to Polars.
 
 
 ## About GEOS
