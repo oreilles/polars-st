@@ -1205,6 +1205,32 @@ pub fn interpolate_normalized(
     })
 }
 
+pub fn project(a: &BinaryChunked, b: &BinaryChunked) -> GResult<Float64Chunked> {
+    broadcast_try_binary_elementwise_values(a, b, |a, b| {
+        let a = Geometry::new_from_wkb(a)?;
+        let b = Geometry::new_from_wkb(b)?;
+        // Empty lines error, empty points segfault
+        if a.geometry_type()? == LineString && a.is_empty()? || b.is_empty()? {
+            Ok(f64::NAN)
+        } else {
+            a.project(&b)
+        }
+    })
+}
+
+pub fn project_normalized(a: &BinaryChunked, b: &BinaryChunked) -> GResult<Float64Chunked> {
+    broadcast_try_binary_elementwise_values(a, b, |a, b| {
+        let a = Geometry::new_from_wkb(a)?;
+        let b = Geometry::new_from_wkb(b)?;
+        // Empty lines error, empty points segfault
+        if a.geometry_type()? == LineString && a.is_empty()? || b.is_empty()? {
+            Ok(f64::NAN)
+        } else {
+            a.project_normalized(&b)
+        }
+    })
+}
+
 pub fn line_merge(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.line_merge()?.to_ewkb())
 }

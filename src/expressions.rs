@@ -1146,6 +1146,19 @@ pub fn interpolate(inputs: &[Series], kwargs: args::InterpolateKwargs) -> Polars
     .map(IntoSeries::into_series)
 }
 
+#[polars_expr(output_type=Float64)]
+pub fn project(inputs: &[Series], kwargs: args::InterpolateKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let left = inputs[0].binary()?;
+    let right = inputs[1].binary()?;
+    match kwargs.normalized {
+        true => functions::project_normalized(left, right),
+        false => functions::project(left, right),
+    }
+    .map_err(to_compute_err)
+    .map(IntoSeries::into_series)
+}
+
 #[polars_expr(output_type=Binary)]
 pub fn line_merge(inputs: &[Series], kwargs: args::LineMergeKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;

@@ -790,6 +790,15 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def project(
+        self,
+        other: IntoGeoExprColumn,
+        normalized: bool = False,
+    ) -> pl.Series:
+        """See [`GeoExprNameSpace.project`][polars_st.GeoExprNameSpace.project]."""
+        ...
+
+    @dispatch
     def line_merge(self, directed: bool = False) -> GeoSeries:
         """See [`GeoExprNameSpace.line_merge`][polars_st.GeoExprNameSpace.line_merge]."""
         ...

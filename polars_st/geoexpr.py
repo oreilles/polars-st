@@ -1222,6 +1222,19 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast(GeoExpr, e))
 
+    def project(
+        self,
+        other: IntoGeoExprColumn,
+        normalized: bool = False,
+    ) -> pl.Expr:
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="project",
+            args=[self._expr, other],
+            kwargs={"normalized": normalized},
+            is_elementwise=True,
+        )
+
     def line_merge(self, directed: bool = False) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,

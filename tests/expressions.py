@@ -190,6 +190,8 @@ functions = [
     Function(Geo.minimum_rotated_rectangle, pl.Binary()),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": False}),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": True}),
+    Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": True}),
+    Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": False}),
     Function(Geo.line_merge, pl.Binary(), {"directed": True}),
     Function(Geo.line_merge, pl.Binary(), {"directed": False}),
     Function(Geo.shared_paths, pl.Binary(), {"other": dummy_line}),
@@ -370,6 +372,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     if func.call in {
         Geo.offset_curve,
         Geo.interpolate,
+        Geo.project,
         Geo.get_point,
     } and geom_type not in {GeometryType.LineString}:
         match = "generic error: Geometry must be a LineString"
