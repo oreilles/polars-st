@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
-    from altair.typing import EncodeKwds
+    from altair.vegalite.v5.schema._config import MarkConfigKwds
     from polars._typing import (
         FrameInitTypes,
         JoinStrategy,
@@ -450,14 +450,14 @@ class GeoDataFrameNameSpace:
             geometry=geom().st.to_geojson().str.json_decode(),
         ).write_ndjson(file)
 
-    def plot(self, **kwargs: Unpack[EncodeKwds]) -> alt.Chart:
+    def plot(self, **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
         """Draw map plot.
 
         Polars does not implement plotting logic itself but instead defers to
         [`Altair`](https://altair-viz.github.io/).
 
         `df.st.plot(**kwargs)` is shorthand for
-        `alt.Chart(df).mark_geoshape().encode(**kwargs).interactive()`. Please read Altair
+        `alt.Chart(df).mark_geoshape(**kwargs).interactive()`. Please read Altair
         [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
         for available options.
         """

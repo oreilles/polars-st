@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
-    from altair.typing import EncodeKwds
+    from altair.vegalite.v5.schema._config import MarkConfigKwds
     from polars._typing import PolarsDataType
     from typing_extensions import Unpack
 
@@ -892,14 +892,14 @@ class GeoSeriesNameSpace:
         """See [`GeoExprNameSpace.delaunay_triangles`][polars_st.GeoExprNameSpace.delaunay_triangles]."""  # noqa: E501
         ...
 
-    def plot(self, **kwargs: Unpack[EncodeKwds]) -> alt.Chart:
+    def plot(self, **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
         """Draw map plot.
 
         Polars does not implement plotting logic itself but instead defers to
         [`Altair`](https://altair-viz.github.io/).
 
         `df.st.plot(**kwargs)` is shorthand for
-        `alt.Chart(df).mark_geoshape().encode(**kwargs).interactive()`. Please read Altair
+        `alt.Chart(df).mark_geoshape(**kwargs).interactive()`. Please read Altair
         [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
         for available options.
         """
