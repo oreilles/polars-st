@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: ubuntu-22.04
+          - runner: ubuntu-latest
             target: x86_64
           - runner: ubuntu-latest
             target: x86
@@ -41,6 +41,8 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --zig --release --out dist
           manylinux: auto
+        env:
+          RUSTFLAGS: "-Zlinker-features=-lld"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -84,7 +86,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: macos-12
+          - runner: macos-13
             target: x86_64
           - runner: macos-14
             target: aarch64
@@ -98,7 +100,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist
-          sccache: 'true'
+          sccache: true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
