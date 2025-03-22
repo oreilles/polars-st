@@ -127,6 +127,7 @@ hide:
 | `scale` | | [`root`][polars_st.scale], [`Expr`][polars_st.GeoExprNameSpace.scale], [`Series`][polars_st.GeoSeriesNameSpace.scale] |
 | **LineString operations** | | |
 | `interpolate` | | [`root`][polars_st.interpolate], [`Expr`][polars_st.GeoExprNameSpace.interpolate], [`Series`][polars_st.GeoSeriesNameSpace.interpolate] |
+| `project` | | [`Expr`][polars_st.GeoExprNameSpace.project], [`Series`][polars_st.GeoSeriesNameSpace.project] |
 | `line_merge` | | [`root`][polars_st.line_merge], [`Expr`][polars_st.GeoExprNameSpace.line_merge], [`Series`][polars_st.GeoSeriesNameSpace.line_merge] |
 | `shared_paths` | | [`Expr`][polars_st.GeoExprNameSpace.shared_paths], [`Series`][polars_st.GeoSeriesNameSpace.shared_paths] |
 | **Aggregation** | | |
