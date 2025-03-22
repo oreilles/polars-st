@@ -43,7 +43,7 @@ For every spatial operations, the WKB binary blob will be parsed into a Geometry
 
 ## About GeoPolars
 
-[GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising, but pre-alpha, tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
+[GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
 
 Storing geometry as EWKB and delegating core functionality to GEOS allows `polars-st` to be ready now, and provide additional features such as XYZM coordinates, curved geometry types and per-geometry CRS information.
 
