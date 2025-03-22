@@ -167,7 +167,7 @@ pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
         let num_rings = geom.get_num_interior_rings()?;
         let mut rings = BinaryChunkedBuilder::new("".into(), num_rings + 1);
         for n in 0..num_rings {
-            let ring = geom.get_interior_ring_n(n as u32)?;
+            let ring = geom.get_interior_ring_n(n)?;
             rings.append_value(ring.to_ewkb()?);
         }
         Ok(rings.finish().into_series())
@@ -347,7 +347,8 @@ pub fn get_interior_ring_n(wkb: &BinaryChunked, index: &UInt32Chunked) -> GResul
     broadcast_try_binary_elementwise(wkb, index, |wkb, index| {
         if let (Some(wkb), Some(index)) = (wkb, index) {
             let geom = Geometry::new_from_wkb(wkb)?;
-            let num_rings = geom.get_num_interior_rings()? as u32;
+            let index = index as usize;
+            let num_rings = geom.get_num_interior_rings()?;
             if index < num_rings {
                 return Some(geom.get_interior_ring_n(index)?.to_ewkb()).transpose();
             }
