@@ -319,7 +319,7 @@ dependencies = [
 [[package]]
 name = "geos"
 version = "9.0.0"
-source = "git+https://github.com/Oreilles/rust-geos?branch=main#d61aa56e58e8835d0184526cb0baa99d35cad578"
+source = "git+https://github.com/Oreilles/rust-geos?branch=main#00f5eb644a0f23007605c8db537f9b0f8c6e6463"
 dependencies = [
  "c_vec",
  "geos-sys",
@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "geos-src"
 version = "0.2.3"
-source = "git+https://github.com/Oreilles/rust-geos?branch=main#d61aa56e58e8835d0184526cb0baa99d35cad578"
+source = "git+https://github.com/Oreilles/rust-geos?branch=main#00f5eb644a0f23007605c8db537f9b0f8c6e6463"
 dependencies = [
  "cmake",
 ]
@@ -338,7 +338,7 @@ dependencies = [
 [[package]]
 name = "geos-sys"
 version = "2.0.6"
-source = "git+https://github.com/Oreilles/rust-geos?branch=main#d61aa56e58e8835d0184526cb0baa99d35cad578"
+source = "git+https://github.com/Oreilles/rust-geos?branch=main#00f5eb644a0f23007605c8db537f9b0f8c6e6463"
 dependencies = [
  "geos-src",
  "libc",
@@ -1455,9 +1455,9 @@ checksum = "6ab8598aa408498679922eff7fa985c25d58a90771bd6be794434c5277eab1a6"
 
 [[package]]
 name = "semver"
-version = "1.0.23"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
+checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
 
 [[package]]
 name = "serde"
