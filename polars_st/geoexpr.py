@@ -39,13 +39,13 @@ class GeoExpr(pl.Expr):
         return GeoExprNameSpace(self)
 
     def __new__(cls) -> GeoExpr:  # noqa: PYI034
-        return cast(GeoExpr, pl.Expr())
+        return cast("GeoExpr", pl.Expr())
 
 
 @register_expr_namespace("st")
 class GeoExprNameSpace:
     def __init__(self, expr: pl.Expr) -> None:
-        self._expr = cast(GeoExpr, expr)
+        self._expr = cast("GeoExpr", expr)
 
     def geometry_type(self) -> pl.Expr:
         """Return the type ID of each geometry.
@@ -240,7 +240,7 @@ class GeoExprNameSpace:
             function_name="exterior_ring",
             args=self._expr,
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def interior_rings(self) -> pl.Expr:
         """Return the list of interior rings for Polygon geometries."""
@@ -267,7 +267,7 @@ class GeoExprNameSpace:
             function_name="get_interior_ring",
             args=[self._expr, index],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def count_geometries(self) -> pl.Expr:
         """Return the number of parts in multipart geometries."""
@@ -285,7 +285,7 @@ class GeoExprNameSpace:
             function_name="get_geometry",
             args=[self._expr, index],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def count_points(self) -> pl.Expr:
         """Return the number of points in LineString geometries."""
@@ -303,7 +303,7 @@ class GeoExprNameSpace:
             function_name="get_point",
             args=[self._expr, index],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def parts(self) -> pl.Expr:
         """Return the list of parts for multipart geometries."""
@@ -335,7 +335,7 @@ class GeoExprNameSpace:
             args=[self._expr, grid_size],
             kwargs={"mode": mode},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def distance(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return the distance from each geometry to other."""
@@ -396,7 +396,7 @@ class GeoExprNameSpace:
             function_name="set_srid",
             args=[self._expr, srid],
             is_elementwise=True,
-        ).pipe(lambda s: cast(GeoExpr, s))
+        ).pipe(lambda s: cast("GeoExpr", s))
 
     def to_srid(self, srid: int) -> GeoExpr:
         """Transform the coordinates of each geometry into a new CRS.
@@ -410,7 +410,7 @@ class GeoExprNameSpace:
             args=self._expr,
             kwargs={"srid": srid},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     # Serialization
 
@@ -799,7 +799,7 @@ class GeoExprNameSpace:
             args=[self._expr, other],
             kwargs={"grid_size": grid_size},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def unary_union(self, grid_size: float | None = None) -> GeoExpr:
         """Return the unary union of each geometry."""
@@ -809,7 +809,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"grid_size": grid_size},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def coverage_union(self) -> GeoExpr:
         """Return the coverage union of each geometry with other."""
@@ -818,7 +818,7 @@ class GeoExprNameSpace:
             function_name="coverage_union",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def intersection(
         self,
@@ -832,7 +832,7 @@ class GeoExprNameSpace:
             args=[self._expr, other],
             kwargs={"grid_size": grid_size},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def difference(
         self,
@@ -846,7 +846,7 @@ class GeoExprNameSpace:
             args=[self._expr, other],
             kwargs={"grid_size": grid_size},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def symmetric_difference(
         self,
@@ -860,7 +860,7 @@ class GeoExprNameSpace:
             args=[self._expr, other],
             kwargs={"grid_size": grid_size},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     # Constructive operations
 
@@ -871,7 +871,7 @@ class GeoExprNameSpace:
             function_name="boundary",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def buffer(
         self,
@@ -895,7 +895,7 @@ class GeoExprNameSpace:
                 "single_sided": single_sided,
             },
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def offset_curve(
         self,
@@ -915,7 +915,7 @@ class GeoExprNameSpace:
                 "mitre_limit": mitre_limit,
             },
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def centroid(self) -> GeoExpr:
         """Return the centroid of each geometry."""
@@ -924,7 +924,7 @@ class GeoExprNameSpace:
             function_name="centroid",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def center(self) -> GeoExpr:
         """Return the bounding box center of each geometry."""
@@ -933,7 +933,7 @@ class GeoExprNameSpace:
             function_name="center",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def clip_by_rect(
         self,
@@ -954,7 +954,7 @@ class GeoExprNameSpace:
                 "ymax": ymax,
             },
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def convex_hull(self) -> GeoExpr:
         """Return the convex hull of each geometry."""
@@ -963,7 +963,7 @@ class GeoExprNameSpace:
             function_name="convex_hull",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def concave_hull(self, ratio: float = 0.0, allow_holes: bool = False) -> GeoExpr:
         """Return the concave hull of each geometry."""
@@ -973,7 +973,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"ratio": ratio, "allow_holes": allow_holes},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def segmentize(self, max_segment_length: IntoDecimalExpr) -> GeoExpr:
         return register_plugin_function(
@@ -981,7 +981,7 @@ class GeoExprNameSpace:
             function_name="segmentize",
             args=[self._expr, max_segment_length],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def envelope(self) -> GeoExpr:
         """Return the envelope of each geometry."""
@@ -990,7 +990,7 @@ class GeoExprNameSpace:
             function_name="envelope",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def extract_unique_points(self) -> GeoExpr:
         return register_plugin_function(
@@ -998,7 +998,7 @@ class GeoExprNameSpace:
             function_name="extract_unique_points",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def build_area(self) -> GeoExpr:
         return register_plugin_function(
@@ -1006,7 +1006,7 @@ class GeoExprNameSpace:
             function_name="build_area",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def make_valid(self) -> GeoExpr:
         return register_plugin_function(
@@ -1014,7 +1014,7 @@ class GeoExprNameSpace:
             function_name="make_valid",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def normalize(self) -> GeoExpr:
         return register_plugin_function(
@@ -1022,7 +1022,7 @@ class GeoExprNameSpace:
             function_name="normalize",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def node(self) -> GeoExpr:
         return register_plugin_function(
@@ -1030,7 +1030,7 @@ class GeoExprNameSpace:
             function_name="node",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def point_on_surface(self) -> GeoExpr:
         """Return a point that intersects of each geometry."""
@@ -1039,7 +1039,7 @@ class GeoExprNameSpace:
             function_name="point_on_surface",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def remove_repeated_points(self, tolerance: IntoDecimalExpr = 0.0) -> GeoExpr:
         """Remove the repeated points for each geometry."""
@@ -1048,7 +1048,7 @@ class GeoExprNameSpace:
             function_name="remove_repeated_points",
             args=[self._expr, tolerance],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def reverse(self) -> GeoExpr:
         """Reverse the coordinates order of each geometry."""
@@ -1057,7 +1057,7 @@ class GeoExprNameSpace:
             function_name="reverse",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def simplify(
         self,
@@ -1071,7 +1071,7 @@ class GeoExprNameSpace:
             args=[self._expr, tolerance],
             kwargs={"preserve_topology": preserve_topology},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def flip_coordinates(self) -> GeoExpr:
         """Flip the x and y coordinates of each geometry."""
@@ -1080,7 +1080,7 @@ class GeoExprNameSpace:
             function_name="flip_coordinates",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def minimum_rotated_rectangle(self) -> GeoExpr:
         return register_plugin_function(
@@ -1088,7 +1088,7 @@ class GeoExprNameSpace:
             function_name="minimum_rotated_rectangle",
             args=[self._expr],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def snap(
         self,
@@ -1100,7 +1100,7 @@ class GeoExprNameSpace:
             function_name="snap",
             args=[self._expr, other, tolerance],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def shortest_line(self, other: IntoGeoExprColumn) -> GeoExpr:
         """Return the shortest line between each geometry and other."""
@@ -1109,7 +1109,7 @@ class GeoExprNameSpace:
             function_name="shortest_line",
             args=[self._expr, other],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     # Affine tranforms
 
@@ -1136,7 +1136,7 @@ class GeoExprNameSpace:
                 else pl.lit(matrix, dtype=pl.Array(pl.Float64, len(matrix))),
             ],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def translate(
         self,
@@ -1155,7 +1155,7 @@ class GeoExprNameSpace:
             function_name="affine_transform",
             args=[self._expr, matrix],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def rotate(
         self,
@@ -1180,7 +1180,7 @@ class GeoExprNameSpace:
             function_name="affine_transform",
             args=[self._expr, matrix],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def scale(
         self,
@@ -1205,7 +1205,7 @@ class GeoExprNameSpace:
             function_name="affine_transform",
             args=[self._expr, matrix],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     # Linestring operations
 
@@ -1220,7 +1220,7 @@ class GeoExprNameSpace:
             args=[self._expr, distance],
             kwargs={"normalized": normalized},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def project(
         self,
@@ -1242,7 +1242,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"directed": directed},
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def shared_paths(self, other: IntoGeoExprColumn) -> GeoExpr:
         return register_plugin_function(
@@ -1250,7 +1250,7 @@ class GeoExprNameSpace:
             function_name="shared_paths",
             args=[self._expr, other],
             is_elementwise=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     # Aggregations
 
@@ -1270,7 +1270,7 @@ class GeoExprNameSpace:
             function_name="multipoint",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def multilinestring(self) -> GeoExpr:
         """Aggregate LineString geometries into a single MultiLineString."""
@@ -1279,7 +1279,7 @@ class GeoExprNameSpace:
             function_name="multilinestring",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def multipolygon(self) -> GeoExpr:
         """Aggregate Polygon geometries into a single MultiPolygon."""
@@ -1288,7 +1288,7 @@ class GeoExprNameSpace:
             function_name="multipolygon",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def geometrycollection(self) -> GeoExpr:
         """Aggregate geometries into a single GeometryCollection."""
@@ -1297,7 +1297,7 @@ class GeoExprNameSpace:
             function_name="geometrycollection",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def collect(self) -> GeoExpr:
         """Aggregate geometries into a single MultiPart geometry or GeometryCollection."""
@@ -1306,7 +1306,7 @@ class GeoExprNameSpace:
             function_name="collect",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def union_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the union of all geometries."""
@@ -1316,7 +1316,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"grid_size": grid_size},
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def coverage_union_all(self) -> GeoExpr:
         """Return the coverage union of all geometries."""
@@ -1325,7 +1325,7 @@ class GeoExprNameSpace:
             function_name="coverage_union_all",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def intersection_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the intersection of all geometries."""
@@ -1335,7 +1335,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"grid_size": grid_size},
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def difference_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the difference of all geometries."""
@@ -1345,7 +1345,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"grid_size": grid_size},
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def symmetric_difference_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the symmetric difference of all geometries."""
@@ -1355,7 +1355,7 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"grid_size": grid_size},
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def polygonize(self) -> GeoExpr:
         return register_plugin_function(
@@ -1363,7 +1363,7 @@ class GeoExprNameSpace:
             function_name="polygonize",
             args=[self._expr],
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def voronoi_polygons(
         self,
@@ -1382,7 +1382,7 @@ class GeoExprNameSpace:
                 "only_edges": only_edges,
             },
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
     def delaunay_triangles(
         self,
@@ -1399,7 +1399,7 @@ class GeoExprNameSpace:
                 "only_edges": only_edges,
             },
             returns_scalar=True,
-        ).pipe(lambda e: cast(GeoExpr, e))
+        ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def _interpret_origin(

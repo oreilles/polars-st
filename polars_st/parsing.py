@@ -17,12 +17,12 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    "from_wkb",
-    "from_wkt",
     "from_ewkt",
     "from_geojson",
-    "from_xy",
     "from_shapely",
+    "from_wkb",
+    "from_wkt",
+    "from_xy",
 ]
 
 
@@ -36,7 +36,7 @@ def from_wkb(expr: IntoExprColumn) -> GeoExpr:
         ... ) # doctest: +SKIP
         >>> gdf = df.select(st.from_wkb("geometry"))  # doctest: +SKIP
     """
-    return cast(GeoExpr, wrap_expr(parse_into_expression(expr)))
+    return cast("GeoExpr", wrap_expr(parse_into_expression(expr)))
 
 
 def from_wkt(expr: IntoExprColumn) -> GeoExpr:
@@ -54,7 +54,7 @@ def from_wkt(expr: IntoExprColumn) -> GeoExpr:
         function_name="from_wkt",
         args=[expr],
         is_elementwise=True,
-    ).pipe(lambda e: cast(GeoExpr, e))
+    ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def from_ewkt(expr: IntoExprColumn) -> GeoExpr:
@@ -89,7 +89,7 @@ def from_geojson(expr: IntoExprColumn) -> GeoExpr:
         function_name="from_geojson",
         args=[expr],
         is_elementwise=True,
-    ).pipe(lambda e: cast(GeoExpr, e))
+    ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def from_xy(
@@ -111,7 +111,7 @@ def from_xy(
         function_name="from_xy",
         args=pl.struct(x=x, y=y) if z is None else pl.struct(x=x, y=y, z=z),
         is_elementwise=True,
-    ).pipe(lambda e: cast(GeoExpr, e))
+    ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def from_shapely(expr: IntoExprColumn) -> GeoExpr:
@@ -133,4 +133,4 @@ def from_shapely(expr: IntoExprColumn) -> GeoExpr:
         return_dtype=pl.Binary,
         is_elementwise=True,
     )
-    return cast(GeoExpr, res)
+    return cast("GeoExpr", res)

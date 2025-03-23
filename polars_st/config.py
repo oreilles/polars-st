@@ -74,7 +74,7 @@ class Config(contextlib.ContextDecorator):
         if geometry_column is None:
             geometry_column = ConfigValues.model_fields["geometry_column"].default
 
-        self._config = ConfigValues(geometry_column=cast(str, geometry_column))
+        self._config = ConfigValues(geometry_column=cast("str", geometry_column))
 
     def __enter__(self) -> Self:
         """Support setting temporary Config options that are reset on scope exit."""
