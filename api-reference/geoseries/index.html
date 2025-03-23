@@ -5705,7 +5705,7 @@ for parameters documentation.</p>
 
 
 <a href="#polars_st.GeoSeriesNameSpace.plot" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing_extensions.Unpack">Unpack</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;altair.typing.EncodeKwds&lt;/code&gt;" href="https://altair-viz.github.io/user_guide/generated/typing/altair.typing.EncodeKwds.html#altair.typing.EncodeKwds">EncodeKwds</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;altair.Chart&lt;/code&gt;" href="https://altair-viz.github.io/user_guide/generated/toplevel/altair.Chart.html#altair.Chart">Chart</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing_extensions.Unpack">Unpack</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;altair.vegalite.v5.schema._config.MarkConfigKwds&lt;/code&gt;" href="https://altair-viz.github.io/user_guide/generated/theme/altair.theme.MarkConfigKwds.html#altair.theme.MarkConfigKwds">MarkConfigKwds</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;altair.Chart&lt;/code&gt;" href="https://altair-viz.github.io/user_guide/generated/toplevel/altair.Chart.html#altair.Chart">Chart</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5714,7 +5714,7 @@ for parameters documentation.</p>
 <p>Polars does not implement plotting logic itself but instead defers to
 <a href="https://altair-viz.github.io/"><code>Altair</code></a>.</p>
 <p><code>df.st.plot(**kwargs)</code> is shorthand for
-<code>alt.Chart(df).mark_geoshape().encode(**kwargs).interactive()</code>. Please read Altair
+<code>alt.Chart(df).mark_geoshape(**kwargs).interactive()</code>. Please read Altair
 <a href="https://altair-viz.github.io/user_guide/marks/geoshape.html">GeoShape</a> documentation
 for available options.</p>
 
