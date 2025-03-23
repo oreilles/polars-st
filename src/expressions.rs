@@ -36,8 +36,8 @@ fn output_type_sjoin(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
         first_field_name(input_fields)?.clone(),
         DataType::Struct(vec![
-            Field::new("left_index".into(), DataType::Float64),
-            Field::new("right_index".into(), DataType::Float64),
+            Field::new("left_index".into(), DataType::UInt32),
+            Field::new("right_index".into(), DataType::UInt32),
         ]),
     ))
 }
