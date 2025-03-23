@@ -213,6 +213,6 @@ def from_geopandas(
     res = cast(pl.DataFrame, res).with_columns(
         geom(str(col)).st.set_srid(srid)
         for col in data.dtypes.index[data.dtypes == "geometry"]
-        if (crs := data.get(col).crs) and (srid := get_crs_srid_or_warn(str(crs)))
+        if (crs := data[col].crs) and (srid := get_crs_srid_or_warn(str(crs)))
     )
     return st(res)._df  # noqa: SLF001
