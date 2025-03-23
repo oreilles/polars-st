@@ -41,6 +41,9 @@ dev-dependencies = [
     "shapely>=2.0.6",
 ]
 
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+
 [tool.pyright]
 typeCheckingMode = "basic"
 
