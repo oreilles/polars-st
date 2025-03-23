@@ -7,23 +7,26 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 * Documentation: https://oreilles.github.io/polars-st/
 
 ```pycon
->>> import polars as pl
 >>> import polars_st as st
->>> gdf = st.GeoDataFrame([
-...     "POINT (0 0)",
-...     "LINESTRING (0 0, 1 1, 2 2)",
-...     "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
-... ])
->>> gdf.select(st.centroid().st.to_geojson())
-┌──────────────────────────────────────────┐
-│ geometry                                 │
-│ ---                                      │
-│ str                                      │
-╞══════════════════════════════════════════╡
-│ {"type":"Point","coordinates":[0.0,0.0]} │
-│ {"type":"Point","coordinates":[1.0,1.0]} │
-│ {"type":"Point","coordinates":[0.5,0.5]} │
-└──────────────────────────────────────────┘
+>>> gdf = st.GeoDataFrame({
+...     "category": ["A", "A", "B"],
+...     "geometry": [
+...         "POLYGON((0 0, 0 4, 4 2, 0 0))",
+...         "POLYGON((4 0, 4 4, 0 2, 4 0))",
+...         "POLYGON((0 0, 2 2, 2 0, 0 0))",
+...     ]
+... })
+>>> gdf = gdf.group_by("category").agg(st.intersection_all()).with_columns(area=st.area())
+>>> gdf.st.to_wkt()
+shape: (2, 3)
+┌──────────┬─────────────────────────────────────┬──────┐
+│ category ┆ geometry                            ┆ area │
+│ ---      ┆ ---                                 ┆ ---  │
+│ str      ┆ str                                 ┆ f64  │
+╞══════════╪═════════════════════════════════════╪══════╡
+│ B        ┆ POLYGON ((0 0, 2 2, 2 0, 0 0))      ┆ 2.0  │
+│ A        ┆ POLYGON ((4 2, 2 1, 0 2, 2 3, 4 2)) ┆ 4.0  │
+└──────────┴─────────────────────────────────────┴──────┘
 ```
 
 ## Installation
