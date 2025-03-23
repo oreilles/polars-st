@@ -8,11 +8,10 @@ from polars._utils.parse import parse_into_expression
 from polars._utils.wrap import wrap_expr
 from polars.plugins import register_plugin_function
 
-from polars_st.geoexpr import GeoExpr
-
 if TYPE_CHECKING:
     from polars._typing import IntoExprColumn
 
+    from polars_st.geoexpr import GeoExpr
     from polars_st.typing import IntoDecimalExpr
 
 
