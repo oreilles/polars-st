@@ -20,7 +20,7 @@ if TYPE_CHECKING:
         pa.Array,
         pa.ChunkedArray,
         np.ndarray[Any, Any],
-        pd.Series[Any],
+        pd.Series,
         pd.DatetimeIndex,
         ArrowArrayExportable,
         ArrowStreamExportable,
