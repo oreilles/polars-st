@@ -424,13 +424,13 @@ class GeoDataFrameNameSpace:
         )
 
     @overload
-    def write_geojsonseq(self, file: None = None) -> str: ...
+    def write_ndgeojson(self, file: None = None) -> str: ...
 
     @overload
-    def write_geojsonseq(self, file: IOBase | str | Path) -> None: ...
+    def write_ndgeojson(self, file: IOBase | str | Path) -> None: ...
 
-    def write_geojsonseq(self, file: IOBase | str | Path | None = None) -> str | None:
-        """Serialize to newline delimited GeoJSON representation.
+    def write_ndgeojson(self, file: IOBase | str | Path | None = None) -> str | None:
+        """Serialize to newline-delimited GeoJSON representation.
 
         The result will be invalid if the geometry column contains different geometry types.
 
@@ -439,8 +439,8 @@ class GeoDataFrameNameSpace:
             ...     "geometry": ["POINT(0 0)", "POINT(1 2)"],
             ...     "name": ["Alice", "Bob"]
             ... })
-            >>> geojsonseq = gdf.st.write_geojsonseq()
-            >>> print(geojsonseq)
+            >>> ndgeojson = gdf.st.write_ndgeojson()
+            >>> print(ndgeojson)
             {"properties":{"name":"Alice"},"geometry":{"type":"Point","coordinates":[0.0,0.0]}}
             {"properties":{"name":"Bob"},"geometry":{"type":"Point","coordinates":[1.0,2.0]}}
             <BLANKLINE>

@@ -11,7 +11,7 @@ hide:
 | `read_file` | Read OGR supported file format into a GeoDataFrame. | [`root`][polars_st.read_file] |
 | `write_file` | Write the GeoDataFrame to an OGR supported file format. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_file] |
 | `write_geojson` | Serialize to GeoJSON FeatureCollection representation. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_geojson] |
-| `write_geojsonseq` | Serialize to newline delimited GeoJSON FeatureCollection representation. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_geojsonseq] |
+| `write_ndgeojson` | Serialize to newline-delimited GeoJSON FeatureCollection representation. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_ndgeojson] |
 | **Parsing** | | |
 | `from_wkb` | Parse geometries from Well-Known Binary (WKB) representation | [`root`][polars_st.from_wkb] |
 | `from_wkt` | Parse geometries from Well-Known Text (WKT) representation | [`root`][polars_st.from_wkt] |
