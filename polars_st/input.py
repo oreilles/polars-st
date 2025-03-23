@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    "read_file",
     "from_geopandas",
+    "read_file",
 ]
 
 
@@ -139,7 +139,7 @@ def read_file(
     )
 
     geometry_name = metadata["geometry_name"] or "wkb_geometry"
-    res = cast(pl.DataFrame, pl.from_arrow(table))
+    res = cast("pl.DataFrame", pl.from_arrow(table))
     if geometry_name in table.column_names:
         if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(crs)):
             res = res.with_columns(geom(geometry_name).st.set_srid(srid))
@@ -205,12 +205,12 @@ def from_geopandas(
             nan_to_null=nan_to_null,
             include_index=include_index,
         )
-        res = cast(pl.Series, res)
+        res = cast("pl.Series", res)
         if (crs := data.crs) and (srid := get_crs_srid_or_warn(str(crs))):
             res = st(res).set_srid(srid)
         return st(res)._series  # noqa: SLF001
 
-    res = cast(pl.DataFrame, res).with_columns(
+    res = cast("pl.DataFrame", res).with_columns(
         geom(str(col)).st.set_srid(srid)
         for col in data.dtypes.index[data.dtypes == "geometry"]
         if (crs := data.get(col).crs) and (srid := get_crs_srid_or_warn(str(crs)))

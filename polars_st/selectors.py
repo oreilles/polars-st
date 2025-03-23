@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING, cast
 import polars as pl
 
 from polars_st.config import Config
-from polars_st.geoexpr import GeoExpr
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from polars_st.geoexpr import GeoExpr
+
 
 __all__ = [
-    "geom",
     "element",
+    "geom",
 ]
 
 
@@ -61,7 +62,7 @@ def geom(name: str | Iterable[str] | None = None, *more_names: str) -> GeoExpr:
         └───────────────────────────┘
     """
     columns = pl.col(Config.get_geometry_column()) if name is None else pl.col(name, *more_names)
-    return cast(GeoExpr, columns)
+    return cast("GeoExpr", columns)
 
 
 def element() -> GeoExpr:
@@ -81,4 +82,4 @@ def element() -> GeoExpr:
         │ ["POINT (0 0)", "POINT (1 2)"] │
         └────────────────────────────────┘
     """
-    return cast(GeoExpr, pl.element())
+    return cast("GeoExpr", pl.element())

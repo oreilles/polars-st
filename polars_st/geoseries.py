@@ -56,15 +56,15 @@ class GeoSeries(pl.Series):
         if s.name == "" and not (isinstance(name, str) and name == ""):
             s = s.rename(Config.get_geometry_column())
         if len(s) == 0 or s.dtype == pl.Null:
-            return cast(GeoSeries, s.cast(pl.Binary))
+            return cast("GeoSeries", s.cast(pl.Binary))
         if geometry_format is None:
             match s.dtype:
                 case pl.Binary:
                     geometry_format = "wkb"
                 case pl.String:
-                    first_value: str | None = s[cast(int, s.is_not_null().arg_max())]
+                    first_value: str | None = s[cast("int", s.is_not_null().arg_max())]
                     if first_value is None:
-                        return cast(GeoSeries, s.cast(pl.Binary))
+                        return cast("GeoSeries", s.cast(pl.Binary))
                     if first_value.startswith("{"):
                         geometry_format = "geojson"
                     elif first_value.startswith("SRID="):
@@ -97,7 +97,7 @@ class GeoSeries(pl.Series):
                         z=s.struct["z"] if "z" in s.struct.fields else None,
                     ),
                 ).to_series()
-        return cast(GeoSeries, result)
+        return cast("GeoSeries", result)
 
     def __init__(
         self,
@@ -168,7 +168,7 @@ def dispatch(func):  # noqa: ANN001, ANN202 to preserve pylance type hints
 @register_series_namespace("st")
 class GeoSeriesNameSpace:
     def __init__(self, series: pl.Series) -> None:
-        self._series = cast(GeoSeries, series)
+        self._series = cast("GeoSeries", series)
 
     @dispatch
     def geometry_type(self) -> pl.Series:

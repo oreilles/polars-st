@@ -54,7 +54,7 @@ class GeoLazyFrame(LazyFrame):
             infer_schema_length=infer_schema_length,
             nan_to_null=nan_to_null,
         ).lazy()
-        return cast(GeoLazyFrame, ldf)
+        return cast("GeoLazyFrame", ldf)
 
 
 @register_lazyframe_namespace("st")

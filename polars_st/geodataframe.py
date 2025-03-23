@@ -67,7 +67,7 @@ class GeoDataFrame(DataFrame):
             df = df.rename({"column_0": geometry_name})
         if geometry_name in df.columns:
             df = df.with_columns(GeoSeries(df.get_column(geometry_name)))
-        return cast(GeoDataFrame, df)
+        return cast("GeoDataFrame", df)
 
     def __init__(
         self,
@@ -111,7 +111,7 @@ class GeoDataFrame(DataFrame):
 @register_dataframe_namespace("st")
 class GeoDataFrameNameSpace:
     def __init__(self, df: DataFrame) -> None:
-        self._df = cast(GeoDataFrame, df)
+        self._df = cast("GeoDataFrame", df)
 
     def sjoin(
         self,
@@ -157,7 +157,7 @@ class GeoDataFrameNameSpace:
                 coalesce=coalesce,
             )
             .collect(_eager=True)
-            .pipe(lambda df: cast(GeoDataFrame, df))
+            .pipe(lambda df: cast("GeoDataFrame", df))
         )
 
     def to_wkt(
