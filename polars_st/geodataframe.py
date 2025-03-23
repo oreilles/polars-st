@@ -464,8 +464,7 @@ class GeoDataFrameNameSpace:
         import altair as alt
 
         chart = alt.Chart(_ChartGeoDataFrameWrapper(self._df))
-        # Close enough, as I couldn't get MarkDef's kwargs as a convenience type
-        return chart.mark_geoshape(**kwargs).interactive()  # type: ignore[]
+        return chart.mark_geoshape(**kwargs).interactive()
 
 
 class _ChartGeoDataFrameWrapper:
