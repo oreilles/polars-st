@@ -204,8 +204,3 @@ pub struct GetCoordinatesKwargs {
 pub struct RelatePatternKwargs {
     pub pattern: String,
 }
-
-#[derive(Deserialize)]
-pub struct ToSridKwargs {
-    pub srid: i32,
-}

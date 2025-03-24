@@ -1,3 +1,4 @@
+#![feature(result_flattening)]
 #![feature(downcast_unchecked)]
 #![feature(iterator_try_reduce)]
 #![deny(clippy::pedantic)]

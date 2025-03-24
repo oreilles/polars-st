@@ -4,11 +4,6 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
-use polars_arrow; // Remove once solved: https://github.com/pola-rs/pyo3-polars/issues/130
-use polars_plan::{
-    plans::{Literal, NULL},
-    prelude::{ApplyOptions, FunctionFlags, FunctionOptions},
-};
 use pyo3::prelude::*;
 use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
 
@@ -1251,56 +1246,13 @@ pub fn apply_coordinates(
 }
 
 #[polars_expr(output_type=Binary)]
-pub fn to_srid(inputs: &[Series], kwargs: args::ToSridKwargs) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
+pub fn to_srid(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = inputs[0].binary()?;
+    let srid = inputs[1].strict_cast(&DataType::Int64)?;
+    let srid = srid.i64()?;
 
-    if wkb.len() == wkb.null_count() {
-        return Ok(Series::full_null(
-            wkb.name().clone(),
-            wkb.len(),
-            wkb.dtype(),
-        ));
-    }
-
-    let srids = functions::get_srid(wkb).map_err(to_compute_err)?;
-    let unique_srids = srids.unique()?.drop_nulls();
-
-    if unique_srids.len() == 1 {
-        return functions::to_srid(wkb, unique_srids.get(0).unwrap(), kwargs.srid)
-            .map_err(to_compute_err)
-            .map(IntoSeries::into_series);
-    }
-
-    let chained_then = unique_srids.into_iter().flatten().fold(
-        // Must repeat this twice to get a ChainedThen expression
-        when(false).then(NULL.lit()).when(false).then(NULL.lit()),
-        |chain, srid| {
-            let function = move |c: &mut [Column]| {
-                functions::to_srid(c[0].binary()?, srid, kwargs.srid)
-                    .map_err(to_compute_err)
-                    .map(IntoColumn::into_column)
-                    .map(Some)
-            };
-            chain
-                .when(col("srid").eq(srid))
-                .then(Expr::AnonymousFunction {
-                    input: vec![col("wkb")],
-                    function: LazySerde::Deserialized(SpecialEq::new(Arc::new(function))),
-                    output_type: GetOutput::from_type(DataType::Binary),
-                    options: FunctionOptions {
-                        collect_groups: ApplyOptions::ElementWise,
-                        fmt_str: "transform_xy",
-                        flags: FunctionFlags::default(),
-                        ..Default::default()
-                    },
-                })
-        },
-    );
-    let res = df! {"wkb" => &inputs[0], "srid" => srids }?
-        .lazy()
-        .select([chained_then.otherwise(NULL.lit())])
-        .collect()?;
-
-    Ok(res.get_columns()[0].as_series().unwrap().clone())
+    functions::to_srid(wkb, srid)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
 }

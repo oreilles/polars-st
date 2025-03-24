@@ -407,8 +407,7 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="to_srid",
-            args=self._expr,
-            kwargs={"srid": srid},
+            args=[self._expr, srid],
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 

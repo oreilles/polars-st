@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     args::{
         BufferKwargs, ClipByRectKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs,
@@ -16,7 +18,8 @@ use geos::{
 };
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
-use proj::Proj;
+use proj4rs::errors::Error as ProjError;
+use proj4rs::Proj;
 use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 fn ewkb_writer() -> GResult<WKBWriter> {
@@ -1359,45 +1362,92 @@ pub fn sjoin(
     Ok((left_index_builder.finish(), right_index_builder.finish()))
 }
 
-fn apply_proj_transformation(geometry: Geometry, transformation: &Proj) -> GResult<Geometry> {
-    if geometry.is_empty()? {
-        return Ok(geometry);
+fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {
+    let mut success = Ok(());
+    let transformed = geom.transform_xyz(|x, y, z| {
+        let has_z = !z.is_nan();
+        if src.is_latlong() {
+            *x = x.to_radians();
+            *y = y.to_radians();
+            *z = z.to_radians();
+        }
+        if has_z {
+            match proj4rs::adaptors::transform_xyz(src, dst, *x, *y, *z) {
+                Ok(transformed) => {
+                    *x = transformed.0;
+                    *y = transformed.1;
+                    *z = transformed.2;
+                }
+                Err(e) => success = Err(e),
+            }
+        } else {
+            match proj4rs::adaptors::transform_xy(src, dst, *x, *y) {
+                Ok(transformed) => {
+                    *x = transformed.0;
+                    *y = transformed.1;
+                }
+                Err(e) => success = Err(e),
+            }
+        };
+        if dst.is_latlong() {
+            *x = x.to_degrees();
+            *y = y.to_degrees();
+            *z = z.to_degrees();
+        };
+        match success {
+            Ok(()) => 1,
+            Err(_) => 0,
+        }
+    });
+    match success {
+        Ok(()) => transformed,
+        Err(e) => Err(geos::Error::GenericError(e.to_string())),
     }
-    if 3 > geometry.get_coordinate_dimension()?.into() {
-        geometry.transform_xy(|x, y| match transformation.convert((*x, *y)) {
-            Ok(projected) => {
-                *x = projected.0;
-                *y = projected.1;
-                1
-            }
-            Err(_) => 0,
-        })
-    } else {
-        geometry.transform_xyz(|x, y, z| match transformation.convert((*x, *y, *z)) {
-            Ok(projected) => {
-                *x = projected.0;
-                *y = projected.1;
-                *z = projected.2;
-                1
-            }
-            Err(_) => 0,
-        })
+}
+struct ProjCache(HashMap<u16, Proj>);
+
+impl ProjCache {
+    fn new() -> Self {
+        return Self(HashMap::<u16, Proj>::new());
+    }
+
+    fn get(&mut self, srid: u16) -> Result<Proj, ProjError> {
+        Ok(match self.0.entry(srid) {
+            std::collections::hash_map::Entry::Occupied(proj) => proj.into_mut(),
+            std::collections::hash_map::Entry::Vacant(e) => e.insert(Proj::from_epsg_code(srid)?),
+        }
+        .clone())
     }
 }
 
-pub fn to_srid(wkb: &BinaryChunked, from_srid: i32, to_srid: i32) -> GResult<BinaryChunked> {
-    let from_crs = format!("EPSG:{from_srid}");
-    let to_crs = format!("EPSG:{to_srid}");
-    let transformation = Proj::try_from((from_crs.as_str(), to_crs.as_str())).map_err(|_| {
-        let err = format!("Couldn't create transformation from {from_crs} to {to_crs}");
-        geos::Error::GenericError(err)
-    })?;
+pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunked> {
+    let mut cache = ProjCache::new();
 
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        Geometry::new_from_wkb(wkb)
-            .and_then(|geom| apply_proj_transformation(geom, &transformation))
+    broadcast_try_binary_elementwise_values(wkb, srid, |wkb, dest_srid| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        let geom_srid = geom.get_srid()?;
+
+        if geom_srid as i64 == dest_srid || geom.is_empty()? {
+            return Ok(wkb.into());
+        }
+
+        let proj_src = geom_srid
+            .try_into()
+            .map(|geom_srid| cache.get(geom_srid))
+            .map_err(|_| ProjError::ProjectionNotFound)
+            .flatten()
+            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {}", geom_srid)))?;
+
+        let proj_dst = dest_srid
+            .try_into()
+            .map(|dest_srid| cache.get(dest_srid))
+            .map_err(|_| ProjError::ProjectionNotFound)
+            .flatten()
+            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {}", dest_srid)))?;
+
+        apply_proj_transform(&proj_src, &proj_dst, &geom)
             .map(|mut geom| {
-                geom.set_srid(to_srid);
+                geom.set_srid(dest_srid as _);
                 geom
             })?
             .to_ewkb()
