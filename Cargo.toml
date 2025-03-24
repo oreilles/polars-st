@@ -14,12 +14,13 @@ crate-type = ["cdylib"]
 [dependencies]
 geos = { git = "https://github.com/Oreilles/rust-geos", branch = "main", features = ["static", "v3_14_0"]}
 num_enum = "0.7.3"
-polars = { version = "0.43.1", default-features = false, features = ["lazy", "dtype-array", "dtype-struct"] }
+polars = { version = "0.46.0", default-features = false, features = ["lazy", "dtype-array", "dtype-struct"] }
+polars-arrow = { version = "0.46.0", default-features = false }
 proj = { git = "https://github.com/Oreilles/proj", branch = "main", default-features = false }
-pyo3 = { version = "0.22.0", features = ["abi3-py38"] }
-pyo3-polars = { version = "0.17.0", features = ["derive", "dtype-array", "dtype-struct"] }
+pyo3 = { version = "0.23", features = ["abi3-py38"] }
+pyo3-polars = { version = "0.20.0", features = ["derive", "dtype-array", "dtype-struct"] }
 scroll = "0.12.0"
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [features]
 default = ["bundled_proj", "bundled_sqlite"]

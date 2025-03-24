@@ -224,7 +224,10 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
             Point | LineString | CircularString => {
                 let seq = geom.get_coord_seq()?;
                 Series::new("".into(), seq.as_buffer(Some(dimension))?)
-                    .reshape_array(&[seq.size()? as i64, dimension as _])
+                    .reshape_array(&[
+                        ReshapeDimension::new_dimension(seq.size()? as u64),
+                        ReshapeDimension::new_dimension(dimension as u64),
+                    ])
                     .map_err(|_| geos::Error::GenericError("Invalid coordinate sequence".into()))
             }
             _ => {

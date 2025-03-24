@@ -4,6 +4,7 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
+use polars_arrow; // Remove once solved: https://github.com/pola-rs/pyo3-polars/issues/130
 use polars_plan::{
     plans::{Literal, NULL},
     prelude::{ApplyOptions, FunctionFlags, FunctionOptions},
@@ -1199,9 +1200,10 @@ pub fn sjoin(inputs: &[Series], kwargs: args::SpatialJoinKwargs) -> PolarsResult
     functions::sjoin(left, right, kwargs.predicate)
         .map_err(to_compute_err)
         .map(|(left_index, right_index)| {
-            StructChunked::from_series(
+            StructChunked::from_columns(
                 left.name().clone(),
-                &[left_index.into_series(), right_index.into_series()],
+                left.len(),
+                &[left_index.into_column(), right_index.into_column()],
             )
             .map(IntoSeries::into_series)
         })?
@@ -1274,17 +1276,17 @@ pub fn to_srid(inputs: &[Series], kwargs: args::ToSridKwargs) -> PolarsResult<Se
         // Must repeat this twice to get a ChainedThen expression
         when(false).then(NULL.lit()).when(false).then(NULL.lit()),
         |chain, srid| {
-            let function = move |s: &mut [Series]| {
-                functions::to_srid(s[0].binary()?, srid, kwargs.srid)
+            let function = move |c: &mut [Column]| {
+                functions::to_srid(c[0].binary()?, srid, kwargs.srid)
                     .map_err(to_compute_err)
-                    .map(IntoSeries::into_series)
+                    .map(IntoColumn::into_column)
                     .map(Some)
             };
             chain
                 .when(col("srid").eq(srid))
                 .then(Expr::AnonymousFunction {
                     input: vec![col("wkb")],
-                    function: SpecialEq::new(Arc::new(function)),
+                    function: LazySerde::Deserialized(SpecialEq::new(Arc::new(function))),
                     output_type: GetOutput::from_type(DataType::Binary),
                     options: FunctionOptions {
                         collect_groups: ApplyOptions::ElementWise,
@@ -1300,5 +1302,5 @@ pub fn to_srid(inputs: &[Series], kwargs: args::ToSridKwargs) -> PolarsResult<Se
         .select([chained_then.otherwise(NULL.lit())])
         .collect()?;
 
-    Ok(res.get_columns()[0].clone())
+    Ok(res.get_columns()[0].as_series().unwrap().clone())
 }
