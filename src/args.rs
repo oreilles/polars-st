@@ -106,7 +106,7 @@ pub struct BufferKwargs {
     single_sided: bool,
 }
 
-impl<'a> TryInto<geos::BufferParams> for &'a BufferKwargs {
+impl TryInto<geos::BufferParams> for &BufferKwargs {
     type Error = geos::Error;
 
     #[inline]

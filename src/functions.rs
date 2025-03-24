@@ -988,12 +988,12 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return Geometry::create_empty_point()?.to_ewkb();
-        };
+        }
         let x_min = geom.get_x_min()?;
         let x_max = geom.get_x_max()?;
         let y_min = geom.get_y_min()?;
         let y_max = geom.get_y_max()?;
-        let coords = CoordSeq::new_from_vec(&[&[(x_min + x_max) / 2.0, (y_min + y_max) / 2.0]])?;
+        let coords = CoordSeq::new_from_vec(&[&[f64::midpoint(x_min, x_max), f64::midpoint(y_min, y_max)]])?;
         Geometry::create_point(coords)?.to_ewkb()
     })
 }
@@ -1347,7 +1347,7 @@ pub fn sjoin(
     for (right_index, wkb) in right.into_iter().enumerate() {
         if wkb.is_none() {
             continue;
-        };
+        }
         let right_geom = Geometry::new_from_wkb(wkb.unwrap())?;
         spatial_index.query(&right_geom, |left_index| {
             let left_geom = left_geoms[*left_index]
@@ -1388,12 +1388,12 @@ fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geom
                 }
                 Err(e) => success = Err(e),
             }
-        };
+        }
         if dst.is_latlong() {
             *x = x.to_degrees();
             *y = y.to_degrees();
             *z = z.to_degrees();
-        };
+        }
         match success {
             Ok(()) => 1,
             Err(_) => 0,
@@ -1408,7 +1408,7 @@ struct ProjCache(HashMap<u16, Proj>);
 
 impl ProjCache {
     fn new() -> Self {
-        return Self(HashMap::<u16, Proj>::new());
+        Self(HashMap::<u16, Proj>::new())
     }
 
     fn get(&mut self, srid: u16) -> Result<Proj, ProjError> {
@@ -1427,7 +1427,7 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunke
         let geom = Geometry::new_from_wkb(wkb)?;
         let geom_srid = geom.get_srid()?;
 
-        if geom_srid as i64 == dest_srid || geom.is_empty()? {
+        if i64::from(geom_srid) == dest_srid || geom.is_empty()? {
             return Ok(wkb.into());
         }
 
@@ -1436,14 +1436,14 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunke
             .map(|geom_srid| cache.get(geom_srid))
             .map_err(|_| ProjError::ProjectionNotFound)
             .flatten()
-            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {}", geom_srid)))?;
+            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {geom_srid}")))?;
 
         let proj_dst = dest_srid
             .try_into()
             .map(|dest_srid| cache.get(dest_srid))
             .map_err(|_| ProjError::ProjectionNotFound)
             .flatten()
-            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {}", dest_srid)))?;
+            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {dest_srid}")))?;
 
         apply_proj_transform(&proj_src, &proj_dst, &geom)
             .map(|mut geom| {
