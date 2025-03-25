@@ -148,7 +148,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [linux, musllinux, macos, sdist]
+    needs: [linux, musllinux, macos, windows, sdist]
     permissions:
       id-token: write
     steps:
