@@ -1,7 +1,8 @@
-use proj4wkt::{Builder, Node};
+use proj4wkt::{parser::Processor, Builder};
 use pyo3::prelude::*;
 
 fn wkt_to_authority(i: &str) -> Option<(&str, &str)> {
+    type Node<'a> = <proj4wkt::Builder as Processor<'a>>::Output;
     match Builder::new().parse(i) {
         Ok(Node::PROJCRS(p)) => p.projection.authority.map(|a| (a.name, a.code)),
         _ => None,

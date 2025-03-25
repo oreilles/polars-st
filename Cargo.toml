@@ -17,7 +17,7 @@ num_enum = "0.7.3"
 polars = { version = "0.46.0", default-features = false, features = ["lazy", "dtype-array", "dtype-struct"] }
 polars-arrow = { version = "0.46.0", default-features = false }
 proj4rs = { version = "0.1.5", features = ["crs-definitions"] }
-proj4wkt = { git = "https://github.com/Oreilles/proj4wkt-rs", branch = "main" }
+proj4wkt = { git = "https://github.com/3liz/proj4wkt-rs", branch = "main" }
 pyo3 = { version = "0.23", features = ["abi3-py38"] }
 pyo3-polars = { version = "0.20.0", features = ["derive", "dtype-array", "dtype-struct"] }
 scroll = "0.12.0"
