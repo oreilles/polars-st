@@ -719,6 +719,16 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def force_2d(self) -> GeoSeries:
+        """See [`GeoExprNameSpace.force_2d`][polars_st.GeoExprNameSpace.force_2d]."""
+        ...
+
+    @dispatch
+    def force_3d(self, z: IntoDecimalExpr = 0.0) -> GeoSeries:
+        """See [`GeoExprNameSpace.force_3d`][polars_st.GeoExprNameSpace.force_3d]."""
+        ...
+
+    @dispatch
     def flip_coordinates(self) -> GeoSeries:
         """See [`GeoExprNameSpace.flip_coordinates`][polars_st.GeoExprNameSpace.flip_coordinates]."""  # noqa: E501
         ...

@@ -989,12 +989,9 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
         if geom.is_empty()? {
             return Geometry::create_empty_point()?.to_ewkb();
         }
-        let x_min = geom.get_x_min()?;
-        let x_max = geom.get_x_max()?;
-        let y_min = geom.get_y_min()?;
-        let y_max = geom.get_y_max()?;
-        let coords = CoordSeq::new_from_vec(&[&[f64::midpoint(x_min, x_max), f64::midpoint(y_min, y_max)]])?;
-        Geometry::create_point(coords)?.to_ewkb()
+        let x = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        let y = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        Geometry::create_point(CoordSeq::new_from_vec(&[&[x, y]])?)?.to_ewkb()
     })
 }
 
@@ -1103,6 +1100,32 @@ pub fn topology_preserve_simplify(
     broadcast_try_binary_elementwise_values(wkb, tolerance, |wkb, tolerance| {
         Geometry::new_from_wkb(wkb)?
             .topology_preserve_simplify(tolerance)?
+            .to_ewkb()
+    })
+}
+
+pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            geom.transform_xy(|_, _| 1)?
+        } else {
+            geom.transform_xyz(|_x, _y, z| {
+                *z = f64::NAN;
+                1
+            })?
+        }
+        .to_ewkb()
+    })
+}
+
+pub fn force_3d(wkb: &BinaryChunked, z: &Float64Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, z, |wkb, new_z| {
+        Geometry::new_from_wkb(wkb)?
+            .transform_xyz(|_x, _y, z| {
+                *z = new_z;
+                1
+            })?
             .to_ewkb()
     })
 }

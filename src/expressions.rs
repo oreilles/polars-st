@@ -1079,6 +1079,26 @@ pub fn simplify(inputs: &[Series], kwargs: args::SimplifyKwargs) -> PolarsResult
 }
 
 #[polars_expr(output_type=Binary)]
+pub fn force_2d(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    functions::force_2d(wkb)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn force_3d(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = inputs[0].binary()?;
+    let z = inputs[1].strict_cast(&DataType::Float64)?;
+    let z = z.f64()?;
+    functions::force_3d(wkb, z)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
 pub fn snap(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<3>(inputs)?;
     let left = inputs[0].binary()?;

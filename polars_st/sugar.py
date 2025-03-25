@@ -48,6 +48,8 @@ __all__ = [
     "exterior_ring",
     "extract_unique_points",
     "flip_coordinates",
+    "force_2d",
+    "force_3d",
     "geometry_type",
     "geometrycollection",
     "get_geometry",
@@ -473,6 +475,16 @@ def remove_repeated_points(*columns: str, tolerance: IntoDecimalExpr = 0.0) -> G
 def reverse(*columns: str) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[reverse()][polars_st.GeoExprNameSpace.reverse]</code>."""  # noqa: E501
     return geom(*columns).st.reverse()
+
+
+def force_2d(*columns: str) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[force_2d()][polars_st.GeoExprNameSpace.force_2d]</code>."""  # noqa: E501
+    return geom(*columns).st.force_2d()
+
+
+def force_3d(*columns: str, z: IntoDecimalExpr = 0.0) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[force_3d(...)][polars_st.GeoExprNameSpace.force_3d]</code>."""  # noqa: E501
+    return geom(*columns).st.force_3d(z)
 
 
 def simplify(

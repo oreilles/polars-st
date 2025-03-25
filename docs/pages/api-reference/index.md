@@ -115,6 +115,8 @@ hide:
 | `remove_repeated_points` | Remove the repeated points for each geometry. | [`root`][polars_st.remove_repeated_points], [`Expr`][polars_st.GeoExprNameSpace.remove_repeated_points], [`Series`][polars_st.GeoSeriesNameSpace.remove_repeated_points] |
 | `reverse` | Reverse the coordinates order of each geometry. | [`root`][polars_st.reverse], [`Expr`][polars_st.GeoExprNameSpace.reverse], [`Series`][polars_st.GeoSeriesNameSpace.reverse] |
 | `simplify` | Simplify each geometry with a given tolerance. | [`root`][polars_st.simplify], [`Expr`][polars_st.GeoExprNameSpace.simplify], [`Series`][polars_st.GeoSeriesNameSpace.simplify] |
+| `force_2d` | Force the dimensionality of a geometry to 2D. | [`root`][polars_st.force_2d], [`Expr`][polars_st.GeoExprNameSpace.force_2d], [`Series`][polars_st.GeoSeriesNameSpace.force_2d] |
+| `force_3d` | Force the dimensionality of a geometry to 3D. | [`root`][polars_st.force_3d], [`Expr`][polars_st.GeoExprNameSpace.force_3d], [`Series`][polars_st.GeoSeriesNameSpace.force_3d] |
 | `flip_coordinates` | Flip the x and y coordinates of each geometry. | [`root`][polars_st.flip_coordinates], [`Expr`][polars_st.GeoExprNameSpace.flip_coordinates], [`Series`][polars_st.GeoSeriesNameSpace.flip_coordinates] |
 | `minimum_rotated_rectangle` | | [`root`][polars_st.minimum_rotated_rectangle], [`Expr`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle], [`Series`][polars_st.GeoSeriesNameSpace.minimum_rotated_rectangle] | |
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |

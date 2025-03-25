@@ -1072,6 +1072,24 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    def force_2d(self) -> GeoExpr:
+        """Force the dimensionality of a geometry to 2D."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="force_2d",
+            args=[self._expr],
+            is_elementwise=True,
+        ).pipe(lambda e: cast("GeoExpr", e))
+
+    def force_3d(self, z: IntoDecimalExpr = 0.0) -> GeoExpr:
+        """Force the dimensionality of a geometry to 3D."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="force_3d",
+            args=[self._expr, z],
+            is_elementwise=True,
+        ).pipe(lambda e: cast("GeoExpr", e))
+
     def flip_coordinates(self) -> GeoExpr:
         """Flip the x and y coordinates of each geometry."""
         return register_plugin_function(
