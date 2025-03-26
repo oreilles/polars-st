@@ -328,9 +328,10 @@ class GeoDataFrameNameSpace:
                 The available drivers can be listed by calling:
                 ```py
                 >>> import pyogrio
-                >>> pyogrio.list_drivers()
+                >>> pyogrio.list_drivers() # doctest: +SKIP
                 {..., 'GeoJSON': 'rw', 'GeoJSONSeq': 'rw',...}
                 ```
+
             geometry_type:
                 The geometry type of the written layer. Currently, this needs to be
                 specified explicitly when creating a new layer with geometries.
