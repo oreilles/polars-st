@@ -1630,7 +1630,7 @@ dependencies = [
 [[package]]
 name = "proj4wkt"
 version = "0.1.0"
-source = "git+https://github.com/3liz/proj4wkt-rs?branch=main#a31d4fc2c8e054db60f494aaf7b120c48e354d7e"
+source = "git+https://github.com/3liz/proj4wkt-rs?branch=main#400427ef9ad035aec251199e5cc96d59e85282c4"
 dependencies = [
  "console_log",
  "js-sys",
