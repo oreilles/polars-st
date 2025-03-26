@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 
-from polars_st._lib import get_crs_auth_code
+from polars_st._lib import get_crs_authority
 
 logger = logging.getLogger(__name__)
 
 
 def get_crs_srid_or_warn(crs: str) -> int | None:
-    authority = get_crs_auth_code(crs)
+    authority = get_crs_authority(crs)
     if authority is None:
         msg = f"Couldn't infer authority from {crs}. The geometries SRID will be set to 0."
         logger.warning(msg)

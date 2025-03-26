@@ -10,7 +10,7 @@ fn wkt_to_authority(i: &str) -> Option<(&str, &str)> {
 }
 
 #[pyfunction]
-pub fn get_crs_auth_code(definition: &str) -> Option<(&str, &str)> {
+pub fn get_crs_authority(definition: &str) -> Option<(&str, &str)> {
     if let Some(("EPSG", code)) = definition.split_once(':') {
         Some(("EPSG", code))
     } else {
