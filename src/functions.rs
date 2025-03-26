@@ -1108,7 +1108,24 @@ pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
-            geom.transform_xy(|_, _| 1)?
+            let mut res = match geom.geometry_type()? {
+                Point => Geometry::create_empty_point(),
+                LineString => Geometry::create_empty_line_string(),
+                Polygon => Geometry::create_empty_polygon(),
+                MultiPoint => Geometry::create_empty_collection(MultiPoint),
+                MultiLineString => Geometry::create_empty_collection(MultiLineString),
+                MultiPolygon => Geometry::create_empty_collection(MultiPolygon),
+                GeometryCollection => Geometry::create_empty_collection(GeometryCollection),
+                CircularString => Geometry::create_empty_circular_string(),
+                CompoundCurve => Geometry::create_empty_compound_curve(),
+                CurvePolygon => Geometry::create_empty_curve_polygon(),
+                MultiCurve => Geometry::create_empty_collection(MultiCurve),
+                MultiSurface => Geometry::create_empty_collection(MultiSurface),
+                LinearRing => unreachable!(),
+                __Unknown(_) => unreachable!(),
+            }?;
+            res.set_srid(geom.get_srid()?);
+            res
         } else {
             geom.transform_xyz(|_x, _y, z| {
                 *z = f64::NAN;
@@ -1123,7 +1140,7 @@ pub fn force_3d(wkb: &BinaryChunked, z: &Float64Chunked) -> GResult<BinaryChunke
     broadcast_try_binary_elementwise_values(wkb, z, |wkb, new_z| {
         Geometry::new_from_wkb(wkb)?
             .transform_xyz(|_x, _y, z| {
-                *z = new_z;
+                z.is_nan().then(|| *z = new_z);
                 1
             })?
             .to_ewkb()
