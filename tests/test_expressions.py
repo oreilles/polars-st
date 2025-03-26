@@ -315,19 +315,6 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     geom_type: GeometryType = frame.select(st.geometry_type()).item()
     geom_empty: bool = frame.select(st.is_empty()).item()
 
-    geometrycollection_errors = {
-        Geo.relate: r'impossible to build a geometry from a nullptr in "GGeom::relate::managed_string"',
-        Geo.relate_pattern: r"error while calling libgeos method RelatePattern \(error number = 2\)",
-    }
-    if (
-        func.call in geometrycollection_errors
-        and geom_type in {GeometryType.GeometryCollection}
-        and geom_empty
-    ):
-        with pytest.raises(pl.exceptions.ComputeError, match=geometrycollection_errors[func.call]):
-            frame.select(func.call(st.geom().st, **func.args))
-        return
-
     if func.call in {Geo.coverage_union} and frame is collection_mixed:
         match = "IllegalArgumentException: Overlay input is mixed-dimensio"
         with pytest.raises(pl.exceptions.ComputeError, match=match):

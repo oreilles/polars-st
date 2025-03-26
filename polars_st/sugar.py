@@ -477,6 +477,15 @@ def reverse(*columns: str) -> GeoExpr:
     return geom(*columns).st.reverse()
 
 
+def simplify(
+    *columns: str,
+    tolerance: IntoDecimalExpr,
+    preserve_topology: bool = True,
+) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[simplify(...)][polars_st.GeoExprNameSpace.simplify]</code>."""  # noqa: E501
+    return geom(*columns).st.simplify(tolerance, preserve_topology)
+
+
 def force_2d(*columns: str) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[force_2d()][polars_st.GeoExprNameSpace.force_2d]</code>."""  # noqa: E501
     return geom(*columns).st.force_2d()
@@ -485,15 +494,6 @@ def force_2d(*columns: str) -> GeoExpr:
 def force_3d(*columns: str, z: IntoDecimalExpr = 0.0) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[force_3d(...)][polars_st.GeoExprNameSpace.force_3d]</code>."""  # noqa: E501
     return geom(*columns).st.force_3d(z)
-
-
-def simplify(
-    *columns: str,
-    tolerance: IntoDecimalExpr,
-    preserve_topology: bool = True,
-) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[simplify(...)][polars_st.GeoExprNameSpace.simplify]</code>."""  # noqa: E501
-    return geom(*columns).st.simplify(tolerance, preserve_topology)
 
 
 def flip_coordinates(*columns: str) -> GeoExpr:
