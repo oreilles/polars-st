@@ -301,8 +301,7 @@ class GeoDataFrameNameSpace:
             "MultiLineString",
             "MultiPolygon",
             "GeometryCollection",
-        ]
-        | None = None,
+        ] = "Unknown",
         crs: str | None = None,
         encoding: str | None = None,
         append: bool = False,
