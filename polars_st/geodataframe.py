@@ -325,6 +325,12 @@ class GeoDataFrameNameSpace:
             driver:
                 The OGR format driver used to write the vector file. By default attempts
                 to infer driver from path.  Must be provided to write to memory.
+                The available drivers can be listed by calling:
+                ```py
+                >>> import pyogrio
+                >>> pyogrio.list_drivers()
+                {..., 'GeoJSON': 'rw', 'GeoJSONSeq': 'rw',...}
+                ```
             geometry_type:
                 The geometry type of the written layer. Currently, this needs to be
                 specified explicitly when creating a new layer with geometries.
