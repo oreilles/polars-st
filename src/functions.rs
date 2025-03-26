@@ -1121,8 +1121,7 @@ pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
                 CurvePolygon => Geometry::create_empty_curve_polygon(),
                 MultiCurve => Geometry::create_empty_collection(MultiCurve),
                 MultiSurface => Geometry::create_empty_collection(MultiSurface),
-                LinearRing => unreachable!(),
-                __Unknown(_) => unreachable!(),
+                LinearRing | __Unknown(_) => unreachable!(),
             }?;
             res.set_srid(geom.get_srid()?);
             res

@@ -32,18 +32,24 @@ jobs:
         run: uv run pyright .
 
 
-  # rust-test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  rust-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Set up Rust
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly
-  #         profile: minimal
-  #         override: true
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
 
-  #     - name: Run Rust tests
-  #       run: cargo test --all
+      - name: Run Rust formatter
+        run: cargo fmt --all -- --check
+
+      - name: Run Rust linter
+        run: cargo clippy --all-features
+
+      - name: Run Rust tests
+        run: cargo test --all
