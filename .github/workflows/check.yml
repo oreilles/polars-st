@@ -41,9 +41,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
           profile: minimal
-          override: true
 
       - name: Run Rust formatter
         run: cargo fmt --all -- --check
