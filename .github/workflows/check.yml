@@ -21,15 +21,15 @@ jobs:
 
       - name: Install Python project
         run: uv run maturin develop --uv
-
-      - name: Run Python tests
-        run: uv run pytest
-
+        
+      - name: Run Ruff formatter check
+        run: uv run ruff format --check .
+      
       - name: Run Ruff linter
         run: uv run ruff check .
 
-      - name: Run Ruff formatter check
-        run: uv run ruff format --check .
+      - name: Run Python tests
+        run: uv run pytest
 
       - name: Run Pyright type checker
         run: uv run pyright .
