@@ -11,6 +11,7 @@ from pyogrio import write_arrow
 
 from polars_st.casting import st
 from polars_st.config import Config
+from polars_st.geometry import GeometryType
 from polars_st.geoseries import GeoSeries
 from polars_st.selectors import geom
 
@@ -292,16 +293,6 @@ class GeoDataFrameNameSpace:
         path: str | BytesIO,
         layer: str | None = None,
         driver: str | None = None,
-        geometry_type: Literal[
-            "Unknown",
-            "Point",
-            "LineString",
-            "Polygon",
-            "MultiPoint",
-            "MultiLineString",
-            "MultiPolygon",
-            "GeometryCollection",
-        ] = "Unknown",
         crs: str | None = None,
         encoding: str | None = None,
         append: bool = False,
@@ -332,14 +323,6 @@ class GeoDataFrameNameSpace:
                 {..., 'GeoJSON': 'rw', 'GeoJSONSeq': 'rw',...}
                 ```
 
-            geometry_type:
-                The geometry type of the written layer. Currently, this needs to be
-                specified explicitly when creating a new layer with geometries.
-
-                This parameter does not modify the geometry, but it will try to force the layer
-                type of the output file to this value. Use this parameter with caution because
-                using a wrong layer geometry type may result in errors when writing the
-                file, may be ignored by the driver, or may result in invalid files.
             crs:
                 WKT-encoded CRS of the geometries to be written.
             encoding:
@@ -376,6 +359,9 @@ class GeoDataFrameNameSpace:
                 do this (for example if an option exists as both dataset and layer
                 option).
         """
+        geometry_types = self._df.select(geom().st.geometry_type().unique().drop_nulls())
+        geometry_type = GeometryType(geometry_types).name if len(geometry_types) == 1 else "Unknown"
+
         write_arrow(
             self._df.to_arrow(),
             path=path,
