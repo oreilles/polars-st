@@ -16,12 +16,9 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Install Python dependencies
-        run: uv sync --all-extras --dev --no-build --no-install-project
+      - name: Install Python package
+        run: uv sync --all-extras --dev
 
-      - name: Install Python project
-        run: uv run maturin develop --uv
-        
       - name: Run Ruff formatter check
         run: uv run ruff format --check .
       
