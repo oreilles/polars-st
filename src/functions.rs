@@ -1189,7 +1189,7 @@ fn apply_affine_transform(
 
 pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
         apply_affine_transform(
             &Geometry::new_from_wkb(wkb)?,
             unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
@@ -1211,7 +1211,7 @@ pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResul
 
 pub fn affine_transform_3d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
         apply_affine_transform(
             &Geometry::new_from_wkb(wkb)?,
             unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
@@ -1470,19 +1470,19 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunke
             return Ok(wkb.into());
         }
 
+        let srid_err = |srid| geos::Error::GenericError(format!("Unknown SRID: {srid}"));
+
         let proj_src = geom_srid
             .try_into()
             .map(|geom_srid| cache.get(geom_srid))
-            .map_err(|_| ProjError::ProjectionNotFound)
-            .flatten()
-            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {geom_srid}")))?;
+            .map_err(|_| srid_err(geom_srid))?
+            .map_err(|_| srid_err(geom_srid))?;
 
         let proj_dst = dest_srid
             .try_into()
             .map(|dest_srid| cache.get(dest_srid))
-            .map_err(|_| ProjError::ProjectionNotFound)
-            .flatten()
-            .map_err(|_| geos::Error::GenericError(format!("Unknown SRID: {dest_srid}")))?;
+            .map_err(|_| srid_err(geom_srid))?
+            .map_err(|_| srid_err(geom_srid))?;
 
         apply_proj_transform(&proj_src, &proj_dst, &geom)
             .map(|mut geom| {

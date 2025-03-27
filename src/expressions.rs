@@ -707,12 +707,8 @@ fn difference_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> Polars
     let wkb = inputs[0].binary()?;
     let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
-        Some(g) => it
-            .flatten()
-            .try_reduce(|left, right| left.difference_prec(&right, g)),
-        None => it
-            .flatten()
-            .try_reduce(|left, right| left.difference(&right)),
+        Some(g) => it.flatten().try_reduce(|a, b| a.difference_prec(&b, g)),
+        None => it.flatten().try_reduce(|a, b| a.difference(&b)),
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
