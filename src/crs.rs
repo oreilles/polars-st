@@ -16,3 +16,11 @@ pub fn get_crs_authority(definition: &str) -> Option<(&str, &str)> {
         wkt_to_authority(definition)
     }
 }
+
+#[pyfunction]
+pub fn get_crs_from_code(srid: i64) -> Option<String> {
+    srid.try_into()
+        .ok()
+        .and_then(crs_definitions::from_code)
+        .map(|def| def.wkt.to_owned())
+}

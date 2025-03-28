@@ -12,6 +12,7 @@ name = "polars_st"
 crate-type = ["cdylib"]
 
 [dependencies]
+crs-definitions = "0.3"
 geos = { git = "https://github.com/Oreilles/rust-geos", branch = "main", features = ["static", "v3_14_0"]}
 num_enum = "0.7.3"
 polars = { version = "0.46.0", default-features = false, features = ["lazy", "dtype-array", "dtype-struct"] }
