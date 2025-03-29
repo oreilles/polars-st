@@ -31,7 +31,6 @@ if TYPE_CHECKING:
         SchemaDefinition,
         SchemaDict,
     )
-    from polars.interchange.dataframe import PolarsDataFrame
     from typing_extensions import Unpack
 
 __all__ = [
@@ -462,23 +461,36 @@ class GeoDataFrameNameSpace:
         [`Altair`](https://altair-viz.github.io/).
 
         `df.st.plot(**kwargs)` is shorthand for
-        `alt.Chart(df).mark_geoshape(**kwargs).interactive()`. Please read Altair
-        [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
+        `alt.Chart({"values": self.to_dicts()}).mark_geoshape(**kwargs).interactive()`. Please read
+        Altair [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
         for available options.
+
+        Please note that the dataframe will be converted to a GeoJSON FeatureCollection, so
+        columns will need to be prefixed with `properties.` for access in Altair functions.
+
+        Examples:
+            >>> url = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
+            >>> st.read_file(url).st.plot().encode(color="properties.CONTINENT:N")
+            alt.Chart(...)
+
+            >>> import altair as alt
+            >>> df = st.GeoDataFrame({
+            ... "color": ["red","yellow", "blue"],
+            ... "geometry": [
+            ...     "POLYGON((0 0, 0 2, 2 2, 2 0, 0 0))",
+            ...     "POLYGON((0 0, 1 2, 2 0, 0 0))",
+            ...     "POINT(2 1)"
+            ... ]})
+            >>> plot = (
+            ...     df.st.plot(blend="difference")
+            ...     .encode(fill=alt.Color("properties.color:N", scale=None))
+            ...     .project("identity", reflectY=True, pointRadius=100)
+            ...     .properties(height=200)
+            ... )
+            >>> plot
+            alt.Chart(...)
         """
         import altair as alt
 
-        chart = alt.Chart(_ChartGeoDataFrameWrapper(self._df))
+        chart = alt.Chart({"values": self.to_dicts()})
         return chart.mark_geoshape(**kwargs).interactive()
-
-
-class _ChartGeoDataFrameWrapper:
-    def __init__(self, df: GeoDataFrame) -> None:
-        self._df = df
-
-    def __dataframe__(self) -> PolarsDataFrame:
-        return self._df.__dataframe__()
-
-    @property
-    def __geo_interface__(self) -> dict:
-        return self._df.st.__geo_interface__
