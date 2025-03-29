@@ -9,6 +9,7 @@ from polars.api import register_dataframe_namespace
 from polars.datatypes import N_INFER_DEFAULT
 from pyogrio import write_arrow
 
+from polars_st._lib import get_crs_from_code
 from polars_st.casting import st
 from polars_st.config import Config
 from polars_st.geometry import GeometryType
@@ -293,7 +294,6 @@ class GeoDataFrameNameSpace:
         path: str | BytesIO,
         layer: str | None = None,
         driver: str | None = None,
-        crs: str | None = None,
         encoding: str | None = None,
         append: bool = False,
         dataset_metadata: dict | None = None,
@@ -323,8 +323,6 @@ class GeoDataFrameNameSpace:
                 {..., 'GeoJSON': 'rw', 'GeoJSONSeq': 'rw',...}
                 ```
 
-            crs:
-                WKT-encoded CRS of the geometries to be written.
             encoding:
                 Only used for the .dbf file of ESRI Shapefiles. If not specified,
                 uses the default locale.
@@ -363,6 +361,19 @@ class GeoDataFrameNameSpace:
         geometry_type = (
             GeometryType(geometry_type[0]).name if len(geometry_type) == 1 else "Unknown"
         )
+
+        srids = self._df.select(geom().st.srid().unique().drop_nulls())
+        crs = None
+        if len(srids) == 1 and (srid := srids[0, 0]) != 0:
+            crs = get_crs_from_code(srid)
+            if crs is None:
+                msg = f"Couldn't find CRS information for SRID {srid}"
+                raise ValueError(msg)
+        elif len(srids) > 1:
+            msg = "DataFrame with mixed SRIDs aren't supported"
+            raise ValueError(msg)
+        else:
+            crs = None
 
         write_arrow(
             self._df.to_arrow(),
