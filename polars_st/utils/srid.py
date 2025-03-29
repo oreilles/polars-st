@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def get_crs_srid_or_warn(crs: str) -> int | None:
     authority = get_crs_authority(crs)
     if authority is None:
-        msg = f"Couldn't infer authority from {crs}. The geometries SRID will be set to 0."
+        msg = f"Couldn't infer authority from {crs}.\n The geometries SRID will be set to 0."
         logger.warning(msg)
         return None
 

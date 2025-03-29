@@ -138,14 +138,19 @@ def read_file(
         return_fids=return_fids,
     )
 
+    import pyarrow as pa
+
     geometry_name = metadata["geometry_name"] or "wkb_geometry"
-    res = cast("pl.DataFrame", pl.from_arrow(table))
     if geometry_name in table.column_names:
+        geometry_index = table.schema.get_field_index(geometry_name)
+        table = table.cast(table.schema.set(geometry_index, pa.field(geometry_name, pa.binary())))
+        res = cast("pl.DataFrame", pl.from_arrow(table))
         if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(crs)):
             res = res.with_columns(geom(geometry_name).st.set_srid(srid))
         if not metadata["geometry_name"]:
             res = res.rename({"wkb_geometry": Config.get_geometry_column()})
-
+    else:
+        res = cast("pl.DataFrame", pl.from_arrow(table))
     return st(res)._df  # noqa: SLF001
 
 

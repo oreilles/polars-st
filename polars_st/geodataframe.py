@@ -359,8 +359,10 @@ class GeoDataFrameNameSpace:
                 do this (for example if an option exists as both dataset and layer
                 option).
         """
-        geometry_types = self._df.select(geom().st.geometry_type().unique().drop_nulls())
-        geometry_type = GeometryType(geometry_types).name if len(geometry_types) == 1 else "Unknown"
+        geometry_type = self._df.select(geom().st.geometry_type().unique().drop_nulls()).to_series()
+        geometry_type = (
+            GeometryType(geometry_type[0]).name if len(geometry_type) == 1 else "Unknown"
+        )
 
         write_arrow(
             self._df.to_arrow(),
