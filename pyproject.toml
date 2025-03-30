@@ -15,7 +15,6 @@ dynamic = ["version"]
 dependencies = [
     "polars>=1.7.1",
     "pyarrow>=19.0.1", # TODO: remove once fixed https://github.com/pola-rs/pyo3-polars/pull/132
-    "pydantic>=2.9.1",
     "pyogrio>=0.9.0",
 ]
 

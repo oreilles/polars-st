@@ -147,7 +147,7 @@ hide:
 | `union_all` | Return the union of all geometries. | [`root`][polars_st.union_all], [`Expr`][polars_st.GeoExprNameSpace.union_all], [`Series`][polars_st.GeoSeriesNameSpace.union_all] |
 | `coverage_union_all` | Return the coverage union of all geometries. | [`root`][polars_st.coverage_union_all], [`Expr`][polars_st.GeoExprNameSpace.coverage_union_all], [`Series`][polars_st.GeoSeriesNameSpace.coverage_union_all] |
 | `intersection_all` | Return the intersection of all geometries. | [`root`][polars_st.intersection_all], [`Expr`][polars_st.GeoExprNameSpace.intersection_all], [`Series`][polars_st.GeoSeriesNameSpace.intersection_all] |
-| `difference_all` | Return the difference of all geometries | [`root`][polars_st.difference_all], [`Expr`][polars_st.GeoExprNameSpace.difference_all], [`Series`][polars_st.GeoSeriesNameSpace.difference_all] |
+| `difference_all` | Return the difference of all geometries. | [`root`][polars_st.difference_all], [`Expr`][polars_st.GeoExprNameSpace.difference_all], [`Series`][polars_st.GeoSeriesNameSpace.difference_all] |
 | `symmetric_difference_all` | Return the symmetric difference of all geometries. | [`root`][polars_st.symmetric_difference_all], [`Expr`][polars_st.GeoExprNameSpace.symmetric_difference_all], [`Series`][polars_st.GeoSeriesNameSpace.symmetric_difference_all] |
 | `polygonize` | | [`root`][polars_st.polygonize], [`Expr`][polars_st.GeoExprNameSpace.polygonize], [`Series`][polars_st.GeoSeriesNameSpace.polygonize] |
 | `voronoi_polygons` | Return a Voronoi diagram of all geometries vertices. | [`root`][polars_st.voronoi_polygons], [`Expr`][polars_st.GeoExprNameSpace.voronoi_polygons], [`Series`][polars_st.GeoSeriesNameSpace.voronoi_polygons] |

@@ -17,7 +17,7 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 ...     ]
 ... })
 >>> gdf = gdf.group_by("category").agg(st.intersection_all()).with_columns(area=st.area())
->>> gdf.st.to_wkt()
+>>> gdf.with_columns(st.to_wkt())
 shape: (2, 3)
 ┌──────────┬─────────────────────────────────────┬──────┐
 │ category ┆ geometry                            ┆ area │

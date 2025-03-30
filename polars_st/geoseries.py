@@ -7,7 +7,6 @@ import polars as pl
 from polars.api import register_series_namespace
 
 from polars_st.casting import st
-from polars_st.config import Config
 from polars_st.parsing import (
     circularstring,
     from_coords,
@@ -80,7 +79,7 @@ class GeoSeries(pl.Series):
     ) -> GeoSeries:
         s = pl.Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
         if s.name == "" and not (isinstance(name, str) and name == ""):
-            s = s.rename(Config.get_geometry_column())
+            s = s.rename("geometry")
         if len(s) == 0 or s.dtype == pl.Null:
             return cast("GeoSeries", s.cast(pl.Binary))
         if geometry_format is None:

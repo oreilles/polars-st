@@ -2,7 +2,6 @@
 
 from ._lib import __version__
 from .casting import st
-from .config import Config
 from .geodataframe import *
 from .geoexpr import *
 from .geolazyframe import *

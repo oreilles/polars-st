@@ -11,7 +11,6 @@ from pyogrio import write_arrow
 
 from polars_st._lib import get_crs_from_code
 from polars_st.casting import st
-from polars_st.config import Config
 from polars_st.geoseries import GeoSeries
 from polars_st.selectors import geom
 
@@ -47,6 +46,22 @@ class GeoDataFrame(DataFrame):
         data: FrameInitTypes | None = None,
         schema: SchemaDefinition | None = None,
         *,
+        geometry_name: str = "geometry",
+        geometry_format: Literal[
+            "wkb",
+            "wkt",
+            "ewkt",
+            "geojson",
+            "shapely",
+            "coords",
+            "point",
+            "multipoint",
+            "linestring",
+            "circularstring",
+            "multilinestring",
+            "polygon",
+        ]
+        | None = None,
         schema_overrides: SchemaDict | None = None,
         strict: bool = True,
         orient: Literal["col", "row"] | None = None,
@@ -62,11 +77,14 @@ class GeoDataFrame(DataFrame):
             infer_schema_length=infer_schema_length,
             nan_to_null=nan_to_null,
         )
-        geometry_name = Config.get_geometry_column()
         if df.columns == ["column_0"]:
             df = df.rename({"column_0": geometry_name})
-        if geometry_name in df.columns:
-            df = df.with_columns(GeoSeries(df.get_column(geometry_name)))
+        if geometry_name not in df.columns:
+            msg = f"geometry column {geometry_name} not found"
+            raise ValueError(msg)
+
+        geometry_column = df.get_column(geometry_name)
+        df = df.with_columns(GeoSeries(geometry_column, geometry_format=geometry_format))
         return cast("GeoDataFrame", df)
 
     def __init__(
@@ -74,6 +92,22 @@ class GeoDataFrame(DataFrame):
         data: FrameInitTypes | None = None,
         schema: SchemaDefinition | None = None,
         *,
+        geometry_name: str = "geometry",
+        geometry_format: Literal[
+            "wkb",
+            "wkt",
+            "ewkt",
+            "geojson",
+            "shapely",
+            "coords",
+            "point",
+            "multipoint",
+            "linestring",
+            "circularstring",
+            "multilinestring",
+            "polygon",
+        ]
+        | None = None,
         schema_overrides: SchemaDict | None = None,
         strict: bool = True,
         orient: Orientation | None = None,
@@ -85,8 +119,7 @@ class GeoDataFrame(DataFrame):
         A GeoDataFrame is a regular [`polars.DataFrame`](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html)
         with type annotations added for the `st` namespace.
 
-        If a GeoDataFrame is created with a column matching the [`Configuration`][polars_st.Config]
-            default geometry column name, that column will be parsed into a GeoSeries.
+        The column identified by `geometry_name` (default "geometry") will be parsed as a GeoSeries.
 
         Examples:
             >>> gdf = st.GeoDataFrame({
@@ -98,12 +131,18 @@ class GeoDataFrame(DataFrame):
             >>> gdf.schema
             Schema({'geometry': Binary})
 
-            >>> gdf = st.GeoDataFrame([
-            ...     "POINT(0 0)",
-            ...     "POINT(1 2)",
-            ... ])
+            >>> gdf = st.GeoDataFrame(
+            ...     {
+            ...         "geom": [
+            ...             '{"type": "Point", "coordinates": [0, 0]}',
+            ...             '{"type": "Point", "coordinates": [1, 2]}',
+            ...         ]
+            ...     },
+            ...     geometry_name="geom",
+            ...     geometry_format="geojson",
+            ... )
             >>> gdf.schema
-            Schema({'geometry': Binary})
+            Schema({'geom': Binary})
         """
         ...
 
@@ -116,7 +155,7 @@ class GeoDataFrameNameSpace:
     def sjoin(
         self,
         other: DataFrame,
-        on: str | Expr | None = None,
+        on: str | Expr = "geometry",
         how: JoinStrategy = "inner",
         predicate: Literal[
             "intersects_bbox",
@@ -162,6 +201,7 @@ class GeoDataFrameNameSpace:
 
     def to_wkt(
         self,
+        *geometry_columns: str,
         rounding_precision: int | None = 6,
         trim: bool = True,
         output_dimension: Literal[2, 3, 4] = 3,
@@ -172,7 +212,7 @@ class GeoDataFrameNameSpace:
         See [`GeoExprNameSpace.to_wkt`][polars_st.GeoExprNameSpace.to_wkt].
         """
         return self._df.with_columns(
-            geom().st.to_wkt(
+            geom(*geometry_columns).st.to_wkt(
                 rounding_precision,
                 trim,
                 output_dimension,
@@ -182,6 +222,7 @@ class GeoDataFrameNameSpace:
 
     def to_ewkt(
         self,
+        *geometry_columns: str,
         rounding_precision: int | None = 6,
         trim: bool = True,
         output_dimension: Literal[2, 3, 4] = 3,
@@ -192,7 +233,7 @@ class GeoDataFrameNameSpace:
         See [`GeoExprNameSpace.to_ewkt`][polars_st.GeoExprNameSpace.to_ewkt].
         """
         return self._df.with_columns(
-            geom().st.to_ewkt(
+            geom(*geometry_columns).st.to_ewkt(
                 rounding_precision,
                 trim,
                 output_dimension,
@@ -202,6 +243,7 @@ class GeoDataFrameNameSpace:
 
     def to_wkb(
         self,
+        *geometry_columns: str,
         output_dimension: Literal[2, 3, 4] = 3,
         byte_order: Literal[0, 1] | None = None,
         include_srid: bool = False,
@@ -211,45 +253,56 @@ class GeoDataFrameNameSpace:
         See [`GeoExprNameSpace.to_wkb`][polars_st.GeoExprNameSpace.to_wkb].
         """
         return self._df.with_columns(
-            geom().st.to_wkb(
+            geom(*geometry_columns).st.to_wkb(
                 output_dimension,
                 byte_order,
                 include_srid,
             ),
         )
 
-    def to_geojson(self, indent: int | None = None) -> DataFrame:
+    def to_geojson(self, *geometry_columns: str, indent: int | None = None) -> DataFrame:
         """Serialize the DataFrame geometry column as GeoJSON.
 
         See [`GeoExprNameSpace.to_geojson`][polars_st.GeoExprNameSpace.to_geojson].
         """
-        return self._df.with_columns(geom().st.to_geojson(indent))
+        return self._df.with_columns(geom(*geometry_columns).st.to_geojson(indent))
 
-    def to_shapely(self) -> DataFrame:
+    def to_shapely(self, *geometry_columns: str) -> DataFrame:
         """Convert the DataFrame geometry column to a shapely representation.
 
         See [`GeoExprNameSpace.to_shapely`][polars_st.GeoExprNameSpace.to_shapely].
         """
-        return self._df.with_columns(geom().st.to_shapely())
+        return self._df.with_columns(geom(*geometry_columns).st.to_shapely())
 
-    def to_dict(self) -> DataFrame:
+    def to_dict(self, *geometry_columns: str) -> DataFrame:
         """Convert the DataFrame geometry column to a GeoJSON-like Python [`dict`][] representation.
 
         See [`GeoExprNameSpace.to_dict`][polars_st.GeoExprNameSpace.to_dict].
         """
-        return self._df.with_columns(geom().st.to_dict())
+        return self._df.with_columns(geom(*geometry_columns).st.to_dict())
 
-    def to_dicts(self) -> list[dict[str, Any]]:
-        """Convert every row to a Python dictionary representation of a GeoJSON Feature."""
+    def to_dicts(self, geometry_name: str = "geometry") -> list[dict[str, Any]]:
+        """Convert every row to a Python [`dict`][] representation of a GeoJSON Feature.
+
+        Examples:
+            >>> gdf = st.GeoDataFrame({
+            ...     "name": ["Alice", "Bob"],
+            ...     "location": ["POINT(0 0)", "POINT(1 2)"],
+            ... }, geometry_name="location")
+            >>> dicts = gdf.st.to_dicts("location")
+            >>> dicts[0]
+            {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [0.0, 0.0]}, 'properties': {'name': 'Alice'}}
+        """  # noqa: E501
         return self._df.select(
             type=pl.lit("Feature"),
-            geometry=geom().st.to_dict(),
-            properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
+            geometry=geom(geometry_name).st.to_dict(),
+            properties=pl.struct(cs.exclude(geometry_name)) if len(self._df.columns) > 1 else None,
         ).to_dicts()
 
     def to_geopandas(
         self,
         *,
+        geometry_name: str = "geometry",
         use_pyarrow_extension_array: bool = False,
         **kwargs: Any,
     ) -> gpd.GeoDataFrame:
@@ -257,8 +310,9 @@ class GeoDataFrameNameSpace:
         import geopandas as gpd
 
         return gpd.GeoDataFrame(
-            self.to_shapely().to_pandas(
+            self._df.select(geom(geometry_name).st.to_shapely()).to_pandas(
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
+                geometry=geometry_name,
                 **kwargs,
             ),
         )
@@ -292,6 +346,7 @@ class GeoDataFrameNameSpace:
         path: str | BytesIO,
         layer: str | None = None,
         driver: str | None = None,
+        geometry_name: str = "geometry",
         encoding: str | None = None,
         append: bool = False,
         dataset_metadata: dict | None = None,
@@ -321,6 +376,9 @@ class GeoDataFrameNameSpace:
                 {..., 'GeoJSON': 'rw', 'GeoJSONSeq': 'rw',...}
                 ```
 
+            geometry_name:
+                The name of the column in the input data that will be written as the
+                geometry field.
             encoding:
                 Only used for the .dbf file of ESRI Shapefiles. If not specified,
                 uses the default locale.
@@ -355,8 +413,10 @@ class GeoDataFrameNameSpace:
                 do this (for example if an option exists as both dataset and layer
                 option).
         """
-        geometry_type = self._df.select(geom().st.geometry_type().unique().drop_nulls()).to_series()
-        geometry_type = geometry_type[0] if len(geometry_type) == 1 else "Unknown"
+        geometry_types = self._df.select(
+            geom(geometry_name).st.geometry_type().unique().drop_nulls()
+        ).to_series()
+        geometry_type = geometry_types[0] if len(geometry_types) == 1 else "Unknown"
 
         srids = self._df.select(geom().st.srid().unique().drop_nulls())
         crs = None
@@ -376,7 +436,7 @@ class GeoDataFrameNameSpace:
             path=path,
             layer=layer,
             driver=driver,
-            geometry_name=Config.get_geometry_column(),
+            geometry_name=geometry_name,
             geometry_type=geometry_type,
             crs=crs,
             encoding=encoding,
@@ -451,7 +511,7 @@ class GeoDataFrameNameSpace:
             geometry=geom().st.to_geojson().str.json_decode(),
         ).write_ndjson(file)
 
-    def plot(self, **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
+    def plot(self, geometry_name: str = "geometry", **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
         """Draw map plot.
 
         Polars does not implement plotting logic itself but instead defers to
@@ -493,5 +553,5 @@ class GeoDataFrameNameSpace:
         """
         import altair as alt
 
-        chart = alt.Chart({"values": self.to_dicts()})
+        chart = alt.Chart({"values": self.to_dicts(geometry_name)})
         return chart.mark_geoshape(**kwargs).interactive()

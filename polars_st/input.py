@@ -7,7 +7,6 @@ from polars.dependencies import pandas as pd
 from pyogrio import read_arrow
 
 from polars_st.casting import st
-from polars_st.config import Config
 from polars_st.selectors import geom
 from polars_st.utils.srid import get_crs_srid_or_warn
 
@@ -148,7 +147,7 @@ def read_file(
         if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(crs)):
             res = res.with_columns(geom(geometry_name).st.set_srid(srid))
         if not metadata["geometry_name"]:
-            res = res.rename({"wkb_geometry": Config.get_geometry_column()})
+            res = res.rename({"wkb_geometry": "geometry"})
     else:
         res = cast("pl.DataFrame", pl.from_arrow(table))
     return st(res)._df  # noqa: SLF001

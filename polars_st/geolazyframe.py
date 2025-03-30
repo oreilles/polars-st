@@ -10,7 +10,6 @@ from polars.api import register_lazyframe_namespace
 from polars.datatypes import N_INFER_DEFAULT
 from polars.plugins import register_plugin_function
 
-from polars_st.config import Config
 from polars_st.geodataframe import GeoDataFrame
 
 if TYPE_CHECKING:
@@ -65,7 +64,7 @@ class GeoLazyFrameNameSpace:
     def sjoin(
         self,
         other: LazyFrame,
-        on: str | Expr | None = None,
+        on: str | Expr = "geometry",
         how: JoinStrategy = "inner",
         predicate: Literal[
             "intersects_bbox",
@@ -96,30 +95,10 @@ class GeoLazyFrameNameSpace:
 
         if how == "cross":
             msg = """Use of `how="cross" not supported on sjoin.`"""
-            self._lf.join(
-                other=other,
-                on=on,
-                how=how,
-                left_on=left_on,
-                right_on=right_on,
-                suffix=suffix,
-                validate=validate,
-                nulls_equal=nulls_equal,
-                coalesce=coalesce,
-                allow_parallel=allow_parallel,
-                force_parallel=force_parallel,
-            )
             raise ValueError(msg)
 
-        if on is not None:
-            left_expr = on
-            right_expr = on
-        elif left_on is not None and right_on is not None:
-            left_expr = left_on
-            right_expr = right_on
-        else:
-            left_expr = Config.get_geometry_column()
-            right_expr = Config.get_geometry_column()
+        left_expr = left_on or on
+        right_expr = right_on or on
 
         if (
             parse_into_expression(left_expr).meta_has_multiple_outputs()

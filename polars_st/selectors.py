@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING, cast
 
 import polars as pl
 
-from polars_st.config import Config
-
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -18,12 +16,12 @@ __all__ = [
 ]
 
 
-def geom(name: str | Iterable[str] | None = None, *more_names: str) -> GeoExpr:
+def geom(name: str | Iterable[str] = "geometry", *more_names: str) -> GeoExpr:
     """Create a geometry column expression.
 
     Alias for
-        [`polars.col`](https://docs.pola.rs/api/python/stable/reference/expressions/col.html).
-        If no name is given, the default from [`st.Config`][polars_st.Config] will be used.
+        [`polars.col`](https://docs.pola.rs/api/python/stable/reference/expressions/col.html)
+    with type hints for the `st` namespace.
 
     Args:
         name: The name or datatype of the geometry column(s) to represent. Accepts regular
@@ -61,8 +59,7 @@ def geom(name: str | Iterable[str] | None = None, *more_names: str) -> GeoExpr:
         │ MULTIPOINT ((0 0), (1 2)) │
         └───────────────────────────┘
     """
-    columns = pl.col(Config.get_geometry_column()) if name is None else pl.col(name, *more_names)
-    return cast("GeoExpr", columns)
+    return cast("GeoExpr", pl.col(name, *more_names))
 
 
 def element() -> GeoExpr:
