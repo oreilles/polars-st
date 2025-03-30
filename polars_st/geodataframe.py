@@ -461,7 +461,7 @@ class GeoDataFrameNameSpace:
         [`Altair`](https://altair-viz.github.io/).
 
         `df.st.plot(**kwargs)` is shorthand for
-        `alt.Chart({"values": self.to_dicts()}).mark_geoshape(**kwargs).interactive()`. Please read
+        `alt.Chart({"values": df.st.to_dicts()}).mark_geoshape(**kwargs).interactive()`. Please read
         Altair [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
         for available options.
 
@@ -470,8 +470,14 @@ class GeoDataFrameNameSpace:
 
         Examples:
             >>> url = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
-            >>> st.read_file(url).st.plot().encode(color="properties.CONTINENT:N")
-            alt.Chart(...)
+            >>> plot = (
+            ...     st.read_file(url)
+            ...     .with_columns(st.simplify(tolerance=1))
+            ...     .st.plot()
+            ...     .encode(color="properties.CONTINENT:N")
+            ...     .configure_legend(title=None)
+            ...     .properties(height=150)
+            ... )
 
             >>> import altair as alt
             >>> df = st.GeoDataFrame({
@@ -487,8 +493,6 @@ class GeoDataFrameNameSpace:
             ...     .project("identity", reflectY=True, pointRadius=100)
             ...     .properties(height=200)
             ... )
-            >>> plot
-            alt.Chart(...)
         """
         import altair as alt
 
