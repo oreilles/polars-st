@@ -277,64 +277,6 @@ pub fn flip_coordinates(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     })
 }
 
-pub fn apply_coordinates<F>(wkb: &BinaryChunked, transform: F) -> GResult<BinaryChunked>
-where
-    F: Fn(Series, Series, Option<Series>) -> PolarsResult<(Series, Series, Option<Series>)>,
-{
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        let coords_len = geom.get_num_coordinates()?;
-        let transformed = if 3 > geom.get_coordinate_dimension()?.into() {
-            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x".into(), coords_len);
-            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y".into(), coords_len);
-            geom.transform_xy(|x, y| {
-                coords_x.append_value(*x);
-                coords_y.append_value(*y);
-                1
-            })?;
-            transform(
-                coords_x.finish().into_series(),
-                coords_y.finish().into_series(),
-                None,
-            )
-        } else {
-            let mut coords_x = PrimitiveChunkedBuilder::<Float64Type>::new("x".into(), coords_len);
-            let mut coords_y = PrimitiveChunkedBuilder::<Float64Type>::new("y".into(), coords_len);
-            let mut coords_z = PrimitiveChunkedBuilder::<Float64Type>::new("z".into(), coords_len);
-            geom.transform_xyz(|x, y, z| {
-                coords_x.append_value(*x);
-                coords_y.append_value(*y);
-                coords_z.append_value(*z);
-                1
-            })?;
-            transform(
-                coords_x.finish().into_series(),
-                coords_y.finish().into_series(),
-                Some(coords_z.finish().into_series()),
-            )
-        }
-        .map_err(|e| geos::Error::GenericError(format!("{e}")))?;
-        let mut transformed_x = transformed.0.f64().unwrap().into_iter();
-        let mut transformed_y = transformed.1.f64().unwrap().into_iter();
-        if let Some(transformed_z) = transformed.2 {
-            let mut transformed_z = transformed_z.f64().unwrap().into_iter();
-            geom.transform_xyz(|x, y, z| {
-                *x = transformed_x.next().unwrap().unwrap_or(f64::NAN);
-                *y = transformed_y.next().unwrap().unwrap_or(f64::NAN);
-                *z = transformed_z.next().unwrap().unwrap_or(f64::NAN);
-                1
-            })?
-        } else {
-            geom.transform_xy(|x, y| {
-                *x = transformed_x.next().unwrap().unwrap_or(f64::NAN);
-                *y = transformed_y.next().unwrap().unwrap_or(f64::NAN);
-                1
-            })?
-        }
-        .to_ewkb()
-    })
-}
-
 pub fn get_point_n(wkb: &BinaryChunked, index: &UInt32Chunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise(wkb, index, |wkb, index| {
         if let (Some(wkb), Some(index)) = (wkb, index) {

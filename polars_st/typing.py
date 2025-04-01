@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeAlias, Union
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
     import numpy as np
     import pandas as pd
@@ -30,8 +30,3 @@ if TYPE_CHECKING:
     IntoGeoExprColumn: TypeAlias = IntoExprColumn
     IntoIntegerExpr: TypeAlias = IntoExprColumn | int
     IntoDecimalExpr: TypeAlias = IntoExprColumn | int | float
-
-    CoordinatesApply: TypeAlias = Callable[
-        [pl.Series, pl.Series, pl.Series | None],
-        tuple[pl.Series, pl.Series, pl.Series | None],
-    ]

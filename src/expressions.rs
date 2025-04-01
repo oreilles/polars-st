@@ -4,8 +4,7 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
-use pyo3::prelude::*;
-use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
+use pyo3_polars::derive::polars_expr;
 
 fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
     fields
@@ -1227,38 +1226,6 @@ pub fn flip_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
     functions::flip_coordinates(wkb)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
-}
-
-#[pyfunction]
-pub fn apply_coordinates(
-    py: Python,
-    pyseries: PySeries,
-    pyfunc: PyObject,
-) -> Result<PySeries, PyPolarsErr> {
-    fn apply_coordinates<F>(inputs: &[Series], func: F) -> PolarsResult<Series>
-    where
-        F: Fn(Series, Series, Option<Series>) -> PolarsResult<(Series, Series, Option<Series>)>,
-    {
-        let wkb = inputs[0].binary()?;
-        functions::apply_coordinates(wkb, func)
-            .map_err(to_compute_err)
-            .map(IntoSeries::into_series)
-    }
-
-    let res = apply_coordinates(&[pyseries.0], |x, y, z| {
-        let (tx, ty, tz): (PySeries, PySeries, Option<PySeries>) = pyfunc
-            .call1(py, (PySeries(x), PySeries(y), z.map(PySeries)))
-            .map_err(to_compute_err)?
-            .extract(py)
-            .map_err(to_compute_err)?;
-        Ok((
-            tx.0.cast(&DataType::Float64)?,
-            ty.0.cast(&DataType::Float64)?,
-            tz.map(|tz| tz.0.cast(&DataType::Float64)).transpose()?,
-        ))
-    })?;
-
-    Ok(PySeries(res))
 }
 
 #[polars_expr(output_type=Binary)]

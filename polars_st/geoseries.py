@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
     from polars_st.typing import (
         ArrayLike,
-        CoordinatesApply,
         IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
@@ -233,11 +232,6 @@ class GeoSeriesNameSpace:
     @dispatch
     def coordinates(self, output_dimension: Literal[2, 3] = 2) -> pl.Series:
         """See [`GeoExprNameSpace.coordinates`][polars_st.GeoExprNameSpace.coordinates]."""
-        ...
-
-    @dispatch
-    def apply_coordinates(self, transform: CoordinatesApply) -> pl.GeoSeries:
-        """See [`GeoExprNameSpace.apply_coordinates`][polars_st.GeoExprNameSpace.apply_coordinates]."""  # noqa: E501
         ...
 
     @dispatch

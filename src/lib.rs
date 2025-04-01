@@ -23,6 +23,5 @@ fn _lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_function(wrap_pyfunction!(crs::get_crs_authority, m)?)?;
     m.add_function(wrap_pyfunction!(crs::get_crs_from_code, m)?)?;
-    m.add_function(wrap_pyfunction!(expressions::apply_coordinates, m)?)?;
     Ok(())
 }

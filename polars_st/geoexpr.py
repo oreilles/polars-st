@@ -12,13 +12,10 @@ from polars.api import register_expr_namespace
 from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
 
-from polars_st import _lib
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from polars_st.typing import (
-        CoordinatesApply,
         IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
@@ -224,13 +221,6 @@ class GeoExprNameSpace:
             args=[self._expr],
             kwargs={"output_dimension": output_dimension},
             is_elementwise=True,
-        )
-
-    def apply_coordinates(self, transform: CoordinatesApply) -> pl.GeoExpr:
-        """Replace the coordinates of each geometry with new ones."""
-        return self._expr.map_batches(
-            lambda s: _lib.apply_coordinates(s, transform),
-            return_dtype=pl.Binary,
         )
 
     def exterior_ring(self) -> GeoExpr:

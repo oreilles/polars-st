@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     import polars as pl
 
     from polars_st.typing import (
-        CoordinatesApply,
         IntoDecimalExpr,
         IntoExprColumn,
         IntoIntegerExpr,
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "affine_transform",
-    "apply_coordinates",
     "area",
     "boundary",
     "bounds",
@@ -174,14 +172,6 @@ def count_coordinates(*columns: str) -> pl.Expr:
 def coordinates(*columns: str, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[coordinates(...)][polars_st.GeoExprNameSpace.coordinates]</code>."""  # noqa: E501
     return geom(*columns).st.coordinates(output_dimension)
-
-
-def apply_coordinates(
-    *columns: str,
-    transform: CoordinatesApply,
-) -> pl.GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[apply_coordinates(...)][polars_st.GeoExprNameSpace.apply_coordinates]</code>."""  # noqa: E501
-    return geom(*columns).st.apply_coordinates(transform)
 
 
 def exterior_ring(*columns: str) -> GeoExpr:
