@@ -224,26 +224,46 @@ pub fn get_num_coordinates(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
 }
 
 pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<ListChunked> {
+    fn get_coords_sequence<T>(geom: &T, dimension: usize, builder: &mut Vec<f64>) -> GResult<()>
+    where
+        T: Geom,
+    {
+        match geom.geometry_type() {
+            _ if geom.is_empty()? => Ok(()),
+            Point | LineString | LinearRing | CircularString => {
+                let mut seq = geom.get_coord_seq()?.as_buffer(Some(dimension))?;
+                builder.append(&mut seq);
+                Ok(())
+            }
+            Polygon | CurvePolygon => {
+                let mut seq = geom
+                    .get_exterior_ring()?
+                    .get_coord_seq()?
+                    .as_buffer(Some(dimension))?;
+                builder.append(&mut seq);
+                (0..geom.get_num_interior_rings()?).try_for_each(|n| {
+                    get_coords_sequence(&geom.get_interior_ring_n(n)?, dimension, builder)
+                })
+            }
+            MultiPoint | MultiLineString | MultiCurve | CompoundCurve | MultiPolygon
+            | MultiSurface | GeometryCollection => {
+                (0..geom.get_num_geometries()?).try_for_each(|n| {
+                    get_coords_sequence(&geom.get_geometry_n(n)?, dimension, builder)
+                })
+            }
+            __Unknown(_) => unreachable!(),
+        }
+    }
     fn get_coordinates(wkb: &[u8], dimension: usize) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.is_empty()? {
-            let dt = &DataType::Array(DataType::Float64.into(), dimension);
-            return Ok(Series::new_empty("".into(), dt));
-        }
-        match geom.geometry_type() {
-            Point | LineString | CircularString => {
-                let seq = geom.get_coord_seq()?;
-                Series::new("".into(), seq.as_buffer(Some(dimension))?)
-                    .reshape_array(&[
-                        ReshapeDimension::new_dimension(seq.size()? as u64),
-                        ReshapeDimension::new_dimension(dimension as u64),
-                    ])
-                    .map_err(|_| geos::Error::GenericError("Invalid coordinate sequence".into()))
-            }
-            _ => Err(geos::Error::GenericError(
-                "Invalid coordinate sequence".into(),
-            )),
-        }
+        let mut builder = Vec::with_capacity(wkb.len() / 8);
+        get_coords_sequence(&geom, dimension, &mut builder)?;
+        Series::new("".into(), builder)
+            .reshape_array(&[
+                ReshapeDimension::Infer,
+                ReshapeDimension::new_dimension(dimension as u64),
+            ])
+            .map_err(|_| geos::Error::GenericError(format!("Invalid coordinate sequence.")))
     }
     wkb_array
         .iter()
