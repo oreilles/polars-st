@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -9,8 +7,9 @@ import polars as pl
 from polars._utils.parse import parse_into_expression
 from polars._utils.wrap import wrap_expr
 from polars.api import register_expr_namespace
-from polars.exceptions import PolarsInefficientMapWarning
 from polars.plugins import register_plugin_function
+
+from polars_st import _lib
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -530,13 +529,10 @@ class GeoExprNameSpace:
 
     def to_dict(self) -> pl.Expr:
         """Convert each geometry to a GeoJSON-like Python [`dict`][] object."""
-
-        def _to_dict(s: pl.Series) -> pl.Series:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", PolarsInefficientMapWarning)
-                return s.map_elements(json.loads, return_dtype=pl.Object)
-
-        return self.to_geojson().map_batches(_to_dict, pl.Object(), is_elementwise=True)
+        return self._expr.map_batches(
+            lambda s: pl.Series(s.name, _lib.to_python_dict(s), dtype=pl.Object),
+            is_elementwise=True,
+        )
 
     # Unary predicates
 

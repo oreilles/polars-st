@@ -20,6 +20,7 @@ use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_element
 use polars::prelude::*;
 use proj4rs::errors::Error as ProjError;
 use proj4rs::Proj;
+use pyo3::prelude::*;
 use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 fn ewkb_writer() -> GResult<WKBWriter> {
@@ -263,7 +264,7 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
                 ReshapeDimension::Infer,
                 ReshapeDimension::new_dimension(dimension as u64),
             ])
-            .map_err(|_| geos::Error::GenericError(format!("Invalid coordinate sequence.")))
+            .map_err(|_| geos::Error::GenericError("Invalid coordinate sequence.".to_string()))
     }
     wkb_array
         .iter()
@@ -404,6 +405,21 @@ pub fn to_geojson(wkb: &BinaryChunked, params: &ToGeoJsonKwargs) -> GResult<Stri
         let geom = Geometry::new_from_wkb(wkb)?;
         writer.write_formatted(&geom, params.indent.unwrap_or(-1))
     })
+}
+
+pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyObject>>> {
+    let json = PyModule::import(py, "json").expect("Failed to load json");
+    let loads = json.getattr("loads").expect("Failed to get json.loads");
+    wkb.into_iter()
+        .map(|wkb| {
+            wkb.map(|wkb| {
+                Geometry::new_from_wkb(wkb)
+                    .and_then(|g| g.to_geojson())
+                    .and_then(|s| Ok(loads.call1((s,)).map(Into::into).expect("Invalid GeoJSON")))
+            })
+            .transpose()
+        })
+        .collect::<GResult<Vec<Option<PyObject>>>>()
 }
 
 pub fn area(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
@@ -1383,12 +1399,11 @@ fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geom
             new_y = y.to_degrees();
             new_z = z.to_degrees();
         }
-        match success {
-            Ok(()) => Some((new_x, new_y, new_z)),
-            Err(_) => {
-                let _ = global_success.replace(success);
-                None
-            }
+        if let Ok(()) = success {
+            Some((new_x, new_y, new_z))
+        } else {
+            let _ = global_success.replace(success);
+            None
         }
     });
     match global_success.into_inner() {

@@ -4,7 +4,8 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
-use pyo3_polars::derive::polars_expr;
+use pyo3::prelude::*;
+use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
 
 fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
     fields
@@ -313,6 +314,17 @@ fn to_geojson(inputs: &[Series], kwargs: args::ToGeoJsonKwargs) -> PolarsResult<
     functions::to_geojson(inputs[0].binary()?, &kwargs)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
+}
+
+#[pyfunction]
+pub fn to_python_dict(
+    py: Python,
+    pyseries: PySeries,
+) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
+    let wkb = pyseries.0.binary()?;
+    functions::to_python_dict(wkb, py)
+        .map_err(to_compute_err)
+        .map_err(Into::into)
 }
 
 #[polars_expr(output_type=Float64)]
