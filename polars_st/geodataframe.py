@@ -12,7 +12,6 @@ from pyogrio import write_arrow
 from polars_st._lib import get_crs_from_code
 from polars_st.casting import st
 from polars_st.config import Config
-from polars_st.geometry import GeometryType
 from polars_st.geoseries import GeoSeries
 from polars_st.selectors import geom
 
@@ -357,9 +356,7 @@ class GeoDataFrameNameSpace:
                 option).
         """
         geometry_type = self._df.select(geom().st.geometry_type().unique().drop_nulls()).to_series()
-        geometry_type = (
-            GeometryType(geometry_type[0]).name if len(geometry_type) == 1 else "Unknown"
-        )
+        geometry_type = geometry_type[0] if len(geometry_type) == 1 else "Unknown"
 
         srids = self._df.select(geom().st.srid().unique().drop_nulls())
         crs = None

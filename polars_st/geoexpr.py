@@ -8,6 +8,7 @@ from polars.api import register_expr_namespace
 from polars.plugins import register_plugin_function
 
 from polars_st import _lib
+from polars_st.geometry import PolarsGeometryType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -42,26 +43,7 @@ class GeoExprNameSpace:
         self._expr = cast("GeoExpr", expr)
 
     def geometry_type(self) -> pl.Expr:
-        """Return the type ID of each geometry.
-
-        -  **0** = Unknown
-        -  **1** = Point
-        -  **2** = LineString
-        -  **3** = Polygon
-        -  **4** = MultiPoint
-        -  **5** = MultiLineString
-        -  **6** = MultiPolygon
-        -  **7** = GeometryCollection
-        -  **8** = CircularString
-        -  **9** = CompoundCurve
-        - **10** = CurvePolygon
-        - **11** = MultiCurve
-        - **12** = MultiSurface
-        - **13** = Curve
-        - **14** = Surface
-        - **15** = PolyhedralSurface
-        - **16** = Tin
-        - **17** = Triangle
+        """Return the type of each geometry.
 
         Examples:
             >>> gdf = st.GeoDataFrame([
@@ -71,22 +53,24 @@ class GeoExprNameSpace:
             ... ])
             >>> gdf.select(st.geom().st.geometry_type())
             shape: (3, 1)
-            ┌──────────┐
-            │ geometry │
-            │ ---      │
-            │ u32      │
-            ╞══════════╡
-            │ 1        │
-            │ 2        │
-            │ 3        │
-            └──────────┘
+            ┌────────────┐
+            │ geometry   │
+            │ ---        │
+            │ enum       │
+            ╞════════════╡
+            │ Point      │
+            │ LineString │
+            │ Polygon    │
+            └────────────┘
         """
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="geometry_type",
             args=self._expr,
             is_elementwise=True,
-        )
+        ).map_batches(lambda s: pl.Series(s, dtype=PolarsGeometryType))
+        # Needed because pola-rs/polars#22125, pola-rs/pyo3-polars#131
+        # Cannot use cast either, see comments in pola-rs/polars#6106
 
     def dimensions(self) -> pl.Expr:
         """Return the inherent dimensionality of each geometry.

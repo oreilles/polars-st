@@ -4,6 +4,7 @@ use crate::{
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
+use polars_arrow::array::Utf8ViewArray;
 use pyo3::prelude::*;
 use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
 
@@ -25,6 +26,39 @@ fn output_type_geometry_list(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
         first_field_name(input_fields)?.clone(),
         DataType::List(DataType::Binary.into()),
+    ))
+}
+
+fn geometry_enum() -> DataType {
+    static GEOMETRY_TYPES: [Option<&str>; 18] = [
+        Some("Unknown"),
+        Some("Point"),
+        Some("LineString"),
+        Some("Polygon"),
+        Some("MultiPoint"),
+        Some("MultiLineString"),
+        Some("MultiPolygon"),
+        Some("GeometryCollection"),
+        Some("CircularString"),
+        Some("CompoundCurve"),
+        Some("CurvePolygon"),
+        Some("MultiCurve"),
+        Some("MultiSurface"),
+        Some("Curve"),
+        Some("Surface"),
+        Some("PolyhedralSurface"),
+        Some("Tin"),
+        Some("Triangle"),
+    ];
+    let cats = Utf8ViewArray::from_slice(GEOMETRY_TYPES);
+    let rev_mapping = RevMapping::build_local(cats);
+    DataType::Enum(Some(rev_mapping.into()), CategoricalOrdering::Physical)
+}
+
+fn output_type_geometry_type(input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        first_field_name(input_fields)?.clone(),
+        geometry_enum(),
     ))
 }
 
@@ -84,13 +118,16 @@ fn from_xy(inputs: &[Series]) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
-#[polars_expr(output_type=UInt32)]
+#[polars_expr(output_type_func=output_type_geometry_type)]
 fn geometry_type(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_type_id(wkb)
+    let ca = functions::get_type_id(wkb)
         .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+        .map(|ca| unsafe { CategoricalChunked::from_cats_and_dtype_unchecked(ca, geometry_enum()) })
+        .map(IntoSeries::into_series)?;
+
+    Ok(ca)
 }
 
 #[polars_expr(output_type=Int32)]

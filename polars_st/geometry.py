@@ -1,24 +1,29 @@
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import StrEnum
+
+import polars as pl
 
 
-class GeometryType(IntEnum):
-    Unknown = 0
-    Point = 1
-    LineString = 2
-    Polygon = 3
-    MultiPoint = 4
-    MultiLineString = 5
-    MultiPolygon = 6
-    GeometryCollection = 7
-    CircularString = 8
-    CompoundCurve = 9
-    CurvePolygon = 10
-    MultiCurve = 11
-    MultiSurface = 12
-    Curve = 13
-    Surface = 14
-    PolyhedralSurface = 15
-    Tin = 16
-    Triangle = 17
+class GeometryType(StrEnum):
+    Unknown = "Unknown"
+    Point = "Point"
+    LineString = "LineString"
+    Polygon = "Polygon"
+    MultiPoint = "MultiPoint"
+    MultiLineString = "MultiLineString"
+    MultiPolygon = "MultiPolygon"
+    GeometryCollection = "GeometryCollection"
+    CircularString = "CircularString"
+    CompoundCurve = "CompoundCurve"
+    CurvePolygon = "CurvePolygon"
+    MultiCurve = "MultiCurve"
+    MultiSurface = "MultiSurface"
+    Curve = "Curve"
+    Surface = "Surface"
+    PolyhedralSurface = "PolyhedralSurface"
+    Tin = "Tin"
+    Triangle = "Triangle"
+
+
+PolarsGeometryType = pl.Enum(GeometryType)

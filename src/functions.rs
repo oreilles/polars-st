@@ -16,6 +16,7 @@ use geos::{
     BufferParams, CoordSeq, GResult, GeoJSONWriter, Geom, Geometry, GeometryTypes::*,
     PreparedGeometry, STRtree, SpatialIndex, WKBWriter, WKTWriter,
 };
+
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
 use proj4rs::errors::Error as ProjError;
@@ -507,8 +508,8 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
         .map(|wkb| {
             wkb.map(|wkb| {
                 Geometry::new_from_wkb(wkb)
-                    .and_then(|g| g.to_geojson())
-                    .map(|s| loads.call1((s,)).map(Into::into).expect("Invalid GeoJSON"))
+                    .and_then(|geom| geom.to_geojson())
+                    .map(|json| loads.call1((json,)).expect("Invalid GeoJSON").into())
             })
             .transpose()
         })

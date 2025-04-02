@@ -30,7 +30,7 @@ hide:
 | `to_geopandas` | Convert DataFrame or Series to GeoPandas equivalent. | [`Series`][polars_st.GeoSeriesNameSpace.to_geopandas], [`DataFrame`][polars_st.GeoDataFrameNameSpace.to_geopandas] |
 | `__geo_interface__` | Return a [`dict`][] representation of a `GeometryCollection` or `FeatureCollection` | [`Series`][polars_st.GeoSeriesNameSpace.__geo_interface__], [`DataFrame`][polars_st.GeoDataFrameNameSpace.__geo_interface__] |
 | **General operations** | | |
-| `geometry_type` | Return the type ID of each geometry.. | [`root`][polars_st.geometry_type], [`Expr`][polars_st.GeoExprNameSpace.geometry_type], [`Series`][polars_st.GeoSeriesNameSpace.geometry_type] |
+| `geometry_type` | Return the type of each geometry. | [`root`][polars_st.geometry_type], [`Expr`][polars_st.GeoExprNameSpace.geometry_type], [`Series`][polars_st.GeoSeriesNameSpace.geometry_type] |
 | `dimensions` | Return the inherent dimensionality of each geometry.. | [`root`][polars_st.dimensions], [`Expr`][polars_st.GeoExprNameSpace.dimensions], [`Series`][polars_st.GeoSeriesNameSpace.dimensions] |
 | `coordinate_dimension` | Return the coordinate dimension of each geometry.. | [`root`][polars_st.coordinate_dimension], [`Expr`][polars_st.GeoExprNameSpace.coordinate_dimension], [`Series`][polars_st.GeoSeriesNameSpace.coordinate_dimension] |
 | `area` | Return the area of each geometry. | [`root`][polars_st.area], [`Expr`][polars_st.GeoExprNameSpace.area], [`Series`][polars_st.GeoSeriesNameSpace.area] |
@@ -127,6 +127,7 @@ hide:
 | `translate` | | [`root`][polars_st.translate], [`Expr`][polars_st.GeoExprNameSpace.translate], [`Series`][polars_st.GeoSeriesNameSpace.translate] |
 | `rotate` | | [`root`][polars_st.rotate], [`Expr`][polars_st.GeoExprNameSpace.rotate], [`Series`][polars_st.GeoSeriesNameSpace.rotate] |
 | `scale` | | [`root`][polars_st.scale], [`Expr`][polars_st.GeoExprNameSpace.scale], [`Series`][polars_st.GeoSeriesNameSpace.scale] |
+| `skew` | | [`root`][polars_st.skew], [`Expr`][polars_st.GeoExprNameSpace.skew], [`Series`][polars_st.GeoSeriesNameSpace.skew] |
 | **LineString operations** | | |
 | `interpolate` | | [`root`][polars_st.interpolate], [`Expr`][polars_st.GeoExprNameSpace.interpolate], [`Series`][polars_st.GeoSeriesNameSpace.interpolate] |
 | `project` | | [`Expr`][polars_st.GeoExprNameSpace.project], [`Series`][polars_st.GeoSeriesNameSpace.project] |

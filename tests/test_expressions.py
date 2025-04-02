@@ -11,7 +11,7 @@ import pytest
 
 import polars_st as st
 from polars_st.geoexpr import GeoExprNameSpace as Geo
-from polars_st.geometry import GeometryType
+from polars_st.geometry import GeometryType, PolarsGeometryType
 
 
 def gdf(values: list[str | None]):
@@ -91,7 +91,7 @@ class Function:
 
 
 functions = [
-    Function(Geo.geometry_type, pl.UInt32()),
+    Function(Geo.geometry_type, PolarsGeometryType),
     Function(Geo.dimensions, pl.Int32()),
     Function(Geo.coordinate_dimension, pl.UInt32()),
     Function(Geo.srid, pl.Int32()),
