@@ -46,15 +46,13 @@ For every spatial operations, the WKB binary blob will be parsed into a Geometry
 
 ## About GeoPolars
 
-[GeoPolars](https://github.com/geopolars/geopolars) is an incredibly promising tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance by a long shot. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
+[GeoPolars](https://github.com/geopolars/geopolars) is an very promising tool for manipulating geographic data in Polars based on [GeoArrow](https://github.com/geoarrow/geoarrow) that likely will outperform this library's performance. It however seems to be quite a long way from being ready and feature-complete, mostly due to Polars lack of support for [Arrow Extension Types](https://github.com/pola-rs/polars/issues/9112) and [subclassing of core datatypes](https://github.com/pola-rs/polars/issues/2846#issuecomment-1711799869).
 
-Storing geometry as EWKB and delegating core functionality to GEOS allows `polars-st` to be ready now, and provide additional features such as XYZM coordinates, curved geometry types and per-geometry CRS information.
-
-I really hope Geopolars get there soon, and that maybe some of the API design explorations made here will have helped make it even more pleasant to use.
+`polars-st` stores geometry as EWKB in regular Binary columns and delegates core functionality to GEOS, which allows it to be ready now, with full support for 3D / 4D coordinates, curved geometry types (CircularString, CurvePolygon, ...) and per-geometry CRS information.
 
 ## About Polars
 
-This project is not affiliated with Polars. The design language was made very close to that of Polars because I found it amazingly appealing and liked the challenge of adding geographic meaning to it, and to also highlight the fact that this project is an exclusive extension to Polars.
+This project is not affiliated with Polars. The design language was deliberately made very close to that of Polars to highlight the fact that this project is an exclusive extension to Polars, and as a tribute to its effectiveness.
 
 
 ## About GEOS
