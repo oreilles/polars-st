@@ -415,7 +415,7 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
             wkb.map(|wkb| {
                 Geometry::new_from_wkb(wkb)
                     .and_then(|g| g.to_geojson())
-                    .and_then(|s| Ok(loads.call1((s,)).map(Into::into).expect("Invalid GeoJSON")))
+                    .map(|s| loads.call1((s,)).map(Into::into).expect("Invalid GeoJSON"))
             })
             .transpose()
         })
