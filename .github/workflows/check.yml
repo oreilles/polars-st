@@ -31,6 +31,9 @@ jobs:
       - name: Run Pyright type checker
         run: uv run pyright .
 
+      - name: Run MkDocs build
+        run: uv run mkdocs build -f docs/mkdocs.yml
+
 
   rust-test:
     runs-on: ubuntu-latest
