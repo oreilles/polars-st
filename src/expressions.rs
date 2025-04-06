@@ -1,6 +1,6 @@
 use crate::{
     args,
-    functions::{self, ToEwkb},
+    functions::{self, GeometryUtils},
 };
 use geos::{Geom, Geometry};
 use polars::{error::to_compute_err, prelude::*};
@@ -1190,6 +1190,64 @@ pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
+#[polars_expr(output_type=Binary)]
+pub fn translate(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = factors.array()?;
+    functions::translate(wkb, factors)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn rotate(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    let angle = inputs[1].strict_cast(&DataType::Float64)?;
+    let angle = angle.f64()?;
+    match kwargs.origin {
+        args::TransformOrigin::XY(o) => functions::rotate_around_point(wkb, angle, &o),
+        args::TransformOrigin::XYZ(o) => functions::rotate_around_point(wkb, angle, &(o.0, o.1)),
+        args::TransformOrigin::Center => functions::rotate_around_center(wkb, angle),
+        args::TransformOrigin::Centroid => functions::rotate_around_centroid(wkb, angle),
+    }
+    .map_err(to_compute_err)
+    .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = factors.array()?;
+    match kwargs.origin {
+        args::TransformOrigin::XY(o) => functions::scale_from_point(wkb, factors, &(o.0, o.1, 0.0)),
+        args::TransformOrigin::XYZ(origin) => functions::scale_from_point(wkb, factors, &origin),
+        args::TransformOrigin::Center => functions::scale_from_center(wkb, factors),
+        args::TransformOrigin::Centroid => functions::scale_from_centroid(wkb, factors),
+    }
+    .map_err(to_compute_err)
+    .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn skew(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = factors.array()?;
+    match kwargs.origin {
+        args::TransformOrigin::XY(o) => functions::skew_from_point(wkb, factors, &(o.0, o.1, 0.0)),
+        args::TransformOrigin::XYZ(origin) => functions::skew_from_point(wkb, factors, &origin),
+        args::TransformOrigin::Center => functions::skew_from_center(wkb, factors),
+        args::TransformOrigin::Centroid => functions::skew_from_centroid(wkb, factors),
+    }
+    .map_err(to_compute_err)
+    .map(IntoSeries::into_series)
+}
 #[polars_expr(output_type=Binary)]
 pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;

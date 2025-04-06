@@ -41,9 +41,14 @@ pub trait GeometryUtils {
         m31: f64, m32: f64, m33: f64,
         tx:  f64, ty:  f64, tz:  f64,
     ) -> GResult<Geometry>;
+
+    fn translate(&self, x: f64, y: f64, z: f64) -> GResult<Geometry>;
+    fn rotate(&self, angle: f64, x0: f64, y0: f64) -> GResult<Geometry>;
+    fn scale(&self, x: f64, y: f64, z: f64, x0: f64, y0: f64, z0: f64) -> GResult<Geometry>;
+    fn skew(&self, x: f64, y: f64, z: f64, x0: f64, y0: f64, z0: f64) -> GResult<Geometry>;
 }
 
-impl<T> ToEwkb for T
+impl<T> GeometryUtils for T
 where
     T: Geom,
 {
@@ -75,6 +80,59 @@ where
                 Some((new_x, new_y, new_z))
             })
         }
+    }
+
+    #[rustfmt::skip]
+    fn translate(&self, x: f64, y: f64, z: f64) -> GResult<Geometry> {
+        self.apply_affine_transform(
+            1., 0., 0.,
+            0., 1., 0.,
+            0., 0., 1.,
+            x,  y,  z,
+        )
+    }
+
+    #[rustfmt::skip]
+    fn rotate(&self, angle: f64, x0: f64, y0: f64) -> GResult<Geometry> {
+        let angle = angle.to_radians();
+        let cosp = angle.cos();
+        let sinp = angle.sin();
+        self.apply_affine_transform(
+            cosp,-sinp, 0.0,
+            sinp, cosp, 0.0,
+            0.0,   0.0, 1.0,
+            x0 - x0 * cosp + y0 * sinp,
+            y0 - x0 * sinp - y0 * cosp,
+            0.0,
+        )
+    }
+
+    #[rustfmt::skip]
+    fn scale(&self, x: f64, y: f64, z: f64, x0: f64, y0: f64, z0: f64) -> GResult<Geometry> {
+        self.apply_affine_transform(
+            x,  0., 0.,
+            0., y,  0.,
+            0., 0., z,
+            x0 - x0 * x,
+            y0 - y0 * y,
+            z0 - z0 * z,
+        )
+    }
+
+    #[rustfmt::skip]
+    fn skew(&self, x: f64, y: f64, z: f64, x0: f64, y0: f64, z0: f64) -> GResult<Geometry> {
+        let x = x.to_radians().tan();
+        let y = y.to_radians().tan();
+        let z = z.to_radians().tan();
+
+        self.apply_affine_transform(
+            1., x,  y,
+            z,  1., x,
+            y,  z, 1.,
+            x0 - x0 * 1. - y0 * x - z0 * y,
+            y0 - x0 * z - y0 * 1. - z0 * x,
+            z0 - x0 * y - y0 * z - z0 * 1.,
+        )
     }
 }
 
@@ -1152,37 +1210,166 @@ pub fn minimum_rotated_rectangle(wkb: &BinaryChunked) -> GResult<BinaryChunked> 
     })
 }
 
-#[allow(clippy::too_many_arguments)]
-fn apply_affine_transform(
-    geom: &Geometry,
-    m11: f64,
-    m12: f64,
-    m13: f64,
-    m21: f64,
-    m22: f64,
-    m23: f64,
-    m31: f64,
-    m32: f64,
-    m33: f64,
-    tx: f64,
-    ty: f64,
-    tz: f64,
-) -> GResult<Geometry> {
-    let dims: i32 = geom.get_coordinate_dimension()?.into();
-    if dims < 3 {
-        geom.transform_xy(|x, y| {
-            let new_x = x * m11 + y * m12 + tx;
-            let new_y = x * m21 + y * m22 + ty;
-            Some((new_x, new_y))
-        })
-    } else {
-        geom.transform_xyz(|x, y, z| {
-            let new_x = x * m11 + y * m12 + m13 * z + tx;
-            let new_y = x * m21 + y * m22 + m23 * z + ty;
-            let new_z = x * m31 + y * m32 + m33 * z + tz;
-            Some((new_x, new_y, new_z))
-        })
-    }
+pub fn translate(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        geom.translate(x, y, z)?.to_ewkb()
+    })
+}
+
+pub fn rotate_around_centroid(
+    wkb: &BinaryChunked,
+    angle: &Float64Chunked,
+) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let centroid = geom.get_centroid()?;
+        let x0 = centroid.get_x()?;
+        let y0 = centroid.get_y()?;
+        geom.rotate(angle, x0, y0)?.to_ewkb()
+    })
+}
+
+pub fn rotate_around_center(wkb: &BinaryChunked, angle: &Float64Chunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let x0 = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        let y0 = f64::midpoint(geom.get_y_min()?, geom.get_y_max()?);
+        geom.rotate(angle, x0, y0)?.to_ewkb()
+    })
+}
+
+pub fn rotate_around_point(
+    wkb: &BinaryChunked,
+    angle: &Float64Chunked,
+    origin: &(f64, f64),
+) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        geom.rotate(angle, origin.0, origin.1)?.to_ewkb()
+    })
+}
+
+pub fn scale_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let centroid = geom.get_centroid()?;
+        let x0 = centroid.get_x()?;
+        let y0 = centroid.get_y()?;
+        let z0 = centroid.get_z()?;
+        geom.scale(x, y, z, x0, y0, z0)?.to_ewkb()
+    })
+}
+
+pub fn scale_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let x0 = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        let y0 = f64::midpoint(geom.get_y_min()?, geom.get_y_max()?);
+        let z0 = 0.0;
+        geom.scale(x, y, z, x0, y0, z0)?.to_ewkb()
+    })
+}
+
+pub fn scale_from_point(
+    wkb: &BinaryChunked,
+    factors: &ArrayChunked,
+    origin: &(f64, f64, f64),
+) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        geom.scale(x, y, z, origin.0, origin.1, origin.2)?.to_ewkb()
+    })
+}
+
+pub fn skew_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let centroid = geom.get_centroid()?;
+        let x0 = centroid.get_x()?;
+        let y0 = centroid.get_y()?;
+        let z0 = centroid.get_z()?;
+        geom.skew(x, y, z, x0, y0, z0)?.to_ewkb()
+    })
+}
+
+pub fn skew_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let x0 = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        let y0 = f64::midpoint(geom.get_y_min()?, geom.get_y_max()?);
+        let z0 = 0.0;
+        geom.skew(x, y, z, x0, y0, z0)?.to_ewkb()
+    })
+}
+
+pub fn skew_from_point(
+    wkb: &BinaryChunked,
+    factors: &ArrayChunked,
+    origin: &(f64, f64, f64),
+) -> GResult<BinaryChunked> {
+    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        if geom.is_empty()? {
+            return geom.to_ewkb();
+        }
+        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
+        geom.skew(x, y, z, origin.0, origin.1, origin.2)?.to_ewkb()
+    })
 }
 
 pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {

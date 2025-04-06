@@ -204,3 +204,30 @@ pub struct GetCoordinatesKwargs {
 pub struct RelatePatternKwargs {
     pub pattern: String,
 }
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum TransformOrigin {
+    Center,
+    Centroid,
+    #[serde(untagged)]
+    XY((f64, f64)),
+    #[serde(untagged)]
+    XYZ((f64, f64, f64)),
+}
+
+impl TryInto<(f64, f64, f64)> for TransformOrigin {
+    type Error = u8;
+    fn try_into(self) -> Result<(f64, f64, f64), Self::Error> {
+        match self {
+            Self::XY((x, y)) => Ok((x, y, 0.0)),
+            Self::XYZ((x, y, z)) => Ok((x, y, z)),
+            _ => Err(1),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TransformKwargs {
+    pub origin: TransformOrigin,
+}

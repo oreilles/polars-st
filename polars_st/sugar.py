@@ -514,7 +514,7 @@ def translate(
 def rotate(
     *columns: str,
     angle: IntoDecimalExpr,
-    origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    origin: Literal["center", "centroid"] | Sequence[float] = "center",
 ) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[rotate(...)][polars_st.GeoExprNameSpace.rotate]</code>."""  # noqa: E501
     return geom(*columns).st.rotate(angle, origin)
@@ -525,10 +525,21 @@ def scale(
     x: IntoDecimalExpr = 1.0,
     y: IntoDecimalExpr = 1.0,
     z: IntoDecimalExpr = 1.0,
-    origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+    origin: Literal["center", "centroid"] | Sequence[float] = "center",
 ) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[scale(...)][polars_st.GeoExprNameSpace.scale]</code>."""  # noqa: E501
     return geom(*columns).st.scale(x, y, z, origin)
+
+
+def skew(
+    *columns: str,
+    x: IntoDecimalExpr = 0.0,
+    y: IntoDecimalExpr = 0.0,
+    z: IntoDecimalExpr = 0.0,
+    origin: Literal["center", "centroid"] | Sequence[float] = "center",
+) -> GeoExpr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[skew(...)][polars_st.GeoExprNameSpace.skew]</code>."""  # noqa: E501
+    return geom(*columns).st.skew(x, y, z, origin)
 
 
 def interpolate(

@@ -766,7 +766,7 @@ class GeoSeriesNameSpace:
     def rotate(
         self,
         angle: IntoDecimalExpr,
-        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+        origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.rotate`][polars_st.GeoExprNameSpace.rotate]."""
         ...
@@ -777,9 +777,20 @@ class GeoSeriesNameSpace:
         x: IntoDecimalExpr = 1.0,
         y: IntoDecimalExpr = 1.0,
         z: IntoDecimalExpr = 1.0,
-        origin: Literal["center", "centroid"] | Sequence[float] | pl.Expr | pl.Series = "center",
+        origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.scale`][polars_st.GeoExprNameSpace.scale]."""
+        ...
+
+    @dispatch
+    def skew(
+        self,
+        x: IntoDecimalExpr = 0.0,
+        y: IntoDecimalExpr = 0.0,
+        z: IntoDecimalExpr = 0.0,
+        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+    ) -> GeoSeries:
+        """See [`GeoExprNameSpace.skew`][polars_st.GeoExprNameSpace.skew]."""
         ...
 
     # LineString operations
