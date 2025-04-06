@@ -156,7 +156,7 @@ fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsR
         .map_err(to_compute_err)?
         .into_series()
         .with_name(wkb.name().clone())
-        .cast(&DataType::List(
+        .strict_cast(&DataType::List(
             DataType::Array(DataType::Float64.into(), 2).into(),
         ))
 }
@@ -174,7 +174,7 @@ fn srid(inputs: &[Series]) -> PolarsResult<Series> {
 fn set_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let srid = inputs[1].cast(&DataType::Int32)?;
+    let srid = inputs[1].strict_cast(&DataType::Int32)?;
     let srid = srid.i32()?;
     functions::set_srid(wkb, srid)
         .map_err(to_compute_err)
@@ -234,7 +234,7 @@ fn interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)?
         .with_name(wkb.name().clone())
-        .cast(&DataType::List(DataType::Binary.into()))
+        .strict_cast(&DataType::List(DataType::Binary.into()))
 }
 
 #[polars_expr(output_type=UInt32)]
@@ -314,7 +314,7 @@ fn parts(inputs: &[Series]) -> PolarsResult<Series> {
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)?
         .with_name(wkb.name().clone())
-        .cast(&DataType::List(DataType::Binary.into()))
+        .strict_cast(&DataType::List(DataType::Binary.into()))
 }
 
 #[polars_expr(output_type=Float64)]
@@ -401,7 +401,7 @@ fn bounds(inputs: &[Series]) -> PolarsResult<Series> {
         .map_err(to_compute_err)?
         .into_series()
         .with_name(wkb.name().clone())
-        .cast(&DataType::Array(DataType::Float64.into(), 4))
+        .strict_cast(&DataType::Array(DataType::Float64.into(), 4))
 }
 
 #[polars_expr(output_type_func=output_type_bounds)]
@@ -410,7 +410,7 @@ fn par_bounds(inputs: &[Series]) -> PolarsResult<Series> {
     functions::bounds(wkb)
         .map_err(to_compute_err)?
         .into_series()
-        .cast(&DataType::Array(DataType::Float64.into(), 4))
+        .strict_cast(&DataType::Array(DataType::Float64.into(), 4))
 }
 
 #[polars_expr(output_type_func=output_type_bounds)]
@@ -436,7 +436,7 @@ fn total_bounds(inputs: &[Series]) -> PolarsResult<Series> {
     builder
         .finish()
         .into_series()
-        .cast(&DataType::Array(DataType::Float64.into(), 4))
+        .strict_cast(&DataType::Array(DataType::Float64.into(), 4))
 }
 
 #[polars_expr(output_type=Float64)]
@@ -1202,7 +1202,7 @@ pub fn snap(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<3>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    let tolerance = inputs[2].cast(&DataType::Float64)?;
+    let tolerance = inputs[2].strict_cast(&DataType::Float64)?;
     let tolerance = tolerance.f64()?;
     functions::snap(left, right, tolerance)
         .map_err(to_compute_err)
@@ -1231,7 +1231,7 @@ pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn translate(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = inputs[1].strict_cast(&DataType::Array(DataType::Float64.into(), 3))?;
     let factors = factors.array()?;
     functions::translate(wkb, factors)
         .map_err(to_compute_err)
@@ -1258,7 +1258,7 @@ pub fn rotate(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<
 pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = inputs[1].strict_cast(&DataType::Array(DataType::Float64.into(), 3))?;
     let factors = factors.array()?;
     match kwargs.origin {
         args::TransformOrigin::XY(o) => functions::scale_from_point(wkb, factors, &(o.0, o.1, 0.0)),
@@ -1274,7 +1274,7 @@ pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<S
 pub fn skew(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].cast(&DataType::Array(DataType::Float64.into(), 3))?;
+    let factors = inputs[1].strict_cast(&DataType::Array(DataType::Float64.into(), 3))?;
     let factors = factors.array()?;
     match kwargs.origin {
         args::TransformOrigin::XY(o) => functions::skew_from_point(wkb, factors, &(o.0, o.1, 0.0)),
@@ -1290,20 +1290,19 @@ pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     let matrix = &inputs[1];
-    let matrix_size = match matrix.dtype() {
-        DataType::Array(.., 6) => Ok(6),
-        DataType::Array(.., 12) => Ok(12),
+    match matrix.dtype() {
+        DataType::Array(.., 6) => {
+            let matrix = matrix.strict_cast(&DataType::Array(DataType::Float64.into(), 6))?;
+            functions::affine_transform_2d(wkb, matrix.array()?).map_err(to_compute_err)
+        }
+        DataType::Array(.., 12) => {
+            let matrix = matrix.strict_cast(&DataType::Array(DataType::Float64.into(), 12))?;
+            functions::affine_transform_3d(wkb, matrix.array()?).map_err(to_compute_err)
+        }
         _ => Err(to_compute_err(
-            "matrix parameter should be an numeric array with shape (6 | 12)",
+            "matrix parameter should be of type array with shape (6 | 12)",
         )),
-    }?;
-    let matrix = matrix.cast(&DataType::Array(DataType::Float64.into(), matrix_size))?;
-    match matrix_size {
-        6 => functions::affine_transform_2d(wkb, matrix.array()?),
-        12 => functions::affine_transform_3d(wkb, matrix.array()?),
-        _ => unreachable!(),
     }
-    .map_err(to_compute_err)
     .map(IntoSeries::into_series)
 }
 

@@ -1105,7 +1105,7 @@ class GeoExprNameSpace:
             matrix:
                 The transformation matrix to apply to coordinates. Should contains 6
                 elements for a 2D transform or 12 for a 3D transform. The matrix elements
-                order should be:
+                order should be, in order:
                 - `m11`, `m12`, `m21`, `m22`, `tx`, `ty` for 2D transformations
                 - `m11`, `m12`, `m13`, `m21`, `m22`, `m23`, `m31`, `m32`, `m33`, `tx`, `ty`, `tz`
                     for 3D transformations
@@ -1132,7 +1132,7 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="translate",
-            args=[self._expr, pl.concat_arr(x, y, z)],
+            args=[self._expr, pl.concat_list(x, y, z)],
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -1159,7 +1159,7 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="scale",
-            args=[self._expr, pl.concat_arr(x, y, z)],
+            args=[self._expr, pl.concat_list(x, y, z)],
             kwargs={"origin": origin},
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
@@ -1174,7 +1174,7 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="skew",
-            args=[self._expr, pl.concat_arr(x, y, z)],
+            args=[self._expr, pl.concat_list(x, y, z)],
             kwargs={"origin": origin},
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
