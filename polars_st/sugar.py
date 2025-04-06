@@ -89,6 +89,7 @@ __all__ = [
     "set_precision",
     "set_srid",
     "simplify",
+    "skew",
     "srid",
     "symmetric_difference_all",
     "to_dict",
