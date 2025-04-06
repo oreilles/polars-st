@@ -78,6 +78,7 @@ The following functions can be used that way:
             - translate
             - rotate
             - scale
+            - skew
             - interpolate
             - line_merge
             - total_bounds
