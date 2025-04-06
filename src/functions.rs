@@ -29,8 +29,18 @@ fn ewkb_writer() -> GResult<WKBWriter> {
     Ok(writer)
 }
 
-pub trait ToEwkb {
+pub trait GeometryUtils {
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
+
+    #[rustfmt::skip]
+    #[allow(clippy::too_many_arguments)]
+    fn apply_affine_transform(
+        &self,
+        m11: f64, m12: f64, m13: f64,
+        m21: f64, m22: f64, m23: f64,
+        m31: f64, m32: f64, m33: f64,
+        tx:  f64, ty:  f64, tz:  f64,
+    ) -> GResult<Geometry>;
 }
 
 impl<T> ToEwkb for T
@@ -40,6 +50,31 @@ where
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
         let mut writer = ewkb_writer()?;
         Ok(writer.write_wkb(self)?.into())
+    }
+
+    #[rustfmt::skip]
+    fn apply_affine_transform(
+        &self,
+        m11: f64, m12: f64, m13: f64,
+        m21: f64, m22: f64, m23: f64,
+        m31: f64, m32: f64, m33: f64,
+        tx:  f64, ty:  f64, tz:  f64,
+    ) -> GResult<Geometry> {
+        let dims: i32 = self.get_coordinate_dimension()?.into();
+        if dims < 3 {
+            self.transform_xy(|x, y| {
+                let new_x = x * m11 + y * m12 + tx;
+                let new_y = x * m21 + y * m22 + ty;
+                Some((new_x, new_y))
+            })
+        } else {
+            self.transform_xyz(|x, y, z| {
+                let new_x = x * m11 + y * m12 + m13 * z + tx;
+                let new_y = x * m21 + y * m22 + m23 * z + ty;
+                let new_z = x * m31 + y * m32 + m33 * z + tz;
+                Some((new_x, new_y, new_z))
+            })
+        }
     }
 }
 
@@ -1152,45 +1187,45 @@ fn apply_affine_transform(
 
 pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
-        apply_affine_transform(
-            &Geometry::new_from_wkb(wkb)?,
-            unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
-            0.0,
-            unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
-            0.0,
-        )?
-        .to_ewkb()
+        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        Geometry::new_from_wkb(wkb)?
+            .apply_affine_transform(
+                unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
+                0.0,
+                unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
+                0.0,
+            )?
+            .to_ewkb()
     })
 }
 
 pub fn affine_transform_3d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
-        apply_affine_transform(
-            &Geometry::new_from_wkb(wkb)?,
-            unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(6) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(7) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(8) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(9) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(10) }.unwrap_or(f64::NAN),
-            unsafe { matrix.get_unchecked(11) }.unwrap_or(f64::NAN),
-        )?
-        .to_ewkb()
+        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        Geometry::new_from_wkb(wkb)?
+            .apply_affine_transform(
+                unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(1) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(2) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(3) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(4) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(5) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(6) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(7) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(8) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(9) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(10) }.unwrap_or(f64::NAN),
+                unsafe { matrix.get_unchecked(11) }.unwrap_or(f64::NAN),
+            )?
+            .to_ewkb()
     })
 }
 
