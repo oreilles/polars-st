@@ -959,7 +959,7 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
             return Geometry::create_empty_point()?.to_ewkb();
         }
         let x = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
-        let y = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
+        let y = f64::midpoint(geom.get_y_min()?, geom.get_y_max()?);
         Geometry::create_point(CoordSeq::new_from_vec(&[&[x, y]])?)?.to_ewkb()
     })
 }
