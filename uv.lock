@@ -1029,6 +1029,7 @@ name = "polars-st"
 source = { editable = "." }
 dependencies = [
     { name = "polars" },
+    { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pyogrio" },
 ]
@@ -1044,7 +1045,6 @@ dev = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings-python" },
-    { name = "pyarrow" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1054,6 +1054,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "polars", specifier = ">=1.7.1" },
+    { name = "pyarrow", specifier = ">=19.0.1" },
     { name = "pydantic", specifier = ">=2.9.1" },
     { name = "pyogrio", specifier = ">=0.9.0" },
 ]
@@ -1069,7 +1070,6 @@ dev = [
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-material", specifier = ">=9.5.34" },
     { name = "mkdocstrings-python", specifier = ">=1.11.1" },
-    { name = "pyarrow", specifier = ">=17.0.0" },
     { name = "pyright", specifier = ">=1.1.380" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "ruff", specifier = ">=0.6.4" },
