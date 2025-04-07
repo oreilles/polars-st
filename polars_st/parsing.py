@@ -108,7 +108,7 @@ def from_xy(
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="from_xy",
-        args=pl.struct(x=x, y=y) if z is None else pl.struct(x=x, y=y, z=z),
+        args=pl.struct(x=x, y=y, z=z),
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 

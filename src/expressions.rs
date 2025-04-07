@@ -106,10 +106,10 @@ fn from_xy(inputs: &[Series]) -> PolarsResult<Series> {
     let fields = inputs[0].struct_()?.fields_as_series();
     let x = fields[0].strict_cast(&DataType::Float64)?;
     let y = fields[1].strict_cast(&DataType::Float64)?;
-    let z = fields
-        .get(2)
-        .map(|s| s.strict_cast(&DataType::Float64))
-        .transpose()?;
+    let z = match fields[2].dtype() {
+        &DataType::Null => None,
+        _ => Some(fields[1].strict_cast(&DataType::Float64)?),
+    };
     let x = x.f64()?;
     let y = y.f64()?;
     let z = z.as_ref().map(|s| s.f64()).transpose()?;

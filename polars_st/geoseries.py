@@ -763,6 +763,7 @@ class GeoSeriesNameSpace:
         """See [`GeoExprNameSpace.translate`][polars_st.GeoExprNameSpace.translate]."""
         ...
 
+    @dispatch
     def rotate(
         self,
         angle: IntoDecimalExpr,
