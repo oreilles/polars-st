@@ -1212,7 +1212,7 @@ pub fn minimum_rotated_rectangle(wkb: &BinaryChunked) -> GResult<BinaryChunked> 
 }
 
 pub fn translate(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1229,7 +1229,7 @@ pub fn rotate_around_centroid(
     wkb: &BinaryChunked,
     angle: &Float64Chunked,
 ) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+    broadcast_try_binary_elementwise_values(wkb, angle, |wkb, angle| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1242,7 +1242,7 @@ pub fn rotate_around_centroid(
 }
 
 pub fn rotate_around_center(wkb: &BinaryChunked, angle: &Float64Chunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+    broadcast_try_binary_elementwise_values(wkb, angle, |wkb, angle| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1258,7 +1258,7 @@ pub fn rotate_around_point(
     angle: &Float64Chunked,
     origin: &(f64, f64),
 ) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, angle, |wkb, angle| {
+    broadcast_try_binary_elementwise_values(wkb, angle, |wkb, angle| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1268,7 +1268,7 @@ pub fn rotate_around_point(
 }
 
 pub fn scale_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1286,7 +1286,7 @@ pub fn scale_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResu
 }
 
 pub fn scale_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1307,7 +1307,7 @@ pub fn scale_from_point(
     factors: &ArrayChunked,
     origin: &(f64, f64, f64),
 ) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1321,7 +1321,7 @@ pub fn scale_from_point(
 }
 
 pub fn skew_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1339,7 +1339,7 @@ pub fn skew_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResul
 }
 
 pub fn skew_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
@@ -1360,7 +1360,7 @@ pub fn skew_from_point(
     factors: &ArrayChunked,
     origin: &(f64, f64, f64),
 ) -> GResult<BinaryChunked> {
-    try_binary_elementwise_values(wkb, factors, |wkb, factors| {
+    broadcast_try_binary_elementwise_values(wkb, factors, |wkb, factors| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return geom.to_ewkb();
