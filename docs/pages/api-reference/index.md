@@ -28,7 +28,8 @@ hide:
 | `to_dict` | Convert each geometry to a GeoJSON-like  Python [`dict`][] object. | [`root`][polars_st.to_dict], [`Expr`][polars_st.GeoExprNameSpace.to_dict], [`Series`][polars_st.GeoSeriesNameSpace.to_dict], [`DataFrame`][polars_st.GeoDataFrameNameSpace.to_dict] |
 | `to_shapely` | Convert each geometry to a Shapely object. | [`root`][polars_st.to_shapely], [`Expr`][polars_st.GeoExprNameSpace.to_shapely], [`Series`][polars_st.GeoSeriesNameSpace.to_shapely], [`DataFrame`][polars_st.GeoDataFrameNameSpace.to_shapely] |
 | `to_geopandas` | Convert DataFrame or Series to GeoPandas equivalent. | [`Series`][polars_st.GeoSeriesNameSpace.to_geopandas], [`DataFrame`][polars_st.GeoDataFrameNameSpace.to_geopandas] |
-| `__geo_interface__` | Return a [`dict`][] representation of a `GeometryCollection` or `FeatureCollection` | [`Series`][polars_st.GeoSeriesNameSpace.__geo_interface__], [`DataFrame`][polars_st.GeoDataFrameNameSpace.__geo_interface__] |
+| `to_dicts` | Convert every row to a Python [`dict`][] representation of a GeoJSON Feature. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.to_dict] |
+| `__geo_interface__` | Return a Python [`dict`][] representation of a `GeometryCollection` or `FeatureCollection`. | [`Series`][polars_st.GeoSeriesNameSpace.__geo_interface__], [`DataFrame`][polars_st.GeoDataFrameNameSpace.__geo_interface__] |
 | **General operations** | | |
 | `geometry_type` | Return the type of each geometry. | [`root`][polars_st.geometry_type], [`Expr`][polars_st.GeoExprNameSpace.geometry_type], [`Series`][polars_st.GeoSeriesNameSpace.geometry_type] |
 | `dimensions` | Return the inherent dimensionality of each geometry.. | [`root`][polars_st.dimensions], [`Expr`][polars_st.GeoExprNameSpace.dimensions], [`Series`][polars_st.GeoSeriesNameSpace.dimensions] |
