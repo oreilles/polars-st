@@ -839,8 +839,13 @@
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.to_geopandas&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.to_geopandas"><code>Series</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoDataFrameNameSpace.to_geopandas&lt;/span&gt;" href="geodataframe/#polars_st.GeoDataFrameNameSpace.to_geopandas"><code>DataFrame</code></a></td>
 </tr>
 <tr>
+<td><code>to_dicts</code></td>
+<td>Convert every row to a Python <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict"><code>dict</code></a> representation of a GeoJSON Feature.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoDataFrameNameSpace.to_dict&lt;/span&gt;" href="geodataframe/#polars_st.GeoDataFrameNameSpace.to_dict"><code>DataFrame</code></a></td>
+</tr>
+<tr>
 <td><code>__geo_interface__</code></td>
-<td>Return a <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict"><code>dict</code></a> representation of a <code>GeometryCollection</code> or <code>FeatureCollection</code></td>
+<td>Return a Python <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict"><code>dict</code></a> representation of a <code>GeometryCollection</code> or <code>FeatureCollection</code>.</td>
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;polars_st.GeoSeriesNameSpace.__geo_interface__&lt;/span&gt;
 
 
@@ -860,7 +865,7 @@
 </tr>
 <tr>
 <td><code>geometry_type</code></td>
-<td>Return the type ID of each geometry..</td>
+<td>Return the type of each geometry.</td>
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.geometry_type&lt;/span&gt;" href="sugar/#polars_st.geometry_type"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.geometry_type&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.geometry_type"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.geometry_type&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.geometry_type"><code>Series</code></a></td>
 </tr>
 <tr>
@@ -1342,6 +1347,11 @@
 <td><code>scale</code></td>
 <td></td>
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.scale&lt;/span&gt;" href="sugar/#polars_st.scale"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.scale&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.scale"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.scale&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.scale"><code>Series</code></a></td>
+</tr>
+<tr>
+<td><code>skew</code></td>
+<td></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.skew&lt;/span&gt;" href="sugar/#polars_st.skew"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.skew&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.skew"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.skew&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.skew"><code>Series</code></a></td>
 </tr>
 <tr>
 <td><strong>LineString operations</strong></td>
