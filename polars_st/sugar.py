@@ -26,6 +26,7 @@ __all__ = [
     "bounds",
     "buffer",
     "build_area",
+    "cast",
     "center",
     "centroid",
     "clip_by_rect",
@@ -291,6 +292,11 @@ def to_shapely(*columns: str) -> pl.Expr:
 def to_dict(*columns: str) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_dict()][polars_st.GeoExprNameSpace.to_dict]</code>."""  # noqa: E501
     return geom(*columns).st.to_dict()
+
+
+def cast(*columns: str, into: GeometryType) -> pl.Expr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[cast(into)][polars_st.GeoExprNameSpace.cast]</code>."""  # noqa: E501
+    return geom(*columns).st.cast(into)
 
 
 def has_z(*columns: str) -> pl.Expr:
@@ -560,7 +566,7 @@ def total_bounds(*columns: str) -> pl.Expr:
 
 
 def collect(*columns: str, into: GeometryType | None = None) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[geometrycollection()][polars_st.GeoExprNameSpace.geometrycollection]</code>."""  # noqa: E501
+    """This function is syntactic sugar for <code>st.geom(columns).st.[collect()][polars_st.GeoExprNameSpace.collect]</code>."""  # noqa: E501
     return geom(*columns).st.collect(into)
 
 

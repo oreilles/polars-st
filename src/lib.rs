@@ -1,3 +1,4 @@
+#![feature(iterator_try_collect)]
 #![feature(iterator_try_reduce)]
 #![feature(downcast_unchecked)]
 #![deny(clippy::all)]

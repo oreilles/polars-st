@@ -383,6 +383,11 @@ class GeoSeriesNameSpace:
         """See [`GeoExprNameSpace.to_dict`][polars_st.GeoExprNameSpace.to_dict]."""
         ...
 
+    @dispatch
+    def cast(self, into: GeometryType) -> pl.Series:
+        """See [`GeoExprNameSpace.cast`][polars_st.GeoExprNameSpace.cast]."""
+        ...
+
     def to_geopandas(
         self,
         *,

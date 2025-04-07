@@ -516,6 +516,26 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    def cast(self, into: GeometryType) -> pl.Expr:
+        """Cast each geometry into a different compatible geometry type.
+
+        Valid casts are:
+            - Point -> MultiPoint
+            - MultiPoint -> LineString | CircularString
+            - LineString -> MultiPoint | CircularString | MultiLineString | MultiCurve
+            - CircularString -> MultiPoint | LineString | MultiLineString | MultiCurve
+            - Polygon -> MultiPolygon | MultiSurface
+            - CurvePolygon -> MultiSurface
+            - Any -> GeometryCollection
+        """
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="cast",
+            args=[self._expr],
+            kwargs={"into": into},
+            is_elementwise=True,
+        )
+
     # Unary predicates
 
     def has_z(self) -> pl.Expr:

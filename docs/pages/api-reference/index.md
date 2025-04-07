@@ -97,6 +97,7 @@ hide:
 | `difference` | Return the difference of each geometry with other. | [`Expr`][polars_st.GeoExprNameSpace.difference], [`Series`][polars_st.GeoSeriesNameSpace.difference] |
 | `symmetric_difference` | Return the symmetric difference of each geometry with other. | [`Expr`][polars_st.GeoExprNameSpace.symmetric_difference], [`Series`][polars_st.GeoSeriesNameSpace.symmetric_difference] |
 | **Constructive operations** | | |
+| `cast` | Cast each geometry into a different compatible geometry type. | [`root`][polars_st.cast], [`Expr`][polars_st.GeoExprNameSpace.cast], [`Series`][polars_st.GeoSeriesNameSpace.cast] |
 | `boundary` | Return the topological boundary of each geometry. | [`root`][polars_st.boundary], [`Expr`][polars_st.GeoExprNameSpace.boundary], [`Series`][polars_st.GeoSeriesNameSpace.boundary] |
 | `buffer` | Return a buffer around each geometry. | [`root`][polars_st.buffer], [`Expr`][polars_st.GeoExprNameSpace.buffer], [`Series`][polars_st.GeoSeriesNameSpace.buffer] |
 | `offset_curve` | Return a line at a given distance of each geometry. | [`root`][polars_st.offset_curve], [`Expr`][polars_st.GeoExprNameSpace.offset_curve], [`Series`][polars_st.GeoSeriesNameSpace.offset_curve] |

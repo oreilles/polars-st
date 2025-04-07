@@ -391,6 +391,15 @@ pub fn to_python_dict(
         .map_err(Into::into)
 }
 
+#[polars_expr(output_type=Binary)]
+fn cast(inputs: &[Series], kwargs: args::CastKwargs) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    functions::cast(wkb, kwargs.into)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
 #[polars_expr(output_type=Float64)]
 fn area(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;

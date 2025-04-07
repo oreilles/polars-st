@@ -34,6 +34,8 @@ fn ewkb_writer() -> GResult<WKBWriter> {
 pub trait GeometryUtils {
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
 
+    fn cast(&self, into: GeometryTypes) -> GResult<Geometry>;
+
     #[rustfmt::skip]
     #[allow(clippy::too_many_arguments)]
     fn apply_affine_transform(
@@ -57,6 +59,99 @@ where
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
         let mut writer = ewkb_writer()?;
         Ok(writer.write_wkb(self)?.into())
+    }
+
+    fn cast(&self, into: GeometryTypes) -> GResult<Geometry> {
+        let srid = self.get_srid()?;
+        let mut result = match (self.geometry_type(), into) {
+            (from, to) if from == to => Ok(Geom::clone(self)),
+            (t, GeometryCollection) => {
+                if t.is_collection() {
+                    let geoms = (0..self.get_num_geometries()?)
+                        .map(|n| Ok(self.get_geometry_n(n)?.clone()))
+                        .collect::<Result<_, _>>()?;
+                    Geometry::create_geometry_collection(geoms)
+                } else {
+                    Geometry::create_geometry_collection(vec![Geom::clone(self.original())])
+                }
+            }
+            (Point, MultiPoint) => {
+                if self.is_empty()? {
+                    Geometry::create_multipoint(vec![])
+                } else {
+                    Geometry::create_multipoint(vec![Geom::clone(self)])
+                }
+            }
+            (LineString | CircularString, MultiPoint) => {
+                let coords = self.get_coord_seq()?;
+                let has_z = self.has_z()?;
+                let has_m = self.has_m()?;
+                let dimensions = 2 + usize::from(has_z) + usize::from(has_m);
+                let buffer = coords.as_buffer(Some(dimensions))?;
+                buffer
+                    .chunks_exact(dimensions)
+                    .map(|coord| {
+                        let seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
+                        Geometry::create_point(seq)
+                    })
+                    .try_collect()
+                    .and_then(Geometry::create_multipoint)
+            }
+            (MultiPoint, LineString | CircularString) => {
+                let has_z = self.has_z()?;
+                let has_m = self.has_m()?;
+                let size = self.get_num_geometries()?;
+                let dimensions = 2 + usize::from(has_z) + usize::from(has_m);
+                let coords = (0..self.get_num_geometries()?)
+                    .flat_map(|n| {
+                        self.get_geometry_n(n)?
+                            .get_coord_seq()?
+                            .as_buffer(Some(dimensions))
+                    })
+                    .flatten()
+                    .collect::<Vec<f64>>();
+                let coords = CoordSeq::new_from_buffer(&coords, size, has_z, has_m)?;
+                match into {
+                    LineString => Geometry::create_line_string(coords),
+                    CircularString => Geometry::create_circular_string(coords),
+                    _ => unreachable!(),
+                }
+            }
+            (CircularString, LineString) => Geometry::create_line_string(self.get_coord_seq()?),
+            (LineString, CircularString) => Geometry::create_circular_string(self.get_coord_seq()?),
+            (LineString | CircularString, MultiLineString) if self.is_empty()? => {
+                Geometry::create_multiline_string(vec![])
+            }
+            (LineString, MultiLineString) => {
+                Geometry::create_multiline_string(vec![Geom::clone(self)])
+            }
+            (CircularString, MultiLineString) => {
+                let as_line = Geometry::create_circular_string(self.get_coord_seq()?)?;
+                Geometry::create_multiline_string(vec![as_line])
+            }
+            (LineString | CircularString, MultiCurve) => {
+                if self.is_empty()? {
+                    Geometry::create_multicurve(vec![])
+                } else {
+                    Geometry::create_multicurve(vec![Geom::clone(self)])
+                }
+            }
+            (MultiPolygon, MultiSurface) => {
+                let geoms = (0..self.get_num_geometries()?)
+                    .map(|n| Ok(self.get_geometry_n(n)?.clone()))
+                    .collect::<Result<_, _>>()?;
+                Geometry::create_multisurface(geoms)
+            }
+            (Polygon, MultiPolygon) => Geometry::create_multipolygon(vec![Geom::clone(self)]),
+            (Polygon | CurvePolygon, MultiSurface) => {
+                Geometry::create_multisurface(vec![Geom::clone(self)])
+            }
+            (from, to) => Err(geos::Error::GenericError(format!(
+                "invalid cast from {from:?} to {to:?}"
+            ))),
+        }?;
+        result.set_srid(srid);
+        Ok(result)
     }
 
     #[rustfmt::skip]
@@ -528,6 +623,11 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
             .transpose()
         })
         .collect::<GResult<Vec<Option<PyObject>>>>()
+}
+
+pub fn cast(wkb: &BinaryChunked, into: WKBGeometryType) -> GResult<BinaryChunked> {
+    let into: GeometryTypes = into.try_into()?;
+    wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.cast(into)?.to_ewkb())
 }
 
 pub fn area(wkb: &BinaryChunked) -> GResult<Float64Chunked> {

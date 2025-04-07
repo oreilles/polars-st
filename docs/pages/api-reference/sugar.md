@@ -40,6 +40,7 @@ The following functions can be used that way:
             - to_geojson
             - to_shapely
             - to_dict
+            - cast
             - has_z
             - has_m
             - is_ccw
