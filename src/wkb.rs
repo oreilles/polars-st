@@ -1,6 +1,9 @@
+use geos::GeometryTypes;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 use scroll::{Endian, IOread};
+use serde::Deserialize;
+use serde::Serialize;
 use std::io::{Error, Read};
 
 pub struct WkbInfo {
@@ -30,7 +33,7 @@ pub fn read_ewkb_header<R: Read>(raw: &mut R) -> Result<WkbInfo, Error> {
     Ok(info)
 }
 
-#[derive(Debug, IntoPrimitive, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, IntoPrimitive, TryFromPrimitive, Serialize, Deserialize)]
 #[repr(u32)]
 pub enum WKBGeometryType {
     Unknown = 0,
@@ -51,4 +54,33 @@ pub enum WKBGeometryType {
     PolyhedralSurface = 15,
     Tin = 16,
     Triangle = 17,
+}
+
+impl TryInto<GeometryTypes> for WKBGeometryType {
+    type Error = geos::Error;
+
+    fn try_into(self) -> Result<GeometryTypes, Self::Error> {
+        match self {
+            Self::Point => Ok(GeometryTypes::Point),
+            Self::LineString => Ok(GeometryTypes::LineString),
+            Self::Polygon => Ok(GeometryTypes::Polygon),
+            Self::MultiPoint => Ok(GeometryTypes::MultiPoint),
+            Self::MultiLineString => Ok(GeometryTypes::MultiLineString),
+            Self::MultiPolygon => Ok(GeometryTypes::MultiPolygon),
+            Self::GeometryCollection => Ok(GeometryTypes::GeometryCollection),
+            Self::CircularString => Ok(GeometryTypes::CircularString),
+            Self::CompoundCurve => Ok(GeometryTypes::CompoundCurve),
+            Self::CurvePolygon => Ok(GeometryTypes::CurvePolygon),
+            Self::MultiCurve => Ok(GeometryTypes::MultiCurve),
+            Self::MultiSurface => Ok(GeometryTypes::MultiSurface),
+            Self::Curve
+            | Self::Surface
+            | Self::PolyhedralSurface
+            | Self::Tin
+            | Self::Triangle
+            | Self::Unknown => Err(geos::Error::GenericError(
+                "unsupported geometry type".into(),
+            )),
+        }
+    }
 }

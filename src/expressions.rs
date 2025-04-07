@@ -939,46 +939,10 @@ fn polygonize(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Binary)]
-fn multipoint(inputs: &[Series]) -> PolarsResult<Series> {
+fn collect(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::multipoint(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
-}
-
-#[polars_expr(output_type=Binary)]
-fn multilinestring(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    functions::multilinestring(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
-}
-
-#[polars_expr(output_type=Binary)]
-fn multipolygon(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    functions::multipolygon(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
-}
-
-#[polars_expr(output_type=Binary)]
-fn geometrycollection(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    functions::geometrycollection(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
-}
-
-#[polars_expr(output_type=Binary)]
-fn collect(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    functions::collect(wkb)
+    functions::collect(wkb, kwargs.into)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
 }

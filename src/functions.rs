@@ -13,7 +13,8 @@ use crate::{
     wkb::{read_ewkb_header, WKBGeometryType},
 };
 use geos::{
-    BufferParams, CoordSeq, GResult, GeoJSONWriter, Geom, Geometry, GeometryTypes::*,
+    BufferParams, CoordSeq, GResult, GeoJSONWriter, Geom, Geometry,
+    GeometryTypes::{self, *},
     PreparedGeometry, STRtree, SpatialIndex, WKBWriter, WKTWriter,
 };
 
@@ -66,7 +67,7 @@ where
         m31: f64, m32: f64, m33: f64,
         tx:  f64, ty:  f64, tz:  f64,
     ) -> GResult<Geometry> {
-        let dims: i32 = self.get_coordinate_dimension()?.into();
+        let dims: u32 = self.get_coordinate_dimension()?.into();
         if dims < 3 {
             self.transform_xy(|x, y| {
                 let new_x = x * m11 + y * m12 + tx;
@@ -346,7 +347,6 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
                     get_coords_sequence(&geom.get_geometry_n(n)?, dimension, builder)
                 })
             }
-            __Unknown(_) => unreachable!(),
         }
     }
     fn get_coordinates(wkb: &[u8], dimension: usize) -> GResult<Series> {
@@ -968,34 +968,44 @@ where
         .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
-pub fn multipoint(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    aggregate_with(wkb, Geometry::create_multipoint)
-}
-
-pub fn multilinestring(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    aggregate_with(wkb, Geometry::create_multiline_string)
-}
-
-pub fn multipolygon(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    aggregate_with(wkb, Geometry::create_multipolygon)
-}
-
-pub fn geometrycollection(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    aggregate_with(wkb, Geometry::create_geometry_collection)
-}
-
-pub fn collect(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    let geometry_types = get_type_id(wkb)?
+fn collection_supertype(wkb: &BinaryChunked) -> GResult<GeometryTypes> {
+    let geometry_types: Vec<GeometryTypes> = get_type_id(wkb)?
         .unique()
-        .map_err(|_| geos::Error::GenericError("Couldn't get geometry types".into()))?;
-    match geometry_types.len() {
-        1 => match geometry_types.get(0) {
-            Some(t) if t == WKBGeometryType::Point as u32 => multipoint(wkb),
-            Some(t) if t == WKBGeometryType::LineString as u32 => multilinestring(wkb),
-            Some(t) if t == WKBGeometryType::Polygon as u32 => multipolygon(wkb),
-            _ => geometrycollection(wkb),
-        },
-        _ => geometrycollection(wkb),
+        .unwrap()
+        .sort(false)
+        .into_no_null_iter()
+        .map(WKBGeometryType::try_from)
+        .map(Result::unwrap)
+        .map(TryInto::try_into)
+        .collect::<Result<_, _>>()?;
+    Ok(match &geometry_types.as_slice() {
+        &[Point] => MultiPoint,
+        &[LineString] => MultiLineString,
+        &[CircularString]
+        | &[CompoundCurve]
+        | &[LineString, CircularString]
+        | &[LineString, CircularString, CompoundCurve] => MultiCurve,
+        &[Polygon] => MultiPolygon,
+        &[CurvePolygon] | &[Polygon, CurvePolygon] => MultiSurface,
+        _ => GeometryCollection,
+    })
+}
+
+pub fn collect(wkb: &BinaryChunked, into: Option<WKBGeometryType>) -> GResult<BinaryChunked> {
+    let into = match into {
+        Some(into) => into.try_into(),
+        None => collection_supertype(wkb),
+    }?;
+    match into {
+        MultiPoint => aggregate_with(wkb, Geometry::create_multipoint),
+        MultiLineString => aggregate_with(wkb, Geometry::create_multiline_string),
+        MultiCurve => aggregate_with(wkb, Geometry::create_multicurve),
+        MultiPolygon => aggregate_with(wkb, Geometry::create_multipolygon),
+        MultiSurface => aggregate_with(wkb, Geometry::create_multisurface),
+        GeometryCollection => aggregate_with(wkb, Geometry::create_geometry_collection),
+        _ => Err(geos::Error::GenericError(
+            "type must be a collection".into(),
+        )),
     }
 }
 
@@ -1174,6 +1184,7 @@ pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
             let mut res = match geom.geometry_type() {
                 Point => Geometry::create_empty_point(),
                 LineString => Geometry::create_empty_line_string(),
+                LinearRing => Geometry::create_empty_line_string(),
                 Polygon => Geometry::create_empty_polygon(),
                 MultiPoint => Geometry::create_empty_collection(MultiPoint),
                 MultiLineString => Geometry::create_empty_collection(MultiLineString),
@@ -1184,7 +1195,6 @@ pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
                 CurvePolygon => Geometry::create_empty_curve_polygon(),
                 MultiCurve => Geometry::create_empty_collection(MultiCurve),
                 MultiSurface => Geometry::create_empty_collection(MultiSurface),
-                LinearRing | __Unknown(_) => unreachable!(),
             }?;
             res.set_srid(geom.get_srid()?);
             res

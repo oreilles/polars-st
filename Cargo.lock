@@ -537,7 +537,7 @@ dependencies = [
 [[package]]
 name = "geos"
 version = "10.0.0"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#5bfce08b9e6536f9be7ff0a7ce65118a42184c40"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#ff784899dd10a3983e7d8c7cf2653a44aa595f51"
 dependencies = [
  "c_vec",
  "geos-sys",
@@ -548,7 +548,7 @@ dependencies = [
 [[package]]
 name = "geos-src"
 version = "0.2.3"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#5bfce08b9e6536f9be7ff0a7ce65118a42184c40"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#ff784899dd10a3983e7d8c7cf2653a44aa595f51"
 dependencies = [
  "cmake",
 ]
@@ -556,7 +556,7 @@ dependencies = [
 [[package]]
 name = "geos-sys"
 version = "2.0.6"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#5bfce08b9e6536f9be7ff0a7ce65118a42184c40"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#ff784899dd10a3983e7d8c7cf2653a44aa595f51"
 dependencies = [
  "geos-src",
  "libc",

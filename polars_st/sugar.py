@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
     import polars as pl
 
+    from polars_st.geometry import GeometryType
     from polars_st.typing import (
         IntoDecimalExpr,
         IntoExprColumn,
@@ -49,7 +50,6 @@ __all__ = [
     "force_2d",
     "force_3d",
     "geometry_type",
-    "geometrycollection",
     "get_geometry",
     "get_interior_ring",
     "get_point",
@@ -71,9 +71,6 @@ __all__ = [
     "make_valid",
     "minimum_clearance",
     "minimum_rotated_rectangle",
-    "multilinestring",
-    "multipoint",
-    "multipolygon",
     "node",
     "normalize",
     "offset_curve",
@@ -562,29 +559,9 @@ def total_bounds(*columns: str) -> pl.Expr:
     return geom(*columns).st.total_bounds()
 
 
-def multipoint(*columns: str) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[multipoint()][polars_st.GeoExprNameSpace.multipoint]</code>."""  # noqa: E501
-    return geom(*columns).st.multipoint()
-
-
-def multilinestring(*columns: str) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[multilinestring()][polars_st.GeoExprNameSpace.multilinestring]</code>."""  # noqa: E501
-    return geom(*columns).st.multilinestring()
-
-
-def multipolygon(*columns: str) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[multipolygon()][polars_st.GeoExprNameSpace.multipolygon]</code>."""  # noqa: E501
-    return geom(*columns).st.multipolygon()
-
-
-def geometrycollection(*columns: str) -> GeoExpr:
+def collect(*columns: str, into: GeometryType | None = None) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[geometrycollection()][polars_st.GeoExprNameSpace.geometrycollection]</code>."""  # noqa: E501
-    return geom(*columns).st.geometrycollection()
-
-
-def collect(*columns: str) -> GeoExpr:
-    """This function is syntactic sugar for <code>st.geom(columns).st.[geometrycollection()][polars_st.GeoExprNameSpace.geometrycollection]</code>."""  # noqa: E501
-    return geom(*columns).st.collect()
+    return geom(*columns).st.collect(into)
 
 
 def union_all(*columns: str, grid_size: float | None = None) -> GeoExpr:

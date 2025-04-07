@@ -8,6 +8,7 @@ from polars.api import register_series_namespace
 
 from polars_st.casting import st
 from polars_st.config import Config
+from polars_st.geometry import GeometryType
 from polars_st.parsing import from_ewkt, from_geojson, from_shapely, from_wkt, from_xy
 
 if TYPE_CHECKING:
@@ -835,27 +836,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def multipoint(self) -> GeoSeries:
-        """See [`GeoExprNameSpace.multipoint`][polars_st.GeoExprNameSpace.multipoint]."""
-        ...
-
-    @dispatch
-    def multilinestring(self) -> GeoSeries:
-        """See [`GeoExprNameSpace.multilinestring`][polars_st.GeoExprNameSpace.multilinestring]."""
-        ...
-
-    @dispatch
-    def multipolygon(self) -> GeoSeries:
-        """See [`GeoExprNameSpace.multipolygon`][polars_st.GeoExprNameSpace.multipolygon]."""
-        ...
-
-    @dispatch
-    def geometrycollection(self) -> GeoSeries:
-        """See [`GeoExprNameSpace.geometrycollection`][polars_st.GeoExprNameSpace.geometrycollection]."""  # noqa: E501
-        ...
-
-    @dispatch
-    def collect(self) -> GeoSeries:
+    def collect(self, into: GeometryType | None = None) -> GeoSeries:
         """See [`GeoExprNameSpace.collect`][polars_st.GeoExprNameSpace.collect]."""
         ...
 

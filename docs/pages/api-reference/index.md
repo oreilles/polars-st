@@ -136,11 +136,7 @@ hide:
 | `shared_paths` | | [`Expr`][polars_st.GeoExprNameSpace.shared_paths], [`Series`][polars_st.GeoSeriesNameSpace.shared_paths] |
 | **Aggregation** | | |
 | `total_bounds` | Return the total bounds of all geometries. | [`root`][polars_st.total_bounds], [`Expr`][polars_st.GeoExprNameSpace.total_bounds], [`Series`][polars_st.GeoSeriesNameSpace.total_bounds] |
-| `multipoint` | Aggregate Point geometries into a single MultiPoint. | [`root`][polars_st.multipoint], [`Expr`][polars_st.GeoExprNameSpace.multipoint], [`Series`][polars_st.GeoSeriesNameSpace.multipoint] |
-| `multilinestring` | Aggregate LineString geometries into a single MultiLineString. | [`root`][polars_st.multilinestring], [`Expr`][polars_st.GeoExprNameSpace.multilinestring], [`Series`][polars_st.GeoSeriesNameSpace.multilinestring] |
-| `multipolygon` | Aggregate Polygon geometries into a single MultiPolygon. | [`root`][polars_st.multipolygon], [`Expr`][polars_st.GeoExprNameSpace.multipolygon], [`Series`][polars_st.GeoSeriesNameSpace.multipolygon] |
-| `geometrycollection` | Aggregate geometries into a single GeometryCollection. | [`root`][polars_st.geometrycollection], [`Expr`][polars_st.GeoExprNameSpace.geometrycollection], [`Series`][polars_st.GeoSeriesNameSpace.geometrycollection] |
-| `collect` | Aggregate geometries into a single MultiPart geometry or GeometryCollection. | [`root`][polars_st.collect], [`Expr`][polars_st.GeoExprNameSpace.collect], [`Series`][polars_st.GeoSeriesNameSpace.collect] |
+| `collect` | Aggregate geometries into a single collection. | [`root`][polars_st.collect], [`Expr`][polars_st.GeoExprNameSpace.collect], [`Series`][polars_st.GeoSeriesNameSpace.collect] |
 | `union_all` | Return the union of all geometries. | [`root`][polars_st.union_all], [`Expr`][polars_st.GeoExprNameSpace.union_all], [`Series`][polars_st.GeoSeriesNameSpace.union_all] |
 | `coverage_union_all` | Return the coverage union of all geometries. | [`root`][polars_st.coverage_union_all], [`Expr`][polars_st.GeoExprNameSpace.coverage_union_all], [`Series`][polars_st.GeoSeriesNameSpace.coverage_union_all] |
 | `intersection_all` | Return the intersection of all geometries. | [`root`][polars_st.intersection_all], [`Expr`][polars_st.GeoExprNameSpace.intersection_all], [`Series`][polars_st.GeoSeriesNameSpace.intersection_all] |

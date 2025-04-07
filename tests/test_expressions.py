@@ -221,10 +221,6 @@ aggregates = [
     Aggregate(Geo.symmetric_difference_all, pl.Binary(), collection_empty.item()),
     Aggregate(Geo.union_all, pl.Binary(), collection_empty.item()),
     Aggregate(Geo.coverage_union_all, pl.Binary(), collection_empty.item()),
-    Aggregate(Geo.multipoint, pl.Binary(), multipoint_empty.item()),
-    Aggregate(Geo.multilinestring, pl.Binary(), multiline_empty.item()),
-    Aggregate(Geo.multipolygon, pl.Binary(), multipoly_empty.item()),
-    Aggregate(Geo.geometrycollection, pl.Binary(), collection_empty.item()),
     Aggregate(Geo.collect, pl.Binary(), collection_empty.item()),
 ]
 

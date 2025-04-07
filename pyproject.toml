@@ -46,6 +46,7 @@ addopts = "--doctest-modules"
 
 [tool.pyright]
 typeCheckingMode = "basic"
+reportPrivateImportUsage = "none"
 
 [tool.ruff]
 target-version="py310"

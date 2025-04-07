@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::wkb::WKBGeometryType;
+
 #[derive(Deserialize)]
 pub struct ToWktKwargs {
     pub rounding_precision: Option<u32>,
@@ -230,4 +232,9 @@ impl TryInto<(f64, f64, f64)> for TransformOrigin {
 #[derive(Deserialize)]
 pub struct TransformKwargs {
     pub origin: TransformOrigin,
+}
+
+#[derive(Deserialize)]
+pub struct CollectKwargs {
+    pub into: Option<WKBGeometryType>,
 }

@@ -8,7 +8,7 @@ from polars.api import register_expr_namespace
 from polars.plugins import register_plugin_function
 
 from polars_st import _lib
-from polars_st.geometry import PolarsGeometryType
+from polars_st.geometry import GeometryType, PolarsGeometryType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -1235,48 +1235,13 @@ class GeoExprNameSpace:
             returns_scalar=True,
         )
 
-    def multipoint(self) -> GeoExpr:
-        """Aggregate Point geometries into a single MultiPoint."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="multipoint",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
-
-    def multilinestring(self) -> GeoExpr:
-        """Aggregate LineString geometries into a single MultiLineString."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="multilinestring",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
-
-    def multipolygon(self) -> GeoExpr:
-        """Aggregate Polygon geometries into a single MultiPolygon."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="multipolygon",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
-
-    def geometrycollection(self) -> GeoExpr:
-        """Aggregate geometries into a single GeometryCollection."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="geometrycollection",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
-
-    def collect(self) -> GeoExpr:
-        """Aggregate geometries into a single MultiPart geometry or GeometryCollection."""
+    def collect(self, into: GeometryType | None = None) -> GeoExpr:
+        """Aggregate geometries into a single collection."""
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="collect",
             args=[self._expr],
+            kwargs={"into": into},
             returns_scalar=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
