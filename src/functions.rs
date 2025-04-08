@@ -319,24 +319,31 @@ pub fn get_num_coordinates(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     })
 }
 
-pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<ListChunked> {
-    fn get_coords_sequence<T>(geom: &T, dimension: usize, builder: &mut Vec<f64>) -> GResult<()>
+pub fn get_coordinates(
+    wkb_array: &BinaryChunked,
+    dimension: Option<usize>,
+) -> GResult<ListChunked> {
+    fn get_coords_sequence<T>(
+        geom: &T,
+        dimension: Option<usize>,
+        builder: &mut ListPrimitiveChunkedBuilder<Float64Type>,
+    ) -> GResult<()>
     where
         T: Geom,
     {
         match geom.geometry_type() {
             _ if geom.is_empty()? => Ok(()),
             Point | LineString | LinearRing | CircularString => {
-                let mut seq = geom.get_coord_seq()?.as_buffer(Some(dimension))?;
-                builder.append(&mut seq);
+                let seq = geom.get_coord_seq()?.as_buffer(dimension)?;
+                builder.append_slice(&seq);
                 Ok(())
             }
             Polygon | CurvePolygon => {
-                let mut seq = geom
+                let seq = geom
                     .get_exterior_ring()?
                     .get_coord_seq()?
-                    .as_buffer(Some(dimension))?;
-                builder.append(&mut seq);
+                    .as_buffer(dimension)?;
+                builder.append_slice(&seq);
                 (0..geom.get_num_interior_rings()?).try_for_each(|n| {
                     get_coords_sequence(&geom.get_interior_ring_n(n)?, dimension, builder)
                 })
@@ -349,16 +356,23 @@ pub fn get_coordinates(wkb_array: &BinaryChunked, dimension: usize) -> GResult<L
             }
         }
     }
-    fn get_coordinates(wkb: &[u8], dimension: usize) -> GResult<Series> {
+    fn get_coordinates(wkb: &[u8], dimension: Option<usize>) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
-        let mut builder = Vec::with_capacity(wkb.len() / 8);
+        if geom.is_empty()? {
+            return Ok(Series::new_null("".into(), 0));
+        }
+        let geom_dimension: u32 = geom.get_coordinate_dimension()?.into();
+        let geom_dimension = geom_dimension as usize;
+        let component_count = wkb.len() / 8; // rough estimate
+        let coordinates_count = component_count / geom_dimension;
+        let mut builder = ListPrimitiveChunkedBuilder::<Float64Type>::new(
+            "name".into(),
+            coordinates_count,
+            coordinates_count * dimension.unwrap_or(geom_dimension),
+            DataType::Float64,
+        );
         get_coords_sequence(&geom, dimension, &mut builder)?;
-        Series::new("".into(), builder)
-            .reshape_array(&[
-                ReshapeDimension::Infer,
-                ReshapeDimension::new_dimension(dimension as u64),
-            ])
-            .map_err(|_| geos::Error::GenericError("Invalid coordinate sequence.".to_string()))
+        Ok(Series::new("".into(), builder.finish()))
     }
     wkb_array
         .iter()

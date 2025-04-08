@@ -201,7 +201,7 @@ functions = [
     Function(Geo.shared_paths, pl.Binary(), {"other": dummy_line}),
     Function(Geo.shortest_line, pl.Binary(), {"other": dummy_point}),
     Function(Geo.count_coordinates, pl.UInt32()),
-    Function(Geo.coordinates, pl.List(pl.Array(pl.Float64, 2))),
+    Function(Geo.coordinates, pl.List(pl.List(pl.Float64))),
 ]
 
 

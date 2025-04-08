@@ -8,7 +8,6 @@ from polars.api import register_series_namespace
 
 from polars_st.casting import st
 from polars_st.config import Config
-from polars_st.geometry import GeometryType
 from polars_st.parsing import from_ewkt, from_geojson, from_shapely, from_wkt, from_xy
 
 if TYPE_CHECKING:
@@ -20,6 +19,7 @@ if TYPE_CHECKING:
     from polars._typing import PolarsDataType
     from typing_extensions import Unpack
 
+    from polars_st.geometry import GeometryType
     from polars_st.typing import (
         ArrayLike,
         IntoDecimalExpr,
@@ -231,7 +231,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def coordinates(self, output_dimension: Literal[2, 3] = 2) -> pl.Series:
+    def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Series:
         """See [`GeoExprNameSpace.coordinates`][polars_st.GeoExprNameSpace.coordinates]."""
         ...
 

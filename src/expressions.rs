@@ -22,6 +22,13 @@ fn output_type_bounds(input_fields: &[Field]) -> PolarsResult<Field> {
     ))
 }
 
+fn output_type_coordinates(input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        first_field_name(input_fields)?.clone(),
+        DataType::List(DataType::List(DataType::Float64.into()).into()),
+    ))
+}
+
 fn output_type_geometry_list(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
         first_field_name(input_fields)?.clone(),
@@ -148,7 +155,7 @@ fn coordinate_dimension(inputs: &[Series]) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
-#[polars_expr(output_type=Float64)]
+#[polars_expr(output_type_func=output_type_coordinates)]
 fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
@@ -157,7 +164,7 @@ fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsR
         .into_series()
         .with_name(wkb.name().clone())
         .strict_cast(&DataType::List(
-            DataType::Array(DataType::Float64.into(), 2).into(),
+            DataType::List(DataType::Float64.into()).into(),
         ))
 }
 

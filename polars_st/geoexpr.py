@@ -194,7 +194,7 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
-    def coordinates(self, output_dimension: Literal[2, 3] = 2) -> pl.Expr:
+    def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Expr:
         """Return the coordinates of each geometry."""
         return register_plugin_function(
             plugin_path=Path(__file__).parent,

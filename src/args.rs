@@ -199,7 +199,7 @@ pub struct SpatialJoinKwargs {
 
 #[derive(Deserialize)]
 pub struct GetCoordinatesKwargs {
-    pub output_dimension: usize,
+    pub output_dimension: Option<usize>,
 }
 
 #[derive(Deserialize)]
