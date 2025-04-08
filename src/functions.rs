@@ -100,17 +100,18 @@ where
             (MultiPoint, LineString | CircularString) => {
                 let has_z = self.has_z()?;
                 let has_m = self.has_m()?;
-                let size = self.get_num_geometries()?;
+                let collection_size = self.get_num_geometries()?;
                 let dimensions = 2 + usize::from(has_z) + usize::from(has_m);
-                let coords = (0..self.get_num_geometries()?)
-                    .flat_map(|n| {
-                        self.get_geometry_n(n)?
-                            .get_coord_seq()?
-                            .as_buffer(Some(dimensions))
-                    })
-                    .flatten()
-                    .collect::<Vec<f64>>();
-                let coords = CoordSeq::new_from_buffer(&coords, size, has_z, has_m)?;
+                let mut coords = Vec::with_capacity(dimensions * collection_size);
+                for n in 0..collection_size {
+                    let point = self.get_geometry_n(n)?;
+                    if !point.is_empty()? {
+                        let mut seq = point.get_coord_seq()?.as_buffer(Some(dimensions))?;
+                        coords.append(&mut seq);
+                    }
+                }
+                let coords_size = coords.len() / dimensions;
+                let coords = CoordSeq::new_from_buffer(&coords, coords_size, has_z, has_m)?;
                 match into {
                     LineString => Geometry::create_line_string(coords),
                     CircularString => Geometry::create_circular_string(coords),
