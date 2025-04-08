@@ -73,14 +73,9 @@ impl TryInto<GeometryTypes> for WKBGeometryType {
             Self::CurvePolygon => Ok(GeometryTypes::CurvePolygon),
             Self::MultiCurve => Ok(GeometryTypes::MultiCurve),
             Self::MultiSurface => Ok(GeometryTypes::MultiSurface),
-            Self::Curve
-            | Self::Surface
-            | Self::PolyhedralSurface
-            | Self::Tin
-            | Self::Triangle
-            | Self::Unknown => Err(geos::Error::GenericError(
-                "unsupported geometry type".into(),
-            )),
+            t => Err(geos::Error::GenericError(format!(
+                "unsupported geometry type: {t:?}"
+            ))),
         }
     }
 }
