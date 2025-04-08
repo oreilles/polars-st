@@ -1198,8 +1198,7 @@ pub fn force_2d(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
         if geom.is_empty()? {
             let mut res = match geom.geometry_type() {
                 Point => Geometry::create_empty_point(),
-                LineString => Geometry::create_empty_line_string(),
-                LinearRing => Geometry::create_empty_line_string(),
+                LineString | LinearRing => Geometry::create_empty_line_string(),
                 Polygon => Geometry::create_empty_polygon(),
                 MultiPoint => Geometry::create_empty_collection(MultiPoint),
                 MultiLineString => Geometry::create_empty_collection(MultiLineString),
