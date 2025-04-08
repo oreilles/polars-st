@@ -4,6 +4,8 @@ from enum import StrEnum
 
 import polars as pl
 
+__all__ = ["GeometryType", "PolarsGeometryType"]
+
 
 class GeometryType(StrEnum):
     Unknown = "Unknown"

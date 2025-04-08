@@ -6,6 +6,7 @@ from .config import Config
 from .geodataframe import *
 from .geoexpr import *
 from .geolazyframe import *
+from .geometry import *
 from .geoseries import *
 from .input import *
 from .parsing import *
