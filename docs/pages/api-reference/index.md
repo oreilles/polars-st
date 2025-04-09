@@ -17,7 +17,13 @@ hide:
 | `from_wkt` | Parse geometries from Well-Known Text (WKT) representation | [`root`][polars_st.from_wkt] |
 | `from_ewkt` | Parse geometries from Extended Well-Known Text (EWKT) representation | [`root`][polars_st.from_ewkt] |
 | `from_geojson` | Parse geometries from GeoJSON representation. | [`root`][polars_st.from_geojson] |
-| `from_xy` | Create points from x, y (, z) coordinates | [`root`][polars_st.from_xy] |
+| `point` | Create Point geometries from coordinates. | [`root`][polars_st.point] |
+| `multipoint` | Create MultiPoint geometries from list of coordinates. | [`root`][polars_st.multipoint] |
+| `linestring` | Create LineString geometries from lists of coordinates. | [`root`][polars_st.linestring] |
+| `circularstring` | Create CircularString geometries from lists of coordinates. | [`root`][polars_st.circularstring] |
+| `multilinestring` | Create MultiLineString geometries from lists of lists of coordinates. | [`root`][polars_st.multilinestring] |
+| `polygon` | Create Polygon geometries from lists of lists of coordinates. | [`root`][polars_st.polygon] |
+| `from_coords` | Create geometries from any coordinates. | [`root`][polars_st.from_coords] |
 | `from_shapely` | Parse geometries from shapely objects | [`root`][polars_st.from_shapely] |
 | `from_geopandas` | Create `GeoDataFrame` or `GeoSeries` from Geopandas equivalent. | [`root`][polars_st.from_geopandas] |
 | **Serialization** | | |

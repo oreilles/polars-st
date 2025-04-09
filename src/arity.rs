@@ -5,6 +5,7 @@ use polars::prelude::arity::{
 use polars::prelude::*;
 
 #[inline]
+#[allow(dead_code)]
 pub fn try_binary_elementwise_values<T, U, V, F, K, E>(
     lhs: &ChunkedArray<T>,
     rhs: &ChunkedArray<U>,

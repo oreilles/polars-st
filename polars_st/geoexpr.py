@@ -520,13 +520,16 @@ class GeoExprNameSpace:
         """Cast each geometry into a different compatible geometry type.
 
         Valid casts are:
-            - Point -> MultiPoint
-            - MultiPoint -> LineString | CircularString
-            - LineString -> MultiPoint | CircularString | MultiLineString | MultiCurve
-            - CircularString -> MultiPoint | LineString | MultiLineString | MultiCurve
-            - Polygon -> MultiPolygon | MultiSurface
-            - CurvePolygon -> MultiSurface
-            - Any -> GeometryCollection
+
+        | Source         | Destination |
+        |----------------|-------------|
+        | Point          | MultiPoint  |
+        | MultiPoint     | LineString, CircularString |
+        | LineString     | MultiPoint, CircularString, MultiLineString, MultiCurve |
+        | CircularString | MultiPoint, LineString, MultiLineString, MultiCurve |
+        | Polygon        | MultiPolygon, MultiSurface |
+        | CurvePolygon   | MultiSurface |
+        | Any            | GeometryCollection |
         """
         return register_plugin_function(
             plugin_path=Path(__file__).parent,

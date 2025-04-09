@@ -8,7 +8,19 @@ from polars.api import register_series_namespace
 
 from polars_st.casting import st
 from polars_st.config import Config
-from polars_st.parsing import from_ewkt, from_geojson, from_shapely, from_wkt, from_xy
+from polars_st.parsing import (
+    circularstring,
+    from_coords,
+    from_ewkt,
+    from_geojson,
+    from_shapely,
+    from_wkt,
+    linestring,
+    multilinestring,
+    multipoint,
+    point,
+    polygon,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -50,7 +62,21 @@ class GeoSeries(pl.Series):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
-        geometry_format: Literal["wkb", "wkt", "ewkt", "geojson", "shapely", "xy"] | None = None,
+        geometry_format: Literal[
+            "wkb",
+            "wkt",
+            "ewkt",
+            "geojson",
+            "shapely",
+            "coords",
+            "point",
+            "multipoint",
+            "linestring",
+            "circularstring",
+            "multilinestring",
+            "polygon",
+        ]
+        | None = None,
     ) -> GeoSeries:
         s = pl.Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
         if s.name == "" and not (isinstance(name, str) and name == ""):
@@ -73,8 +99,8 @@ class GeoSeries(pl.Series):
                         geometry_format = "wkt"
                 case pl.Object:
                     geometry_format = "shapely"
-                case pl.Struct:
-                    geometry_format = "xy"
+                case pl.List | pl.Array:
+                    geometry_format = "coords"
         match geometry_format:
             case None:
                 msg = f"Couldn't infer geometry format from dtype {s.dtype}"
@@ -89,14 +115,20 @@ class GeoSeries(pl.Series):
                 result = pl.select(from_geojson(s)).to_series()
             case "shapely":
                 result = pl.select(from_shapely(s)).to_series()
-            case "xy":
-                result = pl.select(
-                    from_xy(
-                        x=s.struct["x"],
-                        y=s.struct["y"],
-                        z=s.struct["z"] if "z" in s.struct.fields else None,
-                    ),
-                ).to_series()
+            case "coords":
+                result = pl.select(from_coords(s)).to_series()
+            case "point":
+                result = pl.select(point(s)).to_series()
+            case "multipoint":
+                result = pl.select(multipoint(s)).to_series()
+            case "linestring":
+                result = pl.select(linestring(s)).to_series()
+            case "circularstring":
+                result = pl.select(circularstring(s)).to_series()
+            case "multilinestring":
+                result = pl.select(multilinestring(s)).to_series()
+            case "polygon":
+                result = pl.select(polygon(s)).to_series()
         return cast("GeoSeries", result)
 
     def __init__(
@@ -107,7 +139,21 @@ class GeoSeries(pl.Series):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
-        geometry_format: Literal["wkb", "wkt", "ewkt", "geojson", "shapely", "xy"] | None = None,
+        geometry_format: Literal[
+            "wkb",
+            "wkt",
+            "ewkt",
+            "geojson",
+            "shapely",
+            "coords",
+            "point",
+            "multipoint",
+            "linestring",
+            "circularstring",
+            "multilinestring",
+            "polygon",
+        ]
+        | None = None,
     ) -> None:
         """Create a new GeoSeries.
 
@@ -131,15 +177,12 @@ class GeoSeries(pl.Series):
             ...     "POINT(0 0)",
             ...     "POINT(1 2)",
             ... ])
-            >>> gs2 = st.GeoSeries(pl.struct(
-            ...     x=pl.Series([0, 1]),
-            ...     y=pl.Series([0, 2]),
-            ...     eager=True,
-            ... ))
+            >>> gs2 = st.GeoSeries([
+            ...     [0, 0],
+            ...     [1, 2],
+            ... ], geometry_format="point")
             >>> gs.equals(gs2)
             True
-            >>> gs.dtype
-            Binary
 
             >>> import shapely
             >>> gs = st.GeoSeries([
