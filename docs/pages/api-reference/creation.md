@@ -16,3 +16,4 @@
             - from_geojson
             - from_shapely
             - from_geopandas
+            - read_file

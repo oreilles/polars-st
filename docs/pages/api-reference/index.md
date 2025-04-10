@@ -12,11 +12,7 @@ hide:
 | `write_file` | Write the GeoDataFrame to an OGR supported file format. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_file] |
 | `write_geojson` | Serialize to GeoJSON FeatureCollection representation. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_geojson] |
 | `write_ndgeojson` | Serialize to newline-delimited GeoJSON FeatureCollection representation. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.write_ndgeojson] |
-| **Parsing** | | |
-| `from_wkb` | Parse geometries from Well-Known Binary (WKB) representation | [`root`][polars_st.from_wkb] |
-| `from_wkt` | Parse geometries from Well-Known Text (WKT) representation | [`root`][polars_st.from_wkt] |
-| `from_ewkt` | Parse geometries from Extended Well-Known Text (EWKT) representation | [`root`][polars_st.from_ewkt] |
-| `from_geojson` | Parse geometries from GeoJSON representation. | [`root`][polars_st.from_geojson] |
+| **Creation** | | |
 | `point` | Create Point geometries from coordinates. | [`root`][polars_st.point] |
 | `multipoint` | Create MultiPoint geometries from list of coordinates. | [`root`][polars_st.multipoint] |
 | `linestring` | Create LineString geometries from lists of coordinates. | [`root`][polars_st.linestring] |
@@ -24,6 +20,10 @@ hide:
 | `multilinestring` | Create MultiLineString geometries from lists of lists of coordinates. | [`root`][polars_st.multilinestring] |
 | `polygon` | Create Polygon geometries from lists of lists of coordinates. | [`root`][polars_st.polygon] |
 | `from_coords` | Create geometries from any coordinates. | [`root`][polars_st.from_coords] |
+| `from_wkb` | Parse geometries from Well-Known Binary (WKB) representation | [`root`][polars_st.from_wkb] |
+| `from_wkt` | Parse geometries from Well-Known Text (WKT) representation | [`root`][polars_st.from_wkt] |
+| `from_ewkt` | Parse geometries from Extended Well-Known Text (EWKT) representation | [`root`][polars_st.from_ewkt] |
+| `from_geojson` | Parse geometries from GeoJSON representation. | [`root`][polars_st.from_geojson] |
 | `from_shapely` | Parse geometries from shapely objects | [`root`][polars_st.from_shapely] |
 | `from_geopandas` | Create `GeoDataFrame` or `GeoSeries` from Geopandas equivalent. | [`root`][polars_st.from_geopandas] |
 | **Serialization** | | |

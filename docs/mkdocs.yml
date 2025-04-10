@@ -12,8 +12,7 @@ nav:
     - index.md
   - API Reference:
     - api-reference/index.md
-    - File input: api-reference/input.md
-    - Geometry Parsing: api-reference/parsing.md
+    - Geometry creation: api-reference/creation.md
     - Column Selection: api-reference/columns.md
     - Expression Shorthand: api-reference/sugar.md
     - GeoExpr: api-reference/geoexpr.md
