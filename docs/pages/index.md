@@ -10,7 +10,7 @@ pip install polars-st
 
 ## Basics
 
-`polars-st` provides geometry operations under the namespace `st` on Polars [`Expr`](https://docs.pola.rs/api/python/stable/reference/expressions/index.html), [`Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html), [`DataFrame`](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) and  [`LazyFrame`](https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html). Functions used to read files or parse geometries are available at the module root. Here's a basic example:
+`polars-st` provides geometry operations under the namespace `st` on Polars [`Expr`][polars_st.GeoExpr], [`Series`][polars_st.GeoSeries], [`DataFrame`][polars_st.GeoDataFrame] and  [`LazyFrame`][polars_st.GeoLazyFrame]. Functions used to read files or parse geometries are available at the module root. Here's a basic example:
 
 ``` pycon
 >>> import polars as pl

@@ -48,7 +48,17 @@ __all__ = [
 ]
 
 
-class GeoSeries(pl.Series):
+class GeoSeriesMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        # The GeoSeries constructor doesn't return an instance of GeoSeries but an
+        # instance of pl.DataFrame. This design decision is made because Polars doesn't
+        # support subclassing of its code datatypes. In order to prevent misuse,
+        # instance checks are forbidden.
+        msg = "instance check on abstract class GeoSeries is not allowed"
+        raise TypeError(msg)
+
+
+class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
     @property
     def st(self) -> GeoSeriesNameSpace:
         return GeoSeriesNameSpace(self)
@@ -156,20 +166,33 @@ class GeoSeries(pl.Series):
     ) -> None:
         """Create a new GeoSeries.
 
-        A GeoSeries is a regular
-        [`polars.Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html)
-        with type annotations added for the `st` namespace. It contains geometries in binary
-        EWKB format.
+        `GeoSeries` is used as an alias for `pl.Series` with type annotations added for the
+        [`st`][polars_st.GeoSeries.st] namespace, and an overriden constructor which will parse
+        the values into binary EWKB format.
 
-        You can create a GeoSeries from a list of WKB, WKT, EWKT or GeoJSON strings, or Shapely
-            objects. If `geometry_format` is not set, the geometries will be created by infering
-            the correct deserialization operation from its datatype. It is also possible to create
-            a GeoSeries of points from a Polars
-            [`Struct`](https://docs.pola.rs/user-guide/expressions/structs/) with fields
-            "x", "y" (, "z").
+        You can create a GeoSeries from a list of coordinate arrays, WKB, WKT, EWKT or GeoJSON
+            strings, or Shapely objects. If `geometry_format` is not set, the geometries will be
+            created by infering the correct deserialization operation from its datatype.
 
         See [`pl.Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html)
         for parameters documentation.
+
+        !!! note
+
+            Because Polars doesn't support subclassing of their types, calling this constructor will
+            **NOT** create an instance of the class `GeoSeries`, but an instance of
+            [`polars.Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html).
+
+            As a result, instance checks are not permitted on this class to prevent misuse:
+            ```pycon
+            >>> s = st.GeoSeries(["POINT(0 0)"])
+            >>> type(s)
+            <class 'polars.series.series.Series'>
+            >>> isinstance(s, st.GeoSeries) # doctest: +IGNORE_EXCEPTION_DETAIL
+            Traceback (most recent call last):
+            ...
+            TypeError: instance check on abstract class GeoSeries is not allowed
+            ```
 
         Examples:
             >>> gs = st.GeoSeries([

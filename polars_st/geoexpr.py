@@ -27,7 +27,7 @@ __all__ = [
 
 
 class GeoExpr(pl.Expr):
-    """A `GeoExpr` is a regular [`polars.Expr`](https://docs.pola.rs/api/python/stable/reference/expressions/index.html) with type annotations added for the `st` namespace."""  # noqa: E501
+    """`GeoExpr` is used as an alias for [`polars.Expr`](https://docs.pola.rs/api/python/stable/reference/expressions/index.html) with type annotations added for the `st` namespace."""  # noqa: E501
 
     @property
     def st(self) -> GeoExprNameSpace:

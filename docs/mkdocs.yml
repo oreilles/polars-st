@@ -89,6 +89,7 @@ plugins:
             merge_init_into_class: true
 
 markdown_extensions:
+  - admonition
   - toc:
       permalink: "#"
   - pymdownx.highlight:

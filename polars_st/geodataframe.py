@@ -37,7 +37,17 @@ __all__ = [
 ]
 
 
-class GeoDataFrame(DataFrame):
+class GeoDataFrameMeta(type):
+    def __instancecheck__(cls, instance: Any) -> bool:
+        # The GeoDataFrame constructor doesn't return an instance of GeoDataFrame but an
+        # instance of pl.DataFrame. This design decision is made because Polars doesn't
+        # support subclassing of its code datatypes. In order to prevent misuse,
+        # instance checks are forbidden.
+        msg = "instance check on abstract class GeoDataFrame is not allowed"
+        raise TypeError(msg)
+
+
+class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
     @property
     def st(self) -> GeoDataFrameNameSpace: ...
 
@@ -116,10 +126,31 @@ class GeoDataFrame(DataFrame):
     ) -> None:
         """Create a new GeoDataFrame.
 
-        A GeoDataFrame is a regular [`polars.DataFrame`](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html)
-        with type annotations added for the `st` namespace.
+        `GeoDataFrame` is used as an alias for `pl.DataFrame` with type annotations added for
+        the [`st`][polars_st.GeoDataFrame.st] namespace, and an overriden constructor which will
+        parse the column identified by `geometry_name` (default `"geometry"`) into a
+        [`GeoSeries`][polars_st.GeoSeries].
 
-        The column identified by `geometry_name` (default "geometry") will be parsed as a GeoSeries.
+        See [`pl.DataFrame`](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html)
+        for parameters documentation.
+
+        !!! note
+
+            Because Polars doesn't support subclassing of their types, calling this constructor will
+            **NOT** create an instance of the class `GeoDataFrame`, but an instance of
+            `pl.DataFrame`.
+
+            As a result, instance checks are not permitted on this class to prevent misuse:
+            ```pycon
+            >>> gdf = st.GeoDataFrame(["POINT(0 0)"])
+            >>> type(gdf)
+            <class 'polars.dataframe.frame.DataFrame'>
+            >>> isinstance(gdf, st.GeoDataFrame) # doctest: +IGNORE_EXCEPTION_DETAIL
+            Traceback (most recent call last):
+            ...
+            TypeError: instance check on abstract class GeoDataFrame is not allowed
+            ```
+
 
         Examples:
             >>> gdf = st.GeoDataFrame({
