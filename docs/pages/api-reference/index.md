@@ -81,7 +81,7 @@ hide:
 | **Binary predicates** | | |
 | `crosses` | Return `True` when each geometry crosses other. | [`Expr`][polars_st.GeoExprNameSpace.crosses], [`Series`][polars_st.GeoSeriesNameSpace.crosses] |
 | `contains` | Return `True` when each geometry contains other. | [`Expr`][polars_st.GeoExprNameSpace.contains], [`Series`][polars_st.GeoSeriesNameSpace.contains] |
-| `contains_properly` | Return `True` when each geometry properly crosses other. | [`Expr`][polars_st.GeoExprNameSpace.contains_properly], [`Series`][polars_st.GeoSeriesNameSpace.contains_properly] |
+| `contains_properly` | Return `True` when each geometry properly contains other. | [`Expr`][polars_st.GeoExprNameSpace.contains_properly], [`Series`][polars_st.GeoSeriesNameSpace.contains_properly] |
 | `covered_by` | Return `True` when each geometry is covered by other. | [`Expr`][polars_st.GeoExprNameSpace.covered_by], [`Series`][polars_st.GeoSeriesNameSpace.covered_by] |
 | `covers` | Return `True` when each geometry covers other. | [`Expr`][polars_st.GeoExprNameSpace.covers], [`Series`][polars_st.GeoSeriesNameSpace.covers] |
 | `disjoint` | Return `True` when each geometry is disjoint from other. | [`Expr`][polars_st.GeoExprNameSpace.disjoint], [`Series`][polars_st.GeoSeriesNameSpace.disjoint] |
