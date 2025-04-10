@@ -165,6 +165,7 @@ functions = [
     Function(Geo.unary_union, pl.Binary(), {"grid_size": None}),
     Function(Geo.unary_union, pl.Binary(), {"grid_size": 0.5}),
     Function(Geo.cast, pl.Binary(), {"into": "GeometryCollection"}),
+    Function(Geo.multi, pl.Binary()),
     Function(Geo.boundary, pl.Binary()),
     Function(Geo.coverage_union, pl.Binary()),
     Function(Geo.buffer, pl.Binary(), {"distance": 1.0}),

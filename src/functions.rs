@@ -746,6 +746,21 @@ pub fn cast(wkb: &BinaryChunked, into: WKBGeometryType) -> GResult<BinaryChunked
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.cast(into)?.to_ewkb())
 }
 
+pub fn multi(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        let geom = Geometry::new_from_wkb(wkb)?;
+        match geom.geometry_type() {
+            Point => geom.cast(MultiPoint),
+            LineString => geom.cast(MultiLineString),
+            CircularString => geom.cast(MultiCurve),
+            Polygon => geom.cast(MultiPolygon),
+            CurvePolygon => geom.cast(MultiSurface),
+            _ => Ok(Geom::clone(&geom)),
+        }?
+        .to_ewkb()
+    })
+}
+
 pub fn area(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.area())
 }

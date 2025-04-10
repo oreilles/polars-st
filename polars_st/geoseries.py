@@ -452,6 +452,11 @@ class GeoSeriesNameSpace:
         """See [`GeoExprNameSpace.cast`][polars_st.GeoExprNameSpace.cast]."""
         ...
 
+    @dispatch
+    def multi(self) -> pl.Series:
+        """See [`GeoExprNameSpace.multi`][polars_st.GeoExprNameSpace.multi]."""
+        ...
+
     def to_geopandas(
         self,
         *,

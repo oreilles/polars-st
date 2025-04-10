@@ -457,6 +457,15 @@ fn cast(inputs: &[Series], kwargs: args::CastKwargs) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
+#[polars_expr(output_type=Binary)]
+fn multi(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    functions::multi(wkb)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
 #[polars_expr(output_type=Float64)]
 fn area(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;

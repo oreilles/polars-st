@@ -540,6 +540,15 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    def multi(self) -> pl.Expr:
+        """Cast each geometry into their multipart equivalent."""
+        return register_plugin_function(
+            plugin_path=Path(__file__).parent,
+            function_name="multi",
+            args=[self._expr],
+            is_elementwise=True,
+        )
+
     # Unary predicates
 
     def has_z(self) -> pl.Expr:

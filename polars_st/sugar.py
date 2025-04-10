@@ -72,6 +72,7 @@ __all__ = [
     "make_valid",
     "minimum_clearance",
     "minimum_rotated_rectangle",
+    "multi",
     "node",
     "normalize",
     "offset_curve",
@@ -297,6 +298,11 @@ def to_dict(*columns: str) -> pl.Expr:
 def cast(*columns: str, into: GeometryType) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[cast(into)][polars_st.GeoExprNameSpace.cast]</code>."""  # noqa: E501
     return geom(*columns).st.cast(into)
+
+
+def multi(*columns: str) -> pl.Expr:
+    """This function is syntactic sugar for <code>st.geom(columns).st.[multi()][polars_st.GeoExprNameSpace.multi]</code>."""  # noqa: E501
+    return geom(*columns).st.multi()
 
 
 def has_z(*columns: str) -> pl.Expr:
