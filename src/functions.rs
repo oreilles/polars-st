@@ -138,6 +138,20 @@ where
                     Geometry::create_multicurve(vec![Geom::clone(self)])
                 }
             }
+            (MultiLineString, Polygon) => {
+                let mut rings = (0..self.get_num_geometries()?).map(|n| {
+                    Geometry::create_linear_ring(self.get_geometry_n(n)?.get_coord_seq()?)
+                });
+                match self.get_num_geometries()? {
+                    0 => Geometry::create_empty_polygon(),
+                    1 => Geometry::create_polygon(rings.next().unwrap()?, vec![]),
+                    _ => {
+                        let outer = rings.next().unwrap()?;
+                        let inner = rings.collect::<Result<_, _>>()?;
+                        Geometry::create_polygon(outer, inner)
+                    }
+                }
+            }
             (MultiPolygon, MultiSurface) => {
                 let geoms = (0..self.get_num_geometries()?)
                     .map(|n| Ok(self.get_geometry_n(n)?.clone()))
