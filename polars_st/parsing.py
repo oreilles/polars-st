@@ -8,12 +8,11 @@ from polars._utils.parse import parse_into_expression
 from polars._utils.wrap import wrap_expr
 from polars.plugins import register_plugin_function
 
-from polars_st.geometry import GeometryType
-
 if TYPE_CHECKING:
     from polars._typing import IntoExprColumn
 
     from polars_st.geoexpr import GeoExpr
+    from polars_st.geometry import GeometryType
 
 
 __all__ = [
@@ -76,7 +75,7 @@ def point(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.Point)},
+        kwargs={"into": "Point"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -107,7 +106,7 @@ def multipoint(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.MultiPoint)},
+        kwargs={"into": "MultiPoint"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -138,7 +137,7 @@ def linestring(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.LineString)},
+        kwargs={"into": "LineString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -167,7 +166,7 @@ def circularstring(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.CircularString)},
+        kwargs={"into": "CircularString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -196,7 +195,7 @@ def multilinestring(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.MultiLineString)},
+        kwargs={"into": "MultiLineString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -225,7 +224,7 @@ def polygon(coords: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(GeometryType.Polygon)},
+        kwargs={"into": "Polygon"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -240,7 +239,7 @@ def from_coords(coords: IntoExprColumn, into: GeometryType | None = None) -> Geo
         plugin_path=Path(__file__).parent,
         function_name="from_coords",
         args=coords,
-        kwargs={"into": str(into)},
+        kwargs={"into": into},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 

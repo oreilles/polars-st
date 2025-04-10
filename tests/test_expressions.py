@@ -331,7 +331,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
             Geo.coverage_union,
         }
         and func.args.get("grid_size", 0) is not None
-        and geom_type == GeometryType.GeometryCollection
+        and geom_type == "GeometryCollection"
         and not geom_empty
     ):
         match = "IllegalArgumentException: Overlay input is mixed-dimensio"
@@ -340,8 +340,8 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         return
 
     if func.call in {Geo.shared_paths} and geom_type not in {
-        GeometryType.LineString,
-        GeometryType.MultiLineString,
+        "LineString",
+        "MultiLineString",
     }:
         match = "IllegalArgumentException: Geometry is not linea"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
@@ -349,8 +349,8 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         return
 
     if func.call in {Geo.get_interior_ring} and geom_type not in {
-        GeometryType.Polygon,
-        GeometryType.CurvePolygon,
+        "Polygon",
+        "CurvePolygon",
     }:
         match = "generic error: Geometry must be a Polygon or CurvePolygon"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
@@ -362,20 +362,20 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         Geo.interpolate,
         Geo.project,
         Geo.get_point,
-    } and geom_type not in {GeometryType.LineString}:
+    } and geom_type not in {"LineString"}:
         match = "generic error: Geometry must be a LineString"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
             frame.select(func.call(st.geom().st, **func.args))
         return
 
     if func.call in {Geo.coverage_union} and geom_type not in {
-        GeometryType.MultiPoint,
-        GeometryType.MultiLineString,
-        GeometryType.MultiPolygon,
-        GeometryType.GeometryCollection,
-        GeometryType.CompoundCurve,
-        GeometryType.MultiCurve,
-        GeometryType.MultiSurface,
+        "MultiPoint",
+        "MultiLineString",
+        "MultiPolygon",
+        "GeometryCollection",
+        "CompoundCurve",
+        "MultiCurve",
+        "MultiSurface",
     }:
         match = "generic error: Geometry must be a collection"
         with pytest.raises(pl.exceptions.ComputeError, match=match):

@@ -536,7 +536,7 @@ class GeoExprNameSpace:
             plugin_path=Path(__file__).parent,
             function_name="cast",
             args=[self._expr],
-            kwargs={"into": str(into)},
+            kwargs={"into": into},
             is_elementwise=True,
         )
 

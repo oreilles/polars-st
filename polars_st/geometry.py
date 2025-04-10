@@ -1,31 +1,30 @@
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Literal, TypeAlias, get_args
 
 import polars as pl
 
 __all__ = ["GeometryType", "PolarsGeometryType"]
 
+GeometryType: TypeAlias = Literal[
+    "Unknown",
+    "Point",
+    "LineString",
+    "Polygon",
+    "MultiPoint",
+    "MultiLineString",
+    "MultiPolygon",
+    "GeometryCollection",
+    "CircularString",
+    "CompoundCurve",
+    "CurvePolygon",
+    "MultiCurve",
+    "MultiSurface",
+    "Curve",
+    "Surface",
+    "PolyhedralSurface",
+    "Tin",
+    "Triangle",
+]
 
-class GeometryType(StrEnum):
-    Unknown = "Unknown"
-    Point = "Point"
-    LineString = "LineString"
-    Polygon = "Polygon"
-    MultiPoint = "MultiPoint"
-    MultiLineString = "MultiLineString"
-    MultiPolygon = "MultiPolygon"
-    GeometryCollection = "GeometryCollection"
-    CircularString = "CircularString"
-    CompoundCurve = "CompoundCurve"
-    CurvePolygon = "CurvePolygon"
-    MultiCurve = "MultiCurve"
-    MultiSurface = "MultiSurface"
-    Curve = "Curve"
-    Surface = "Surface"
-    PolyhedralSurface = "PolyhedralSurface"
-    Tin = "Tin"
-    Triangle = "Triangle"
-
-
-PolarsGeometryType = pl.Enum(GeometryType)
+PolarsGeometryType = pl.Enum(get_args(GeometryType))
