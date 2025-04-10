@@ -26,12 +26,6 @@ use proj4rs::Proj;
 use pyo3::prelude::*;
 use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
-fn ewkb_writer() -> GResult<WKBWriter> {
-    let mut writer = WKBWriter::new()?;
-    writer.set_include_SRID(true);
-    Ok(writer)
-}
-
 pub trait GeometryUtils {
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
 
@@ -58,7 +52,8 @@ where
     T: Geom,
 {
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
-        let mut writer = ewkb_writer()?;
+        let mut writer = WKBWriter::new()?;
+        writer.set_include_SRID(true);
         Ok(writer.write_wkb(self)?.into())
     }
 
