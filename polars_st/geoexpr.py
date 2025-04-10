@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
 import polars as pl
+from polars._utils.parse import parse_into_expression
+from polars._utils.wrap import wrap_expr
 from polars.api import register_expr_namespace
 from polars.plugins import register_plugin_function
 
@@ -532,6 +534,7 @@ class GeoExprNameSpace:
         | CurvePolygon    | MultiSurface |
         | Any             | GeometryCollection |
         """
+        into = wrap_expr(parse_into_expression(into, str_as_lit=True))
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="cast",
