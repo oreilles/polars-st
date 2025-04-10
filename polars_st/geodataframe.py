@@ -137,8 +137,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
         !!! note
 
             Because Polars doesn't support subclassing of their types, calling this constructor will
-            **NOT** create an instance of the class `GeoDataFrame`, but an instance of
-            `pl.DataFrame`.
+            **NOT** create an instance of `GeoDataFrame`, but an instance of `pl.DataFrame`.
 
             As a result, instance checks are not permitted on this class to prevent misuse:
             ```pycon

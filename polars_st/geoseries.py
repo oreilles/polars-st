@@ -180,8 +180,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
         !!! note
 
             Because Polars doesn't support subclassing of their types, calling this constructor will
-            **NOT** create an instance of the class `GeoSeries`, but an instance of
-            [`polars.Series`](https://docs.pola.rs/api/python/stable/reference/series/index.html).
+            **NOT** create an instance of `GeoSeries`, but an instance of `pl.Series`.
 
             As a result, instance checks are not permitted on this class to prevent misuse:
             ```pycon
