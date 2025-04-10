@@ -14,7 +14,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="input/">
+        <link rel="next" href="creation/">
       
       
       <link rel="icon" href="https://raw.githubusercontent.com/Oreilles/polars-st/main/assets/favicon.svg">
@@ -408,8 +408,6 @@
       
         
       
-        
-      
     
     
       
@@ -462,33 +460,11 @@
   
   
     <li class="md-nav__item">
-      <a href="input/" class="md-nav__link">
+      <a href="creation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    File input
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="parsing/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Geometry Parsing
+    Geometry creation
     
   </span>
   
@@ -741,7 +717,7 @@
 <tr>
 <td><code>read_file</code></td>
 <td>Read OGR supported file format into a GeoDataFrame.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.read_file&lt;/span&gt;" href="input/#polars_st.read_file"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.read_file&lt;/span&gt;" href="creation/#polars_st.read_file"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>write_file</code></td>
@@ -759,44 +735,74 @@
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoDataFrameNameSpace.write_ndgeojson&lt;/span&gt;" href="geodataframe/#polars_st.GeoDataFrameNameSpace.write_ndgeojson"><code>DataFrame</code></a></td>
 </tr>
 <tr>
-<td><strong>Parsing</strong></td>
+<td><strong>Creation</strong></td>
 <td></td>
 <td></td>
+</tr>
+<tr>
+<td><code>point</code></td>
+<td>Create Point geometries from coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.point&lt;/span&gt;" href="creation/#polars_st.point"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>multipoint</code></td>
+<td>Create MultiPoint geometries from list of coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.multipoint&lt;/span&gt;" href="creation/#polars_st.multipoint"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>linestring</code></td>
+<td>Create LineString geometries from lists of coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.linestring&lt;/span&gt;" href="creation/#polars_st.linestring"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>circularstring</code></td>
+<td>Create CircularString geometries from lists of coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.circularstring&lt;/span&gt;" href="creation/#polars_st.circularstring"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>multilinestring</code></td>
+<td>Create MultiLineString geometries from lists of lists of coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.multilinestring&lt;/span&gt;" href="creation/#polars_st.multilinestring"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>polygon</code></td>
+<td>Create Polygon geometries from lists of lists of coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.polygon&lt;/span&gt;" href="creation/#polars_st.polygon"><code>root</code></a></td>
+</tr>
+<tr>
+<td><code>from_coords</code></td>
+<td>Create geometries from any coordinates.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_coords&lt;/span&gt;" href="creation/#polars_st.from_coords"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_wkb</code></td>
 <td>Parse geometries from Well-Known Binary (WKB) representation</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_wkb&lt;/span&gt;" href="parsing/#polars_st.from_wkb"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_wkb&lt;/span&gt;" href="creation/#polars_st.from_wkb"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_wkt</code></td>
 <td>Parse geometries from Well-Known Text (WKT) representation</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_wkt&lt;/span&gt;" href="parsing/#polars_st.from_wkt"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_wkt&lt;/span&gt;" href="creation/#polars_st.from_wkt"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_ewkt</code></td>
 <td>Parse geometries from Extended Well-Known Text (EWKT) representation</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_ewkt&lt;/span&gt;" href="parsing/#polars_st.from_ewkt"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_ewkt&lt;/span&gt;" href="creation/#polars_st.from_ewkt"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_geojson</code></td>
 <td>Parse geometries from GeoJSON representation.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_geojson&lt;/span&gt;" href="parsing/#polars_st.from_geojson"><code>root</code></a></td>
-</tr>
-<tr>
-<td><code>from_xy</code></td>
-<td>Create points from x, y (, z) coordinates</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_xy&lt;/span&gt;" href="parsing/#polars_st.from_xy"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_geojson&lt;/span&gt;" href="creation/#polars_st.from_geojson"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_shapely</code></td>
 <td>Parse geometries from shapely objects</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_shapely&lt;/span&gt;" href="parsing/#polars_st.from_shapely"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_shapely&lt;/span&gt;" href="creation/#polars_st.from_shapely"><code>root</code></a></td>
 </tr>
 <tr>
 <td><code>from_geopandas</code></td>
 <td>Create <code>GeoDataFrame</code> or <code>GeoSeries</code> from Geopandas equivalent.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_geopandas&lt;/span&gt;" href="parsing/#polars_st.from_geopandas"><code>root</code></a></td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.from_geopandas&lt;/span&gt;" href="creation/#polars_st.from_geopandas"><code>root</code></a></td>
 </tr>
 <tr>
 <td><strong>Serialization</strong></td>
@@ -1194,6 +1200,11 @@
 <td></td>
 </tr>
 <tr>
+<td><code>cast</code></td>
+<td>Cast each geometry into a different compatible geometry type.</td>
+<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.cast&lt;/span&gt;" href="sugar/#polars_st.cast"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.cast&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.cast"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.cast&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.cast"><code>Series</code></a></td>
+</tr>
+<tr>
 <td><code>boundary</code></td>
 <td>Return the topological boundary of each geometry.</td>
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.boundary&lt;/span&gt;" href="sugar/#polars_st.boundary"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.boundary&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.boundary"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.boundary&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.boundary"><code>Series</code></a></td>
@@ -1389,28 +1400,8 @@
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.total_bounds&lt;/span&gt;" href="sugar/#polars_st.total_bounds"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.total_bounds&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.total_bounds"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.total_bounds&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.total_bounds"><code>Series</code></a></td>
 </tr>
 <tr>
-<td><code>multipoint</code></td>
-<td>Aggregate Point geometries into a single MultiPoint.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.multipoint&lt;/span&gt;" href="sugar/#polars_st.multipoint"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multipoint&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.multipoint"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.multipoint&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.multipoint"><code>Series</code></a></td>
-</tr>
-<tr>
-<td><code>multilinestring</code></td>
-<td>Aggregate LineString geometries into a single MultiLineString.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.multilinestring&lt;/span&gt;" href="sugar/#polars_st.multilinestring"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multilinestring&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.multilinestring"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.multilinestring&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.multilinestring"><code>Series</code></a></td>
-</tr>
-<tr>
-<td><code>multipolygon</code></td>
-<td>Aggregate Polygon geometries into a single MultiPolygon.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.multipolygon&lt;/span&gt;" href="sugar/#polars_st.multipolygon"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multipolygon&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.multipolygon"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.multipolygon&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.multipolygon"><code>Series</code></a></td>
-</tr>
-<tr>
-<td><code>geometrycollection</code></td>
-<td>Aggregate geometries into a single GeometryCollection.</td>
-<td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.geometrycollection&lt;/span&gt;" href="sugar/#polars_st.geometrycollection"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.geometrycollection&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.geometrycollection"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.geometrycollection&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.geometrycollection"><code>Series</code></a></td>
-</tr>
-<tr>
 <td><code>collect</code></td>
-<td>Aggregate geometries into a single MultiPart geometry or GeometryCollection.</td>
+<td>Aggregate geometries into a single collection.</td>
 <td><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.collect&lt;/span&gt;" href="sugar/#polars_st.collect"><code>root</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.collect&lt;/span&gt;" href="geoexpr/#polars_st.GeoExprNameSpace.collect"><code>Expr</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoSeriesNameSpace.collect&lt;/span&gt;" href="geoseries/#polars_st.GeoSeriesNameSpace.collect"><code>Series</code></a></td>
 </tr>
 <tr>
@@ -1526,13 +1517,13 @@
         
         
           
-          <a href="input/" class="md-footer__link md-footer__link--next" aria-label="Next: File input">
+          <a href="creation/" class="md-footer__link md-footer__link--next" aria-label="Next: Geometry creation">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                File input
+                Geometry creation
               </div>
             </div>
             <div class="md-footer__button md-icon">

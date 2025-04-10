@@ -406,8 +406,6 @@
       
         
       
-        
-      
     
     
       
@@ -460,33 +458,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../input/" class="md-nav__link">
+      <a href="../creation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    File input
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../parsing/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Geometry Parsing
+    Geometry creation
     
   </span>
   
@@ -867,6 +843,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#polars_st.cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      cast
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#polars_st.has_z" class="md-nav__link">
     <span class="md-ellipsis">
       has_z
@@ -1239,42 +1224,6 @@
   <a href="#polars_st.total_bounds" class="md-nav__link">
     <span class="md-ellipsis">
       total_bounds
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multipoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipoint
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multilinestring" class="md-nav__link">
-    <span class="md-ellipsis">
-      multilinestring
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multipolygon" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipolygon
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.geometrycollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      geometrycollection
     </span>
   </a>
   
@@ -1831,6 +1780,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#polars_st.cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      cast
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#polars_st.has_z" class="md-nav__link">
     <span class="md-ellipsis">
       has_z
@@ -2203,42 +2161,6 @@
   <a href="#polars_st.total_bounds" class="md-nav__link">
     <span class="md-ellipsis">
       total_bounds
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multipoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipoint
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multilinestring" class="md-nav__link">
-    <span class="md-ellipsis">
-      multilinestring
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.multipolygon" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipolygon
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#polars_st.geometrycollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      geometrycollection
     </span>
   </a>
   
@@ -2623,7 +2545,9 @@
 
 
 <a href="#polars_st.coordinates" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">coordinates</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">output_dimension</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Literal&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">coordinates</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">output_dimension</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Literal&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3075,6 +2999,26 @@
     <div class="doc doc-contents ">
 
         <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.to_dict&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.to_dict">to_dict()</a></code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="polars_st.cast" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.cast</span>
+
+
+<a href="#polars_st.cast" class="headerlink" title="Permanent link">#</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cast</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">into</span><span class="p">:</span> <span class="n"><span title="polars_st.geometry.GeometryType">GeometryType</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.cast&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.cast">cast(into)</a></code>.</p>
 
 
     </div>
@@ -4061,97 +4005,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h2 id="polars_st.multipoint" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.multipoint</span>
-
-
-<a href="#polars_st.multipoint" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multipoint</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multipoint&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.multipoint">multipoint()</a></code>.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="polars_st.multilinestring" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.multilinestring</span>
-
-
-<a href="#polars_st.multilinestring" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multilinestring</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multilinestring&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.multilinestring">multilinestring()</a></code>.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="polars_st.multipolygon" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.multipolygon</span>
-
-
-<a href="#polars_st.multipolygon" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multipolygon</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.multipolygon&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.multipolygon">multipolygon()</a></code>.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="polars_st.geometrycollection" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.geometrycollection</span>
-
-
-<a href="#polars_st.geometrycollection" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">geometrycollection</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.geometrycollection&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.geometrycollection">geometrycollection()</a></code>.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
 <h2 id="polars_st.collect" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">polars_st.collect</span>
 
 
 <a href="#polars_st.collect" class="headerlink" title="Permanent link">#</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">collect</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">collect</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">into</span><span class="p">:</span> <span class="n"><span title="polars_st.geometry.GeometryType">GeometryType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="../geoexpr/#polars_st.GeoExpr">GeoExpr</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.geometrycollection&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.geometrycollection">geometrycollection()</a></code>.</p>
+        <p>This function is syntactic sugar for <code>st.geom(columns).st.<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;polars_st.GeoExprNameSpace.collect&lt;/span&gt;" href="../geoexpr/#polars_st.GeoExprNameSpace.collect">collect()</a></code>.</p>
 
 
     </div>

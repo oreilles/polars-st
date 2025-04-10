@@ -406,8 +406,6 @@
       
         
       
-        
-      
     
     
       
@@ -460,33 +458,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../input/" class="md-nav__link">
+      <a href="../creation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    File input
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../parsing/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Geometry Parsing
+    Geometry creation
     
   </span>
   
@@ -944,6 +920,15 @@
   <a href="#polars_st.GeoExprNameSpace.to_dict" class="md-nav__link">
     <span class="md-ellipsis">
       to_dict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      cast
     </span>
   </a>
   
@@ -1538,42 +1523,6 @@
   <a href="#polars_st.GeoExprNameSpace.total_bounds" class="md-nav__link">
     <span class="md-ellipsis">
       total_bounds
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multipoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipoint
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multilinestring" class="md-nav__link">
-    <span class="md-ellipsis">
-      multilinestring
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multipolygon" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipolygon
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.geometrycollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      geometrycollection
     </span>
   </a>
   
@@ -2174,6 +2123,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#polars_st.GeoExprNameSpace.cast" class="md-nav__link">
+    <span class="md-ellipsis">
+      cast
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#polars_st.GeoExprNameSpace.has_z" class="md-nav__link">
     <span class="md-ellipsis">
       has_z
@@ -2768,42 +2726,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multipoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipoint
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multilinestring" class="md-nav__link">
-    <span class="md-ellipsis">
-      multilinestring
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.multipolygon" class="md-nav__link">
-    <span class="md-ellipsis">
-      multipolygon
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#polars_st.GeoExprNameSpace.geometrycollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      geometrycollection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#polars_st.GeoExprNameSpace.collect" class="md-nav__link">
     <span class="md-ellipsis">
       collect
@@ -3301,7 +3223,7 @@
 
 
 <a href="#polars_st.GeoExprNameSpace.coordinates" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">coordinates</span><span class="p">(</span><span class="n">output_dimension</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Literal&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">coordinates</span><span class="p">(</span><span class="n">output_dimension</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Literal&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4012,6 +3934,65 @@ outputs the most compact representation.</p>
     <div class="doc doc-contents ">
 
         <p>Convert each geometry to a GeoJSON-like Python <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict"><code>dict</code></a> object.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="polars_st.GeoExprNameSpace.cast" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.cast</span>
+
+
+<a href="#polars_st.GeoExprNameSpace.cast" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cast</span><span class="p">(</span><span class="n">into</span><span class="p">:</span> <span class="n"><span title="polars_st.geometry.GeometryType">GeometryType</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="polars.Expr">Expr</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Cast each geometry into a different compatible geometry type.</p>
+<p>Valid casts are:</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Point</td>
+<td>MultiPoint</td>
+</tr>
+<tr>
+<td>MultiPoint</td>
+<td>LineString, CircularString</td>
+</tr>
+<tr>
+<td>LineString</td>
+<td>MultiPoint, CircularString, MultiLineString, MultiCurve</td>
+</tr>
+<tr>
+<td>CircularString</td>
+<td>MultiPoint, LineString, MultiLineString, MultiCurve</td>
+</tr>
+<tr>
+<td>Polygon</td>
+<td>MultiPolygon, MultiSurface</td>
+</tr>
+<tr>
+<td>CurvePolygon</td>
+<td>MultiSurface</td>
+</tr>
+<tr>
+<td>Any</td>
+<td>GeometryCollection</td>
+</tr>
+</tbody>
+</table>
 
 
     </div>
@@ -5578,97 +5559,17 @@ order should be, in order:
 <div class="doc doc-object doc-function">
 
 
-<h3 id="polars_st.GeoExprNameSpace.multipoint" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.multipoint</span>
-
-
-<a href="#polars_st.GeoExprNameSpace.multipoint" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multipoint</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Aggregate Point geometries into a single MultiPoint.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="polars_st.GeoExprNameSpace.multilinestring" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.multilinestring</span>
-
-
-<a href="#polars_st.GeoExprNameSpace.multilinestring" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multilinestring</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Aggregate LineString geometries into a single MultiLineString.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="polars_st.GeoExprNameSpace.multipolygon" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.multipolygon</span>
-
-
-<a href="#polars_st.GeoExprNameSpace.multipolygon" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">multipolygon</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Aggregate Polygon geometries into a single MultiPolygon.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="polars_st.GeoExprNameSpace.geometrycollection" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.geometrycollection</span>
-
-
-<a href="#polars_st.GeoExprNameSpace.geometrycollection" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">geometrycollection</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Aggregate geometries into a single GeometryCollection.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
 <h3 id="polars_st.GeoExprNameSpace.collect" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">polars_st.GeoExprNameSpace.collect</span>
 
 
 <a href="#polars_st.GeoExprNameSpace.collect" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">collect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">collect</span><span class="p">(</span><span class="n">into</span><span class="p">:</span> <span class="n"><span title="polars_st.geometry.GeometryType">GeometryType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;polars_st.GeoExpr&lt;/span&gt; (&lt;code&gt;polars_st.geoexpr.GeoExpr&lt;/code&gt;)" href="#polars_st.GeoExpr">GeoExpr</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Aggregate geometries into a single MultiPart geometry or GeometryCollection.</p>
+        <p>Aggregate geometries into a single collection.</p>
 
 
     </div>
