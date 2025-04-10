@@ -144,9 +144,19 @@ where
                     .collect::<Result<_, _>>()?;
                 Geometry::create_multisurface(geoms)
             }
-            (Polygon, MultiPolygon) => Geometry::create_multipolygon(vec![Geom::clone(self)]),
+            (Polygon, MultiPolygon) => {
+                if self.is_empty()? {
+                    Geometry::create_multipolygon(vec![])
+                } else {
+                    Geometry::create_multipolygon(vec![Geom::clone(self)])
+                }
+            }
             (Polygon | CurvePolygon, MultiSurface) => {
-                Geometry::create_multisurface(vec![Geom::clone(self)])
+                if self.is_empty()? {
+                    Geometry::create_multisurface(vec![])
+                } else {
+                    Geometry::create_multisurface(vec![Geom::clone(self)])
+                }
             }
             (from, to) => Err(geos::Error::GenericError(format!(
                 "invalid cast from {from:?} to {to:?}"
