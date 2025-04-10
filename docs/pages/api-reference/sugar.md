@@ -41,6 +41,7 @@ The following functions can be used that way:
             - to_shapely
             - to_dict
             - cast
+            - multi
             - has_z
             - has_m
             - is_ccw
