@@ -448,7 +448,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def cast(self, into: GeometryType) -> pl.Series:
+    def cast(self, into: IntoExprColumn) -> pl.Series:
         """See [`GeoExprNameSpace.cast`][polars_st.GeoExprNameSpace.cast]."""
         ...
 

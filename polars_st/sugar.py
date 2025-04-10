@@ -295,7 +295,7 @@ def to_dict(*columns: str) -> pl.Expr:
     return geom(*columns).st.to_dict()
 
 
-def cast(*columns: str, into: GeometryType) -> pl.Expr:
+def cast(*columns: str, into: IntoExprColumn) -> pl.Expr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[cast(into)][polars_st.GeoExprNameSpace.cast]</code>."""  # noqa: E501
     return geom(*columns).st.cast(into)
 

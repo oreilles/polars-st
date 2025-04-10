@@ -238,8 +238,3 @@ pub struct TransformKwargs {
 pub struct CollectKwargs {
     pub into: Option<WKBGeometryType>,
 }
-
-#[derive(Deserialize)]
-pub struct CastKwargs {
-    pub into: WKBGeometryType,
-}

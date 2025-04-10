@@ -516,7 +516,7 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
-    def cast(self, into: GeometryType) -> pl.Expr:
+    def cast(self, into: IntoExprColumn) -> pl.Expr:
         """Cast each geometry into a different compatible geometry type.
 
         Valid casts are:
@@ -535,8 +535,7 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="cast",
-            args=[self._expr],
-            kwargs={"into": into},
+            args=[self._expr, into],
             is_elementwise=True,
         )
 
