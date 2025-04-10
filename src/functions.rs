@@ -62,6 +62,7 @@ where
         Ok(writer.write_wkb(self)?.into())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn cast(&self, into: GeometryTypes) -> GResult<Geometry> {
         let srid = self.get_srid()?;
         let mut result = match (self.geometry_type(), into) {
