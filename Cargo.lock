@@ -1500,7 +1500,7 @@ dependencies = [
 
 [[package]]
 name = "polars-st"
-version = "0.1.0-alpha.22"
+version = "0.1.0-alpha.23"
 dependencies = [
  "crs-definitions",
  "geos",
