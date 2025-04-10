@@ -258,7 +258,7 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
     let dimension = lengths[0];
     let has_z = dimension > 2;
     let has_m = dimension > 3;
-    let start = *offsets.first() as usize;
+    let start = (*offsets.first()).try_into().unwrap();
     let values = &coords
         .values()
         .as_any()

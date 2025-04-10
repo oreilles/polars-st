@@ -38,21 +38,39 @@ def point(coords: IntoExprColumn) -> GeoExpr:
 
     Examples:
         >>> df = pl.DataFrame({
+        ...     "coords": [
+        ...          [0, 1],
+        ...          [2, 3],
+        ...     ]
+        ... })
+        >>> df = df.select(geometry=st.point("coords"))
+        >>> df.st.to_wkt()
+        shape: (2, 1)
+        ┌─────────────┐
+        │ geometry    │
+        │ ---         │
+        │ str         │
+        ╞═════════════╡
+        │ POINT (0 1) │
+        │ POINT (2 3) │
+        └─────────────┘
+
+        >>> df = pl.DataFrame({
         ...     "x": [0, 1],
         ...     "y": [0, 2],
         ...     "z": [0, 3],
         ... })
-        >>> df = df.select(geometry=st.point(pl.concat_arr("x", "y")))
+        >>> df = df.select(geometry=st.point(pl.concat_arr("x", "y", "z")))
         >>> df.st.to_wkt()
         shape: (2, 1)
-        ┌───────────────┐
-        │ geometry      │
-        │ ---           │
-        │ str           │
-        ╞═══════════════╡
-        │ POINT (0 0 0) │
-        │ POINT (1 2 3) │
-        └───────────────┘
+        ┌─────────────────┐
+        │ geometry        │
+        │ ---             │
+        │ str             │
+        ╞═════════════════╡
+        │ POINT Z (0 0 0) │
+        │ POINT Z (1 2 3) │
+        └─────────────────┘
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
@@ -104,16 +122,6 @@ def linestring(coords: IntoExprColumn) -> GeoExpr:
         ...     "y": [0, 2, 4, 6],
         ... })
         >>> df = df.group_by("idx").agg(coords=pl.concat_list("x", "y"))
-        >>> df
-        shape: (2, 2)
-        ┌─────┬──────────────────┐
-        │ idx ┆ coords           │
-        │ --- ┆ ---              │
-        │ i64 ┆ list[list[i64]]  │
-        ╞═════╪══════════════════╡
-        │ 0   ┆ [[0, 0], [1, 2]] │
-        │ 1   ┆ [[3, 4], [5, 6]] │
-        └─────┴──────────────────┘
         >>> df = df.select("idx", geometry=st.linestring("coords"))
         >>> df.sort("idx").st.to_wkt()
         shape: (2, 2)
