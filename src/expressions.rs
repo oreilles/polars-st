@@ -184,8 +184,8 @@ fn from_coords(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<S
             validate_polygon_coords(t).and_then(|()| multilinestring(coords))
         }
         (Some(Polygon), t) => validate_polygon_coords(t).and_then(|()| polygon(coords)),
-        (None, t) if validate_line_coords(t).is_ok() => point(coords),
-        (None, t) if validate_point_coords(t).is_ok() => linestring(coords),
+        (None, t) if validate_point_coords(t).is_ok() => point(coords),
+        (None, t) if validate_line_coords(t).is_ok() => linestring(coords),
         (None, t) if validate_polygon_coords(t).is_ok() => polygon(coords),
         (None, t) => Err(polars_err!(InvalidOperation: "invalid coordinates dtype: {t}")),
         (Some(g), _) => Err(polars_err!(InvalidOperation: "unsupported geometry type: {g:?}")),
