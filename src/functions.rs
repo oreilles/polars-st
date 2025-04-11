@@ -8,7 +8,7 @@ use crate::{
     },
     arity::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
-        try_ternary_elementwise_values,
+        try_ternary_elementwise_values, try_unary_elementwise_values_with_dtype,
     },
     wkb::{read_ewkb_header, WKBGeometryType},
 };
@@ -767,23 +767,21 @@ pub fn area(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.area())
 }
 
-pub fn bounds(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    fn get_bounds(wkb: &[u8]) -> GResult<Series> {
+pub fn bounds(wkb: &BinaryChunked) -> GResult<ArrayChunked> {
+    let dt = DataType::Array(Box::new(DataType::Float64), 4);
+    try_unary_elementwise_values_with_dtype(wkb, dt, |wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        let res = if geom.is_empty()? {
-            Series::new("".into(), [f64::NAN, f64::NAN, f64::NAN, f64::NAN])
+        let bounds = if geom.is_empty()? {
+            [f64::NAN, f64::NAN, f64::NAN, f64::NAN]
         } else {
             let x_min = geom.get_x_min()?;
             let y_min = geom.get_y_min()?;
             let x_max = geom.get_x_max()?;
             let y_max = geom.get_y_max()?;
-            Series::new("".into(), [x_min, y_min, x_max, y_max])
+            [x_min, y_min, x_max, y_max]
         };
-        Ok(res)
-    }
-    wkb.iter()
-        .map(|wkb| wkb.map(get_bounds).transpose())
-        .collect()
+        Ok(Box::new(Float64Array::from_slice(bounds)) as Box<dyn Array>)
+    })
 }
 
 pub fn length(wkb: &BinaryChunked) -> GResult<Float64Chunked> {

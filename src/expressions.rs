@@ -4,9 +4,9 @@ use crate::{
     wkb::WKBGeometryType,
 };
 use geos::{Geom, Geometry};
-use polars::datatypes::DataType as D;
+use polars::{datatypes::DataType as D, prelude::array::ArrayNameSpace};
 use polars::{error::to_compute_err, prelude::*};
-use polars_arrow::array::Utf8ViewArray;
+use polars_arrow::array::{Array, FixedSizeListArray, Float64Array, Utf8ViewArray};
 use pyo3::prelude::*;
 use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
 
@@ -492,41 +492,25 @@ fn bounds(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     functions::bounds(wkb)
-        .map_err(to_compute_err)?
-        .into_series()
-        .with_name(wkb.name().clone())
-        .strict_cast(&D::Array(D::Float64.into(), 4))
-}
-
-#[polars_expr(output_type_func=output_type_bounds)]
-fn par_bounds(inputs: &[Series]) -> PolarsResult<Series> {
-    let wkb = validate_wkb(&inputs[0])?;
-    functions::bounds(wkb)
-        .map_err(to_compute_err)?
-        .into_series()
-        .strict_cast(&D::Array(D::Float64.into(), 4))
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type_func=output_type_bounds)]
 fn total_bounds(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let bounds = functions::bounds(wkb)
-        .map_err(to_compute_err)?
-        .cast(&D::List(D::Float64.into()))?;
-    let bounds = bounds.list()?;
-    let mut builder =
-        ListPrimitiveChunkedBuilder::<Float64Type>::new(bounds.name().clone(), 1, 4, D::Float64);
-    builder.append_slice(&[
-        bounds.lst_get(0, false)?.min()?.unwrap_or(f64::NAN),
-        bounds.lst_get(1, false)?.min()?.unwrap_or(f64::NAN),
-        bounds.lst_get(2, false)?.max()?.unwrap_or(f64::NAN),
-        bounds.lst_get(3, false)?.max()?.unwrap_or(f64::NAN),
-    ]);
-    builder
-        .finish()
-        .into_series()
-        .strict_cast(&D::Array(D::Float64.into(), 4))
+    let bounds = functions::bounds(wkb).map_err(to_compute_err)?;
+    let arrow_dt = bounds.dtype().to_arrow(CompatLevel::newest());
+    let i = |i| Int64Chunked::new("".into(), [i]);
+    let total: Box<dyn Array> = Box::new(Float64Array::from_slice([
+        bounds.array_get(&i(0), false)?.min()?.unwrap_or(f64::NAN),
+        bounds.array_get(&i(1), false)?.min()?.unwrap_or(f64::NAN),
+        bounds.array_get(&i(2), false)?.max()?.unwrap_or(f64::NAN),
+        bounds.array_get(&i(3), false)?.max()?.unwrap_or(f64::NAN),
+    ]));
+    let total = FixedSizeListArray::new(arrow_dt, 1, total, None);
+    Ok(ArrayChunked::from_chunk_iter(wkb.name().clone(), [total]).into_series())
 }
 
 #[polars_expr(output_type=Float64)]

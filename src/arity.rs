@@ -3,6 +3,35 @@ use polars::prelude::arity::{
     try_unary_elementwise,
 };
 use polars::prelude::*;
+use polars_arrow::array::Array;
+
+#[inline]
+pub fn try_unary_elementwise_values_with_dtype<'a, T, V, F, K, E>(
+    ca: &'a ChunkedArray<T>,
+    dtype: DataType,
+    mut op: F,
+) -> Result<ChunkedArray<V>, E>
+where
+    T: PolarsDataType,
+    V: PolarsDataType,
+    F: FnMut(T::Physical<'a>) -> Result<K, E>,
+    V::Array: ArrayFromIterDtype<K>,
+{
+    if ca.null_count() == ca.len() {
+        let arr = V::Array::full_null(ca.len(), dtype.to_arrow(CompatLevel::newest()));
+        return Ok(ChunkedArray::with_chunk(ca.name().clone(), arr));
+    }
+
+    let iter = ca.downcast_iter().map(|arr| {
+        let validity = arr.validity().cloned();
+        let arr: V::Array = arr
+            .values_iter()
+            .map(&mut op)
+            .try_collect_arr_with_dtype(dtype.to_arrow(CompatLevel::newest()))?;
+        Ok(arr.with_validity_typed(validity))
+    });
+    ChunkedArray::try_from_chunk_iter(ca.name().clone(), iter)
+}
 
 #[inline]
 #[allow(dead_code)]
