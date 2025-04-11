@@ -254,7 +254,12 @@ def from_wkb(expr: IntoExprColumn) -> GeoExpr:
         ... ) # doctest: +SKIP
         >>> gdf = df.select(st.from_wkb("geometry")) # doctest: +SKIP
     """
-    return cast("GeoExpr", wrap_expr(parse_into_expression(expr)))
+    return register_plugin_function(
+        plugin_path=Path(__file__).parent,
+        function_name="from_wkb",
+        args=[expr],
+        is_elementwise=True,
+    ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def from_wkt(expr: IntoExprColumn) -> GeoExpr:

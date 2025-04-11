@@ -255,6 +255,10 @@ where
     }
 }
 
+pub fn from_wkb(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.to_ewkb())
+}
+
 pub fn from_wkt(wkt: &StringChunked) -> GResult<BinaryChunked> {
     wkt.try_apply_nonnull_values_generic(|wkt| Geometry::new_from_wkt(wkt)?.to_ewkb())
 }
