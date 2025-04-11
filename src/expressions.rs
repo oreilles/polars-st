@@ -1413,7 +1413,7 @@ pub fn sjoin(inputs: &[Series], kwargs: args::SpatialJoinKwargs) -> PolarsResult
         .map(|(left_index, right_index)| {
             StructChunked::from_columns(
                 left.name().clone(),
-                left.len(),
+                left_index.len(),
                 &[left_index.into_column(), right_index.into_column()],
             )
             .map(IntoSeries::into_series)
