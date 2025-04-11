@@ -144,7 +144,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
             >>> gdf = st.GeoDataFrame(["POINT(0 0)"])
             >>> type(gdf)
             <class 'polars.dataframe.frame.DataFrame'>
-            >>> isinstance(gdf, st.GeoDataFrame) # doctest: +IGNORE_EXCEPTION_DETAIL
+            >>> isinstance(gdf, st.GeoDataFrame)
             Traceback (most recent call last):
             ...
             TypeError: instance check on abstract class GeoDataFrame is not allowed

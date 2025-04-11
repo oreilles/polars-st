@@ -187,7 +187,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             >>> s = st.GeoSeries(["POINT(0 0)"])
             >>> type(s)
             <class 'polars.series.series.Series'>
-            >>> isinstance(s, st.GeoSeries) # doctest: +IGNORE_EXCEPTION_DETAIL
+            >>> isinstance(s, st.GeoSeries)
             Traceback (most recent call last):
             ...
             TypeError: instance check on abstract class GeoSeries is not allowed

@@ -234,6 +234,29 @@ def from_coords(coords: IntoExprColumn, into: GeometryType | None = None) -> Geo
 
     Examples:
         >>> df = pl.DataFrame({"coords": [[0, 1], [0, 2]]})
+        >>> df = df.select(geometry=st.from_coords("coords"))
+        >>> df.st.to_wkt()
+        shape: (2, 1)
+        ┌─────────────┐
+        │ geometry    │
+        │ ---         │
+        │ str         │
+        ╞═════════════╡
+        │ POINT (0 1) │
+        │ POINT (0 2) │
+        └─────────────┘
+
+        >>> df = pl.DataFrame({"coords": [[[0, 1], [2, 3]]]})
+        >>> df = df.select(geometry=st.from_coords("coords"))
+        >>> df.st.to_wkt()
+        shape: (1, 1)
+        ┌───────────────────────┐
+        │ geometry              │
+        │ ---                   │
+        │ str                   │
+        ╞═══════════════════════╡
+        │ LINESTRING (0 1, 2 3) │
+        └───────────────────────┘
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
