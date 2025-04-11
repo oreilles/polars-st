@@ -303,9 +303,7 @@ fn interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     functions::get_interior_rings(wkb)
         .map_err(to_compute_err)
-        .map(IntoSeries::into_series)?
-        .with_name(wkb.name().clone())
-        .strict_cast(&D::List(D::Binary.into()))
+        .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=UInt32)]
@@ -383,9 +381,7 @@ fn parts(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     functions::get_parts(wkb)
         .map_err(to_compute_err)
-        .map(IntoSeries::into_series)?
-        .with_name(wkb.name().clone())
-        .strict_cast(&D::List(D::Binary.into()))
+        .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Float64)]

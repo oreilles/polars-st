@@ -20,7 +20,7 @@ use geos::{
 
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
-use polars_arrow::array::Array;
+use polars_arrow::array::{Array, BinaryViewArray};
 use proj4rs::errors::Error as ProjError;
 use proj4rs::Proj;
 use pyo3::prelude::*;
@@ -469,22 +469,22 @@ pub fn get_exterior_ring(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
 }
 
 pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    fn get_geometry_rings(wkb: &[u8]) -> GResult<Series> {
+    // TODO: use try_apply_nonnull_values_generic once pola-rs/polars#22233 is merged
+    let dt = DataType::List(Box::new(DataType::Binary));
+    let adt = dt.to_arrow(CompatLevel::newest());
+    try_unary_elementwise_values_with_dtype(wkb, dt, |wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.geometry_type() != Polygon {
-            return Ok(Series::new_empty("".into(), &DataType::Binary));
+            let rings = BinaryViewArray::new_empty(adt.clone());
+            return Ok(Box::new(rings) as Box<dyn Array>);
         }
         let num_rings = geom.get_num_interior_rings()?;
-        let mut rings = BinaryChunkedBuilder::new("".into(), num_rings + 1);
-        for n in 0..num_rings {
+        let rings = BinaryViewArray::try_arr_from_iter((0..num_rings).map(|n| {
             let ring = geom.get_interior_ring_n(n)?;
-            rings.append_value(ring.to_ewkb()?);
-        }
-        Ok(rings.finish().into_series())
-    }
-    wkb.into_iter()
-        .map(|wkb| wkb.map(get_geometry_rings).transpose())
-        .collect()
+            ring.to_ewkb()
+        }))?;
+        Ok(Box::new(rings) as Box<dyn Array>)
+    })
 }
 
 pub fn get_num_points(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
@@ -641,19 +641,17 @@ pub fn get_geometry_n(wkb: &BinaryChunked, index: &UInt32Chunked) -> GResult<Bin
 }
 
 pub fn get_parts(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    fn get_geometry_parts(wkb: &[u8]) -> GResult<Series> {
+    // TODO: use try_apply_nonnull_values_generic once pola-rs/polars#22233 is merged
+    let dt = DataType::List(Box::new(DataType::Binary));
+    try_unary_elementwise_values_with_dtype(wkb, dt, |wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
         let num_geom = geom.get_num_geometries()?;
-        let mut parts = BinaryChunkedBuilder::new("".into(), num_geom);
-        for n in 0..num_geom {
+        let parts = BinaryViewArray::try_arr_from_iter((0..num_geom).map(|n| {
             let part = geom.get_geometry_n(n)?;
-            parts.append_value(part.to_ewkb()?);
-        }
-        Ok(parts.finish().into_series())
-    }
-    wkb.into_iter()
-        .map(|wkb| wkb.map(get_geometry_parts).transpose())
-        .collect()
+            part.to_ewkb()
+        }))?;
+        Ok(Box::new(parts) as Box<dyn Array>)
+    })
 }
 
 pub fn get_precision(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
