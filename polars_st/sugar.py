@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
     from polars_st.geometry import GeometryType
     from polars_st.typing import (
-        IntoDecimalExpr,
         IntoExprColumn,
         IntoIntegerExpr,
+        IntoNumericExpr,
     )
 
     from .geoexpr import GeoExpr
@@ -226,7 +226,7 @@ def precision(*columns: str) -> pl.Expr:
 
 def set_precision(
     *columns: str,
-    grid_size: IntoDecimalExpr,
+    grid_size: IntoNumericExpr,
     mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[set_precision(...)][polars_st.GeoExprNameSpace.set_precision]</code>."""  # noqa: E501
@@ -367,7 +367,7 @@ def boundary(*columns: str) -> GeoExpr:
 
 def buffer(
     *columns: str,
-    distance: IntoDecimalExpr,
+    distance: IntoNumericExpr,
     quad_segs: int = 8,
     cap_style: Literal["round", "square", "flat"] = "round",
     join_style: Literal["round", "mitre", "bevel"] = "round",
@@ -387,7 +387,7 @@ def buffer(
 
 def offset_curve(
     *columns: str,
-    distance: IntoDecimalExpr,
+    distance: IntoNumericExpr,
     quad_segs: int = 8,
     join_style: Literal["round", "mitre", "bevel"] = "round",
     mitre_limit: float = 5.0,
@@ -408,10 +408,10 @@ def center(*columns: str) -> GeoExpr:
 
 def clip_by_rect(
     *columns: str,
-    xmin: IntoDecimalExpr,
-    ymin: IntoDecimalExpr,
-    xmax: IntoDecimalExpr,
-    ymax: IntoDecimalExpr,
+    xmin: IntoNumericExpr,
+    ymin: IntoNumericExpr,
+    xmax: IntoNumericExpr,
+    ymax: IntoNumericExpr,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[clip_by_rect()][polars_st.GeoExprNameSpace.clip_by_rect]</code>."""  # noqa: E501
     return geom(*columns).st.clip_by_rect(xmin, ymin, xmax, ymax)
@@ -427,7 +427,7 @@ def concave_hull(*columns: str, ratio: float = 0.0, allow_holes: bool = False) -
     return geom(*columns).st.concave_hull(ratio, allow_holes)
 
 
-def segmentize(*columns: str, max_segment_length: IntoDecimalExpr) -> GeoExpr:
+def segmentize(*columns: str, max_segment_length: IntoNumericExpr) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[segmentize(max_segment_length)][polars_st.GeoExprNameSpace.segmentize]</code>."""  # noqa: E501
     return geom(*columns).st.segmentize(max_segment_length)
 
@@ -467,7 +467,7 @@ def point_on_surface(*columns: str) -> GeoExpr:
     return geom(*columns).st.point_on_surface()
 
 
-def remove_repeated_points(*columns: str, tolerance: IntoDecimalExpr = 0.0) -> GeoExpr:
+def remove_repeated_points(*columns: str, tolerance: IntoNumericExpr = 0.0) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[remove_repeated_points(...)][polars_st.GeoExprNameSpace.remove_repeated_points]</code>."""  # noqa: E501
     return geom(*columns).st.remove_repeated_points(tolerance)
 
@@ -479,7 +479,7 @@ def reverse(*columns: str) -> GeoExpr:
 
 def simplify(
     *columns: str,
-    tolerance: IntoDecimalExpr,
+    tolerance: IntoNumericExpr,
     preserve_topology: bool = True,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[simplify(...)][polars_st.GeoExprNameSpace.simplify]</code>."""  # noqa: E501
@@ -491,7 +491,7 @@ def force_2d(*columns: str) -> GeoExpr:
     return geom(*columns).st.force_2d()
 
 
-def force_3d(*columns: str, z: IntoDecimalExpr = 0.0) -> GeoExpr:
+def force_3d(*columns: str, z: IntoNumericExpr = 0.0) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[force_3d(...)][polars_st.GeoExprNameSpace.force_3d]</code>."""  # noqa: E501
     return geom(*columns).st.force_3d(z)
 
@@ -513,9 +513,9 @@ def affine_transform(*columns: str, matrix: IntoExprColumn | Sequence[float]) ->
 
 def translate(
     *columns: str,
-    x: IntoDecimalExpr = 0.0,
-    y: IntoDecimalExpr = 0.0,
-    z: IntoDecimalExpr = 0.0,
+    x: IntoNumericExpr = 0.0,
+    y: IntoNumericExpr = 0.0,
+    z: IntoNumericExpr = 0.0,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[translate(...)][polars_st.GeoExprNameSpace.translate]</code>."""  # noqa: E501
     return geom(*columns).st.translate(x, y, z)
@@ -523,7 +523,7 @@ def translate(
 
 def rotate(
     *columns: str,
-    angle: IntoDecimalExpr,
+    angle: IntoNumericExpr,
     origin: Literal["center", "centroid"] | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[rotate(...)][polars_st.GeoExprNameSpace.rotate]</code>."""  # noqa: E501
@@ -532,9 +532,9 @@ def rotate(
 
 def scale(
     *columns: str,
-    x: IntoDecimalExpr = 1.0,
-    y: IntoDecimalExpr = 1.0,
-    z: IntoDecimalExpr = 1.0,
+    x: IntoNumericExpr = 1.0,
+    y: IntoNumericExpr = 1.0,
+    z: IntoNumericExpr = 1.0,
     origin: Literal["center", "centroid"] | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[scale(...)][polars_st.GeoExprNameSpace.scale]</code>."""  # noqa: E501
@@ -543,9 +543,9 @@ def scale(
 
 def skew(
     *columns: str,
-    x: IntoDecimalExpr = 0.0,
-    y: IntoDecimalExpr = 0.0,
-    z: IntoDecimalExpr = 0.0,
+    x: IntoNumericExpr = 0.0,
+    y: IntoNumericExpr = 0.0,
+    z: IntoNumericExpr = 0.0,
     origin: Literal["center", "centroid"] | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[skew(...)][polars_st.GeoExprNameSpace.skew]</code>."""  # noqa: E501
@@ -554,7 +554,7 @@ def skew(
 
 def interpolate(
     *columns: str,
-    distance: IntoDecimalExpr,
+    distance: IntoNumericExpr,
     normalized: bool = False,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[interpolate()][polars_st.GeoExprNameSpace.interpolate]</code>."""  # noqa: E501

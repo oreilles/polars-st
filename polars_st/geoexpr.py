@@ -18,10 +18,10 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from polars_st.typing import (
-        IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
+        IntoNumericExpr,
     )
 
     P = ParamSpec("P")
@@ -261,7 +261,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def set_precision(
         self,
-        grid_size: IntoDecimalExpr,
+        grid_size: IntoNumericExpr,
         mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
     ) -> GeoExpr:
         """Set the precision of each geometry to a certain grid size."""
@@ -663,7 +663,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def buffer(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         quad_segs: int = 8,
         cap_style: Literal["round", "square", "flat"] = "round",
         join_style: Literal["round", "mitre", "bevel"] = "round",
@@ -676,7 +676,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def offset_curve(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         quad_segs: int = 8,
         join_style: Literal["round", "mitre", "bevel"] = "round",
         mitre_limit: float = 5.0,
@@ -696,10 +696,10 @@ class GeoExprNameSpace:
 
     def clip_by_rect(
         self,
-        xmin: IntoDecimalExpr,
-        ymin: IntoDecimalExpr,
-        xmax: IntoDecimalExpr,
-        ymax: IntoDecimalExpr,
+        xmin: IntoNumericExpr,
+        ymin: IntoNumericExpr,
+        xmax: IntoNumericExpr,
+        ymax: IntoNumericExpr,
     ) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
@@ -719,7 +719,7 @@ class GeoExprNameSpace:
         ...
 
     @register_plugin()
-    def segmentize(self, max_segment_length: IntoDecimalExpr) -> GeoExpr: ...
+    def segmentize(self, max_segment_length: IntoNumericExpr) -> GeoExpr: ...
 
     @register_plugin()
     def envelope(self) -> GeoExpr:
@@ -747,7 +747,7 @@ class GeoExprNameSpace:
         ...
 
     @register_plugin()
-    def remove_repeated_points(self, tolerance: IntoDecimalExpr = 0.0) -> GeoExpr:
+    def remove_repeated_points(self, tolerance: IntoNumericExpr = 0.0) -> GeoExpr:
         """Remove the repeated points for each geometry."""
         ...
 
@@ -759,7 +759,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def simplify(
         self,
-        tolerance: IntoDecimalExpr,
+        tolerance: IntoNumericExpr,
         preserve_topology: bool = True,
     ) -> GeoExpr:
         """Simplify each geometry with a given tolerance."""
@@ -771,7 +771,7 @@ class GeoExprNameSpace:
         ...
 
     @register_plugin()
-    def force_3d(self, z: IntoDecimalExpr = 0.0) -> GeoExpr:
+    def force_3d(self, z: IntoNumericExpr = 0.0) -> GeoExpr:
         """Force the dimensionality of a geometry to 3D."""
         ...
 
@@ -787,7 +787,7 @@ class GeoExprNameSpace:
     def snap(
         self,
         other: IntoGeoExprColumn,
-        tolerance: IntoDecimalExpr,
+        tolerance: IntoNumericExpr,
     ) -> GeoExpr: ...
 
     @register_plugin()
@@ -824,9 +824,9 @@ class GeoExprNameSpace:
 
     def translate(
         self,
-        x: IntoDecimalExpr = 0.0,
-        y: IntoDecimalExpr = 0.0,
-        z: IntoDecimalExpr = 0.0,
+        x: IntoNumericExpr = 0.0,
+        y: IntoNumericExpr = 0.0,
+        z: IntoNumericExpr = 0.0,
     ) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
@@ -838,15 +838,15 @@ class GeoExprNameSpace:
     @register_plugin()
     def rotate(
         self,
-        angle: IntoDecimalExpr,
+        angle: IntoNumericExpr,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoExpr: ...
 
     def scale(
         self,
-        x: IntoDecimalExpr = 1.0,
-        y: IntoDecimalExpr = 1.0,
-        z: IntoDecimalExpr = 1.0,
+        x: IntoNumericExpr = 1.0,
+        y: IntoNumericExpr = 1.0,
+        z: IntoNumericExpr = 1.0,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoExpr:
         return register_plugin_function(
@@ -859,9 +859,9 @@ class GeoExprNameSpace:
 
     def skew(
         self,
-        x: IntoDecimalExpr = 0.0,
-        y: IntoDecimalExpr = 0.0,
-        z: IntoDecimalExpr = 0.0,
+        x: IntoNumericExpr = 0.0,
+        y: IntoNumericExpr = 0.0,
+        z: IntoNumericExpr = 0.0,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoExpr:
         return register_plugin_function(
@@ -877,7 +877,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def interpolate(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         normalized: bool = False,
     ) -> GeoExpr: ...
 

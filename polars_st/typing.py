@@ -29,4 +29,4 @@ if TYPE_CHECKING:
     IntoExprColumn: TypeAlias = pl.Expr | pl.Series | str
     IntoGeoExprColumn: TypeAlias = IntoExprColumn
     IntoIntegerExpr: TypeAlias = IntoExprColumn | int
-    IntoDecimalExpr: TypeAlias = IntoExprColumn | int | float
+    IntoNumericExpr: TypeAlias = IntoExprColumn | int | float

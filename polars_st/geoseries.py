@@ -33,10 +33,10 @@ if TYPE_CHECKING:
     from polars_st.geometry import GeometryType
     from polars_st.typing import (
         ArrayLike,
-        IntoDecimalExpr,
         IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
+        IntoNumericExpr,
     )
 
     P = ParamSpec("P")
@@ -352,7 +352,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def set_precision(
         self,
-        grid_size: IntoDecimalExpr,
+        grid_size: IntoNumericExpr,
         mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.set_precision`][polars_st.GeoExprNameSpace.set_precision]."""
@@ -676,7 +676,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def buffer(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         quad_segs: int = 8,
         cap_style: Literal["round", "square", "flat"] = "round",
         join_style: Literal["round", "mitre", "bevel"] = "round",
@@ -689,7 +689,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def offset_curve(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         quad_segs: int = 8,
         join_style: Literal["round", "mitre", "bevel"] = "round",
         mitre_limit: float = 5.0,
@@ -710,10 +710,10 @@ class GeoSeriesNameSpace:
     @dispatch
     def clip_by_rect(
         self,
-        xmin: IntoDecimalExpr,
-        ymin: IntoDecimalExpr,
-        xmax: IntoDecimalExpr,
-        ymax: IntoDecimalExpr,
+        xmin: IntoNumericExpr,
+        ymin: IntoNumericExpr,
+        xmax: IntoNumericExpr,
+        ymax: IntoNumericExpr,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.clip_by_rect`][polars_st.GeoExprNameSpace.clip_by_rect]."""
         ...
@@ -729,7 +729,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def segmentize(self, max_segment_length: IntoDecimalExpr) -> GeoSeries:
+    def segmentize(self, max_segment_length: IntoNumericExpr) -> GeoSeries:
         """See [`GeoExprNameSpace.segmentize`][polars_st.GeoExprNameSpace.segmentize]."""
         ...
 
@@ -769,7 +769,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def remove_repeated_points(self, tolerance: IntoDecimalExpr = 0.0) -> GeoSeries:
+    def remove_repeated_points(self, tolerance: IntoNumericExpr = 0.0) -> GeoSeries:
         """See [`GeoExprNameSpace.remove_repeated_points`][polars_st.GeoExprNameSpace.remove_repeated_points]."""  # noqa: E501
         ...
 
@@ -781,7 +781,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def simplify(
         self,
-        tolerance: IntoDecimalExpr,
+        tolerance: IntoNumericExpr,
         preserve_topology: bool = True,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.simplify`][polars_st.GeoExprNameSpace.simplify]."""
@@ -793,7 +793,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def force_3d(self, z: IntoDecimalExpr = 0.0) -> GeoSeries:
+    def force_3d(self, z: IntoNumericExpr = 0.0) -> GeoSeries:
         """See [`GeoExprNameSpace.force_3d`][polars_st.GeoExprNameSpace.force_3d]."""
         ...
 
@@ -811,7 +811,7 @@ class GeoSeriesNameSpace:
     def snap(
         self,
         other: IntoGeoExprColumn,
-        tolerance: IntoDecimalExpr,
+        tolerance: IntoNumericExpr,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.snap`][polars_st.GeoExprNameSpace.snap]."""
         ...
@@ -831,9 +831,9 @@ class GeoSeriesNameSpace:
     @dispatch
     def translate(
         self,
-        x: IntoDecimalExpr = 0.0,
-        y: IntoDecimalExpr = 0.0,
-        z: IntoDecimalExpr = 0.0,
+        x: IntoNumericExpr = 0.0,
+        y: IntoNumericExpr = 0.0,
+        z: IntoNumericExpr = 0.0,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.translate`][polars_st.GeoExprNameSpace.translate]."""
         ...
@@ -841,7 +841,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def rotate(
         self,
-        angle: IntoDecimalExpr,
+        angle: IntoNumericExpr,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.rotate`][polars_st.GeoExprNameSpace.rotate]."""
@@ -850,9 +850,9 @@ class GeoSeriesNameSpace:
     @dispatch
     def scale(
         self,
-        x: IntoDecimalExpr = 1.0,
-        y: IntoDecimalExpr = 1.0,
-        z: IntoDecimalExpr = 1.0,
+        x: IntoNumericExpr = 1.0,
+        y: IntoNumericExpr = 1.0,
+        z: IntoNumericExpr = 1.0,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.scale`][polars_st.GeoExprNameSpace.scale]."""
@@ -861,9 +861,9 @@ class GeoSeriesNameSpace:
     @dispatch
     def skew(
         self,
-        x: IntoDecimalExpr = 0.0,
-        y: IntoDecimalExpr = 0.0,
-        z: IntoDecimalExpr = 0.0,
+        x: IntoNumericExpr = 0.0,
+        y: IntoNumericExpr = 0.0,
+        z: IntoNumericExpr = 0.0,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.skew`][polars_st.GeoExprNameSpace.skew]."""
@@ -874,7 +874,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def interpolate(
         self,
-        distance: IntoDecimalExpr,
+        distance: IntoNumericExpr,
         normalized: bool = False,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.interpolate`][polars_st.GeoExprNameSpace.interpolate]."""
