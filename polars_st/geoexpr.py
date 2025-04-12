@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from functools import wraps
+from inspect import signature
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal, ParamSpec, cast
 
 import polars as pl
 from polars._utils.parse import parse_into_expression
@@ -22,10 +24,38 @@ if TYPE_CHECKING:
         IntoIntegerExpr,
     )
 
+    P = ParamSpec("P")
+
 __all__ = [
     "GeoExpr",
     "GeoExprNameSpace",
 ]
+
+
+def register_plugin(op: str | None = None, is_aggregation: bool = False):  # noqa: ANN202
+    def decorator(func):  # noqa: ANN001, ANN202
+        func_name = op or func.__name__
+        sig = signature(func)
+        params = sig.parameters
+        expr_args = {k for k, v in params.items() if "Expr" in str(v.annotation)}
+        other_args = {k for k, v in params.items() if k not in expr_args}
+
+        @wraps(func)
+        def wrapper(self: GeoExprNameSpace, *args: P.args, **kwargs: P.kwargs):  # noqa: ANN202
+            bound = sig.bind(self._expr, *args, **kwargs)
+            bound.apply_defaults()
+            return register_plugin_function(
+                plugin_path=Path(__file__).parent,
+                function_name=func_name,
+                args=[self._expr, *[bound.arguments[k] for k in expr_args]],
+                kwargs={k: bound.arguments[k] for k in other_args},
+                is_elementwise=not is_aggregation,
+                returns_scalar=is_aggregation,
+            )
+
+        return wrapper
+
+    return decorator
 
 
 class GeoExpr(pl.Expr):
@@ -68,12 +98,13 @@ class GeoExprNameSpace:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
             function_name="geometry_type",
-            args=self._expr,
+            args=[self._expr],
             is_elementwise=True,
         ).map_batches(lambda s: pl.Series(s, dtype=PolarsGeometryType))
         # Needed because pola-rs/polars#22125, pola-rs/pyo3-polars#131
         # Cannot use cast either, see comments in pola-rs/polars#6106
 
+    @register_plugin()
     def dimensions(self) -> pl.Expr:
         """Return the inherent dimensionality of each geometry.
 
@@ -99,103 +130,59 @@ class GeoExprNameSpace:
             │ 2        │
             └──────────┘
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="dimensions",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def coordinate_dimension(self) -> pl.Expr:
         """Return the coordinate dimension (2, 3 or 4) of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="coordinate_dimension",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def area(self) -> pl.Expr:
         """Return the area of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="area",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def bounds(self) -> pl.Expr:
         """Return the bounds of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="bounds",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def length(self) -> pl.Expr:
         """Return the length of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="length",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def minimum_clearance(self) -> pl.Expr:
         """Return the geometry minimum clearance."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="minimum_clearance",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def x(self) -> pl.Expr:
         """Return the `x` value of Point geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="x",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def y(self) -> pl.Expr:
         """Return the `y` value of Point geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="y",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def z(self) -> pl.Expr:
         """Return the `z` value of Point geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="z",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def m(self) -> pl.Expr:
         """Return the `m` value of Point geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="m",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def count_coordinates(self) -> pl.Expr:
         """Return the number of coordinates in each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="count_coordinates",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Expr:
         """Return the coordinates of each geometry."""
         return register_plugin_function(
@@ -206,33 +193,22 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    @register_plugin()
     def exterior_ring(self) -> GeoExpr:
         """Return the exterior ring of Polygon geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="exterior_ring",
-            args=self._expr,
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def interior_rings(self) -> pl.Expr:
         """Return the list of interior rings for Polygon geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="interior_rings",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def count_interior_rings(self) -> pl.Expr:
         """Return the number of interior rings in Polygon geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="count_interior_rings",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def get_interior_ring(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth ring of Polygon geometries."""
         return register_plugin_function(
@@ -242,15 +218,12 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    @register_plugin()
     def count_geometries(self) -> pl.Expr:
         """Return the number of parts in multipart geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="count_geometries",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def get_geometry(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth part of multipart geometries."""
         return register_plugin_function(
@@ -260,15 +233,12 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    @register_plugin()
     def count_points(self) -> pl.Expr:
         """Return the number of points in LineString geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="count_points",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def get_point(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth point of LineString geometries."""
         return register_plugin_function(
@@ -278,24 +248,17 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    @register_plugin()
     def parts(self) -> pl.Expr:
         """Return the list of parts for multipart geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="parts",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def precision(self) -> pl.Expr:
         """Return the precision of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="precision",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def set_precision(
         self,
         grid_size: IntoDecimalExpr,
@@ -310,15 +273,12 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    @register_plugin()
     def distance(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return the distance from each geometry to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="distance",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def hausdorff_distance(
         self,
         other: IntoGeoExprColumn,
@@ -333,6 +293,7 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    @register_plugin()
     def frechet_distance(
         self,
         other: IntoGeoExprColumn,
@@ -349,15 +310,12 @@ class GeoExprNameSpace:
 
     # Projection operations
 
+    @register_plugin()
     def srid(self) -> pl.Expr:
         """Return the geometry SRID."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="srid",
-            args=self._expr,
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def set_srid(self, srid: IntoIntegerExpr) -> GeoExpr:
         """Set the SRID of each geometry to a given value.
 
@@ -371,6 +329,7 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda s: cast("GeoExpr", s))
 
+    @register_plugin()
     def to_srid(self, srid: IntoIntegerExpr) -> GeoExpr:
         """Transform the coordinates of each geometry into a new CRS.
 
@@ -386,6 +345,7 @@ class GeoExprNameSpace:
 
     # Serialization
 
+    @register_plugin()
     def to_wkt(
         self,
         rounding_precision: int | None = 6,
@@ -406,19 +366,9 @@ class GeoExprNameSpace:
                 new style 3D/4D WKT (ie. “POINT Z (10 20 30)”) is returned, but with
                 `old_3d=True` the WKT will be formatted in the style “POINT (10 20 30)”.
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_wkt",
-            args=self._expr,
-            kwargs={
-                "rounding_precision": rounding_precision,
-                "trim": trim,
-                "output_dimension": output_dimension,
-                "old_3d": old_3d,
-            },
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def to_ewkt(
         self,
         rounding_precision: int | None = 6,
@@ -439,19 +389,9 @@ class GeoExprNameSpace:
                 new style 3D/4D WKT (ie. “POINT Z (10 20 30)”) is returned, but with
                 `old_3d=True` the WKT will be formatted in the style “POINT (10 20 30)”.
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_ewkt",
-            args=self._expr,
-            kwargs={
-                "rounding_precision": rounding_precision,
-                "trim": trim,
-                "output_dimension": output_dimension,
-                "old_3d": old_3d,
-            },
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def to_wkb(
         self,
         output_dimension: Literal[2, 3, 4] = 3,
@@ -472,18 +412,9 @@ class GeoExprNameSpace:
                 If True, the SRID is be included in WKB (this is an extension
                 to the OGC WKB specification).
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_wkb",
-            args=self._expr,
-            kwargs={
-                "output_dimension": output_dimension,
-                "byte_order": byte_order,
-                "include_srid": include_srid,
-            },
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def to_geojson(self, indent: int | None = None) -> pl.Expr:
         """Serialize each geometry as GeoJSON.
 
@@ -493,13 +424,7 @@ class GeoExprNameSpace:
                 An indent level of 0 will only insert newlines. `None` (the default)
                 outputs the most compact representation.
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_geojson",
-            args=self._expr,
-            kwargs={"indent": indent},
-            is_elementwise=True,
-        )
+        ...
 
     def to_shapely(self) -> pl.Expr:
         """Convert each geometry to a Shapely object."""
@@ -542,339 +467,200 @@ class GeoExprNameSpace:
             is_elementwise=True,
         )
 
+    @register_plugin()
     def multi(self) -> pl.Expr:
         """Cast each geometry into their multipart equivalent."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="multi",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
     # Unary predicates
 
+    @register_plugin()
     def has_z(self) -> pl.Expr:
         """Return `True` for each geometry with `z` coordinate values."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="has_z",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def has_m(self) -> pl.Expr:
         """Return `True` for each geometry with `m` coordinate values."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="has_m",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_ccw(self) -> pl.Expr:
         """Return `True` for linear geometries with counter-clockwise coord sequence."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_ccw",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_closed(self) -> pl.Expr:
         """Return `True` for closed linear geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_closed",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_empty(self) -> pl.Expr:
         """Return `True` for empty geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_empty",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_ring(self) -> pl.Expr:
         """Return `True` for ring geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_ring",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_simple(self) -> pl.Expr:
         """Return `True` for simple geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_simple",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_valid(self) -> pl.Expr:
         """Return `True` for valid geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_valid",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def is_valid_reason(self) -> pl.Expr:
         """Return an explanation string for the invalidity of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="is_valid_reason",
-            args=[self._expr],
-            is_elementwise=True,
-        )
+        ...
 
     # Binary predicates
 
+    @register_plugin()
     def crosses(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry crosses other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="crosses",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def contains(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry contains other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="crosses",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def contains_properly(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry properly contains other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="contains_properly",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def covered_by(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry is covered by other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="covered_by",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def covers(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry covers other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="covers",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def disjoint(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry is disjoint from other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="disjoint",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def dwithin(self, other: IntoGeoExprColumn, distance: float) -> pl.Expr:
         """Return `True` when each geometry is within given distance to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="dwithin",
-            args=[self._expr, other],
-            kwargs={"distance": distance},
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def intersects(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry intersects other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="intersects",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def overlaps(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry overlaps other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="overlaps",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def touches(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry touches other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="touches",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def within(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry is within other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="within",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def equals(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry is equal to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="equals",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def equals_exact(
         self,
         other: IntoGeoExprColumn,
         tolerance: float = 0.0,
     ) -> pl.Expr:
         """Return `True` when each geometry is equal to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="equals_exact",
-            args=[self._expr, other],
-            kwargs={"tolerance": tolerance},
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def equals_identical(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return `True` when each geometry is equal to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="equals_identical",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def relate(self, other: IntoGeoExprColumn) -> pl.Expr:
         """Return the DE-9IM intersection matrix of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="relate",
-            args=[self._expr, other],
-            is_elementwise=True,
-        )
+        ...
 
+    @register_plugin()
     def relate_pattern(
         self,
         other: IntoGeoExprColumn,
         pattern: str,
     ) -> pl.Expr:
         """Return `True` when the DE-9IM intersection matrix of geometry with other matches a given pattern."""  # noqa: E501
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="relate_pattern",
-            args=[self._expr, other],
-            kwargs={"pattern": pattern},
-            is_elementwise=True,
-        )
+        ...
 
     # Set operations
 
+    @register_plugin()
     def union(self, other: IntoGeoExprColumn, grid_size: float | None = None) -> GeoExpr:
         """Return the union of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="union",
-            args=[self._expr, other],
-            kwargs={"grid_size": grid_size},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def unary_union(self, grid_size: float | None = None) -> GeoExpr:
         """Return the unary union of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="unary_union",
-            args=[self._expr],
-            kwargs={"grid_size": grid_size},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def coverage_union(self) -> GeoExpr:
         """Return the coverage union of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="coverage_union",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def intersection(
         self,
         other: IntoGeoExprColumn,
         grid_size: float | None = None,
     ) -> GeoExpr:
         """Return the intersection of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="intersection",
-            args=[self._expr, other],
-            kwargs={"grid_size": grid_size},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def difference(
         self,
         other: IntoGeoExprColumn,
         grid_size: float | None = None,
     ) -> GeoExpr:
         """Return the difference of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="difference",
-            args=[self._expr, other],
-            kwargs={"grid_size": grid_size},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def symmetric_difference(
         self,
         other: IntoGeoExprColumn,
         grid_size: float | None = None,
     ) -> GeoExpr:
         """Return the symmetric difference of each geometry with other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="symmetric_difference",
-            args=[self._expr, other],
-            kwargs={"grid_size": grid_size},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     # Constructive operations
 
+    @register_plugin()
     def boundary(self) -> GeoExpr:
         """Return the topological boundary of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="boundary",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def buffer(
         self,
         distance: IntoDecimalExpr,
@@ -885,20 +671,9 @@ class GeoExprNameSpace:
         single_sided: bool = False,
     ) -> GeoExpr:
         """Return a buffer around each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="buffer",
-            args=[self._expr, distance],
-            kwargs={
-                "quad_segs": quad_segs,
-                "cap_style": cap_style,
-                "join_style": join_style,
-                "mitre_limit": mitre_limit,
-                "single_sided": single_sided,
-            },
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def offset_curve(
         self,
         distance: IntoDecimalExpr,
@@ -907,36 +682,19 @@ class GeoExprNameSpace:
         mitre_limit: float = 5.0,
     ) -> GeoExpr:
         """Return a line at a given distance of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="offset_curve",
-            args=[self._expr, distance],
-            kwargs={
-                "quad_segs": quad_segs,
-                "join_style": join_style,
-                "mitre_limit": mitre_limit,
-            },
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def centroid(self) -> GeoExpr:
         """Return the centroid of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="centroid",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def center(self) -> GeoExpr:
         """Return the bounding box center of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="center",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def clip_by_rect(
         self,
         xmin: float,
@@ -945,191 +703,94 @@ class GeoExprNameSpace:
         ymax: float,
     ) -> GeoExpr:
         """Clip each geometry by a bounding rectangle."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="clip_by_rect",
-            args=[self._expr],
-            kwargs={
-                "xmin": xmin,
-                "ymin": ymin,
-                "xmax": xmax,
-                "ymax": ymax,
-            },
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def convex_hull(self) -> GeoExpr:
         """Return the convex hull of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="convex_hull",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def concave_hull(self, ratio: float = 0.0, allow_holes: bool = False) -> GeoExpr:
         """Return the concave hull of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="concave_hull",
-            args=[self._expr],
-            kwargs={"ratio": ratio, "allow_holes": allow_holes},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
-    def segmentize(self, max_segment_length: IntoDecimalExpr) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="segmentize",
-            args=[self._expr, max_segment_length],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def segmentize(self, max_segment_length: IntoDecimalExpr) -> GeoExpr: ...
 
+    @register_plugin()
     def envelope(self) -> GeoExpr:
         """Return the envelope of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="envelope",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
-    def extract_unique_points(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="extract_unique_points",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def extract_unique_points(self) -> GeoExpr: ...
 
-    def build_area(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="build_area",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def build_area(self) -> GeoExpr: ...
 
-    def make_valid(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="make_valid",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def make_valid(self) -> GeoExpr: ...
 
-    def normalize(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="normalize",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def normalize(self) -> GeoExpr: ...
 
-    def node(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="node",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def node(self) -> GeoExpr: ...
 
+    @register_plugin()
     def point_on_surface(self) -> GeoExpr:
         """Return a point that intersects of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="point_on_surface",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def remove_repeated_points(self, tolerance: IntoDecimalExpr = 0.0) -> GeoExpr:
         """Remove the repeated points for each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="remove_repeated_points",
-            args=[self._expr, tolerance],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def reverse(self) -> GeoExpr:
         """Reverse the coordinates order of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="reverse",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def simplify(
         self,
         tolerance: IntoDecimalExpr,
         preserve_topology: bool = True,
     ) -> GeoExpr:
         """Simplify each geometry with a given tolerance."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="simplify",
-            args=[self._expr, tolerance],
-            kwargs={"preserve_topology": preserve_topology},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def force_2d(self) -> GeoExpr:
         """Force the dimensionality of a geometry to 2D."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="force_2d",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def force_3d(self, z: IntoDecimalExpr = 0.0) -> GeoExpr:
         """Force the dimensionality of a geometry to 3D."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="force_3d",
-            args=[self._expr, z],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin()
     def flip_coordinates(self) -> GeoExpr:
         """Flip the x and y coordinates of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="flip_coordinates",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
-    def minimum_rotated_rectangle(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="minimum_rotated_rectangle",
-            args=[self._expr],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def minimum_rotated_rectangle(self) -> GeoExpr: ...
 
+    @register_plugin()
     def snap(
         self,
         other: IntoGeoExprColumn,
         tolerance: IntoDecimalExpr,
-    ) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="snap",
-            args=[self._expr, other, tolerance],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    ) -> GeoExpr: ...
 
+    @register_plugin()
     def shortest_line(self, other: IntoGeoExprColumn) -> GeoExpr:
         """Return the shortest line between each geometry and other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="shortest_line",
-            args=[self._expr, other],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     # Affine tranforms
 
@@ -1171,18 +832,12 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
+    @register_plugin()
     def rotate(
         self,
         angle: IntoDecimalExpr,
         origin: Literal["center", "centroid"] | Sequence[float] = "center",
-    ) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="rotate",
-            args=[self._expr, angle],
-            kwargs={"origin": origin},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    ) -> GeoExpr: ...
 
     def scale(
         self,
@@ -1216,127 +871,67 @@ class GeoExprNameSpace:
 
     # Linestring operations
 
+    @register_plugin()
     def interpolate(
         self,
         distance: IntoDecimalExpr,
         normalized: bool = False,
-    ) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="interpolate",
-            args=[self._expr, distance],
-            kwargs={"normalized": normalized},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    ) -> GeoExpr: ...
 
+    @register_plugin()
     def project(
         self,
         other: IntoGeoExprColumn,
         normalized: bool = False,
-    ) -> pl.Expr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="project",
-            args=[self._expr, other],
-            kwargs={"normalized": normalized},
-            is_elementwise=True,
-        )
+    ) -> pl.Expr: ...
 
-    def line_merge(self, directed: bool = False) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="line_merge",
-            args=[self._expr],
-            kwargs={"directed": directed},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def line_merge(self, directed: bool = False) -> GeoExpr: ...
 
-    def shared_paths(self, other: IntoGeoExprColumn) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="shared_paths",
-            args=[self._expr, other],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def shared_paths(self, other: IntoGeoExprColumn) -> GeoExpr: ...
 
     # Aggregations
 
+    @register_plugin(is_aggregation=True)
     def total_bounds(self) -> pl.Expr:
         """Return the total bounds of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="total_bounds",
-            args=[self._expr],
-            returns_scalar=True,
-        )
+        ...
 
+    @register_plugin(is_aggregation=True)
     def collect(self, into: GeometryType | None = None) -> GeoExpr:
         """Aggregate geometries into a single collection."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="collect",
-            args=[self._expr],
-            kwargs={"into": into},
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def union_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the union of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="union_all",
-            args=[self._expr],
-            kwargs={"grid_size": grid_size},
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def coverage_union_all(self) -> GeoExpr:
         """Return the coverage union of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="coverage_union_all",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def intersection_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the intersection of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="intersection_all",
-            args=[self._expr],
-            kwargs={"grid_size": grid_size},
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def difference_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the difference of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="difference_all",
-            args=[self._expr],
-            kwargs={"grid_size": grid_size},
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def symmetric_difference_all(self, grid_size: float | None = None) -> GeoExpr:
         """Return the symmetric difference of all geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="symmetric_difference_all",
-            args=[self._expr],
-            kwargs={"grid_size": grid_size},
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
-    def polygonize(self) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="polygonize",
-            args=[self._expr],
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin(is_aggregation=True)
+    def polygonize(self) -> GeoExpr: ...
 
+    @register_plugin(is_aggregation=True)
     def voronoi_polygons(
         self,
         tolerance: float = 0.0,
@@ -1344,31 +939,13 @@ class GeoExprNameSpace:
         only_edges: bool = False,
     ) -> GeoExpr:
         """Return a Voronoi diagram of all geometries vertices."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="voronoi_polygons",
-            args=[self._expr],
-            kwargs={
-                "tolerance": tolerance,
-                "extend_to": extend_to,
-                "only_edges": only_edges,
-            },
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
+    @register_plugin(is_aggregation=True)
     def delaunay_triangles(
         self,
         tolerance: float = 0.0,
         only_edges: bool = False,
     ) -> GeoExpr:
         """Return a Delaunay triangulation of all geometries vertices."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="delaunay_triangles",
-            args=[self._expr],
-            kwargs={
-                "tolerance": tolerance,
-                "only_edges": only_edges,
-            },
-            returns_scalar=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
