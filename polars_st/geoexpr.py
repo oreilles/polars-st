@@ -1155,7 +1155,7 @@ class GeoExprNameSpace:
                 if isinstance(matrix, pl.Expr | pl.Series | str)
                 else pl.lit(matrix, dtype=pl.Array(pl.Float64, len(matrix))),
             ],
-            returns_scalar=True,
+            is_elementwise=True,
         ).pipe(lambda e: cast("GeoExpr", e))
 
     def translate(
