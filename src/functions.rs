@@ -2,9 +2,9 @@ use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
     args::{
-        BufferKwargs, ClipByRectKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs,
-        OffsetCurveKwargs, SetPrecisionKwargs, SpatialJoinPredicate, ToGeoJsonKwargs, ToWkbKwargs,
-        ToWktKwargs, VoronoiKwargs,
+        BufferKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs, OffsetCurveKwargs,
+        SetPrecisionKwargs, SpatialJoinPredicate, ToGeoJsonKwargs, ToWkbKwargs, ToWktKwargs,
+        VoronoiKwargs,
     },
     arity::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
@@ -391,7 +391,7 @@ pub fn get_num_dimensions(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
 pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|mut wkb| {
         read_ewkb_header(&mut wkb)
-            .map_err(|_| geos::Error::InvalidGeometry("Invalid header".into()))
+            .map_err(|_| geos::Error::InvalidGeometry("Invalid WKB header".into()))
             .map(|header| 2 + u32::from(header.has_z) + u32::from(header.has_m))
     })
 }
@@ -399,7 +399,7 @@ pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
 pub fn get_srid(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
     wkb.try_apply_nonnull_values_generic(|mut wkb| {
         read_ewkb_header(&mut wkb)
-            .map_err(|_| geos::Error::InvalidGeometry("Invalid header".into()))
+            .map_err(|_| geos::Error::InvalidGeometry("Invalid WKB header".into()))
             .map(|header| header.srid)
     })
 }
@@ -1312,10 +1312,15 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     })
 }
 
-pub fn clip_by_rect(wkb: &BinaryChunked, params: &ClipByRectKwargs) -> GResult<BinaryChunked> {
-    wkb.try_apply_nonnull_values_generic(|wkb| {
+pub fn clip_by_rect(wkb: &BinaryChunked, rect: &ArrayChunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, rect, |wkb, rect| {
+        let rect = unsafe { rect.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let xmin = unsafe { rect.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let ymin = unsafe { rect.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let xmax = unsafe { rect.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let ymax = unsafe { rect.get_unchecked(3) }.unwrap_or(f64::NAN);
         Geometry::new_from_wkb(wkb)?
-            .clip_by_rect(params.xmin, params.ymin, params.xmax, params.ymax)?
+            .clip_by_rect(xmin, ymin, xmax, ymax)?
             .to_ewkb()
     })
 }

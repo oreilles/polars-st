@@ -137,14 +137,6 @@ pub struct ConcaveHullKwargs {
 }
 
 #[derive(Deserialize)]
-pub struct ClipByRectKwargs {
-    pub xmin: f64,
-    pub ymin: f64,
-    pub xmax: f64,
-    pub ymax: f64,
-}
-
-#[derive(Deserialize)]
 pub struct InterpolateKwargs {
     pub normalized: bool,
 }

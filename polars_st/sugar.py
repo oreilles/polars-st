@@ -408,10 +408,10 @@ def center(*columns: str) -> GeoExpr:
 
 def clip_by_rect(
     *columns: str,
-    xmin: float,
-    ymin: float,
-    xmax: float,
-    ymax: float,
+    xmin: IntoDecimalExpr,
+    ymin: IntoDecimalExpr,
+    xmax: IntoDecimalExpr,
+    ymax: IntoDecimalExpr,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[clip_by_rect()][polars_st.GeoExprNameSpace.clip_by_rect]</code>."""  # noqa: E501
     return geom(*columns).st.clip_by_rect(xmin, ymin, xmax, ymax)

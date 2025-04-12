@@ -1065,10 +1065,12 @@ fn concave_hull(inputs: &[Series], kwargs: args::ConcaveHullKwargs) -> PolarsRes
 }
 
 #[polars_expr(output_type=Binary)]
-fn clip_by_rect(inputs: &[Series], kwargs: args::ClipByRectKwargs) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
+fn clip_by_rect(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::clip_by_rect(wkb, &kwargs)
+    let rect = inputs[1].strict_cast(&D::Array(D::Float64.into(), 4))?;
+    let rect = rect.array()?;
+    functions::clip_by_rect(wkb, rect)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
 }

@@ -710,10 +710,10 @@ class GeoSeriesNameSpace:
     @dispatch
     def clip_by_rect(
         self,
-        xmin: float,
-        ymin: float,
-        xmax: float,
-        ymax: float,
+        xmin: IntoDecimalExpr,
+        ymin: IntoDecimalExpr,
+        xmax: IntoDecimalExpr,
+        ymax: IntoDecimalExpr,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.clip_by_rect`][polars_st.GeoExprNameSpace.clip_by_rect]."""
         ...
