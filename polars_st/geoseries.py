@@ -394,7 +394,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def to_srid(self, srid: int) -> GeoSeries:
+    def to_srid(self, srid: IntoIntegerExpr) -> GeoSeries:
         """See [`GeoExprNameSpace.to_srid`][polars_st.GeoExprNameSpace.to_srid]."""
         ...
 

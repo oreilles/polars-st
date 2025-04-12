@@ -243,7 +243,7 @@ def set_srid(*columns: str, srid: IntoIntegerExpr) -> GeoExpr:
     return geom(*columns).st.set_srid(srid)
 
 
-def to_srid(*columns: str, srid: int) -> GeoExpr:
+def to_srid(*columns: str, srid: IntoIntegerExpr) -> GeoExpr:
     """This function is syntactic sugar for <code>st.geom(columns).st.[to_srid(...)][polars_st.GeoExprNameSpace.to_srid]</code>."""  # noqa: E501
     return geom(*columns).st.to_srid(srid)
 

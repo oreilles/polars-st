@@ -371,7 +371,7 @@ class GeoExprNameSpace:
             is_elementwise=True,
         ).pipe(lambda s: cast("GeoExpr", s))
 
-    def to_srid(self, srid: int) -> GeoExpr:
+    def to_srid(self, srid: IntoIntegerExpr) -> GeoExpr:
         """Transform the coordinates of each geometry into a new CRS.
 
         Args:
