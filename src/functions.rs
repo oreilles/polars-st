@@ -1876,9 +1876,9 @@ fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geom
             }
         }
         if dst.is_latlong() {
-            new_x = x.to_degrees();
-            new_y = y.to_degrees();
-            new_z = z.to_degrees();
+            new_x = new_x.to_degrees();
+            new_y = new_y.to_degrees();
+            new_z = new_z.to_degrees();
         }
         if let Ok(()) = success {
             Some((new_x, new_y, new_z))
