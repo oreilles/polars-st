@@ -370,9 +370,9 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
 pub fn get_type_id(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|mut wkb| {
         read_ewkb_header(&mut wkb)
-            .map_err(|_| geos::Error::InvalidGeometry("Invalid WKB header".into()))
+            .map_err(|_| geos::Error::GenericError("Invalid WKB header".into()))
             .map(|header| WKBGeometryType::try_from(header.base_type))?
-            .map_err(|e| geos::Error::InvalidGeometry(format!("Invalid geometry type: {e}")))
+            .map_err(|e| geos::Error::GenericError(format!("Invalid geometry type: {e}")))
             .map(u32::from)
     })
 }
@@ -391,7 +391,7 @@ pub fn get_num_dimensions(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
 pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|mut wkb| {
         read_ewkb_header(&mut wkb)
-            .map_err(|_| geos::Error::InvalidGeometry("Invalid WKB header".into()))
+            .map_err(|_| geos::Error::GenericError("Invalid WKB header".into()))
             .map(|header| 2 + u32::from(header.has_z) + u32::from(header.has_m))
     })
 }
@@ -399,7 +399,7 @@ pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
 pub fn get_srid(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
     wkb.try_apply_nonnull_values_generic(|mut wkb| {
         read_ewkb_header(&mut wkb)
-            .map_err(|_| geos::Error::InvalidGeometry("Invalid WKB header".into()))
+            .map_err(|_| geos::Error::GenericError("Invalid WKB header".into()))
             .map(|header| header.srid)
     })
 }
@@ -864,7 +864,7 @@ pub fn is_ccw(wkb: &BinaryChunked) -> GResult<BooleanChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
         match geom.geometry_type() {
-            Point | LineString | LinearRing => geom.get_coord_seq()?.is_ccw(),
+            Point | LinearRing | LineString | CircularString => geom.get_coord_seq()?.is_ccw(),
             _ => Ok(false),
         }
     })
@@ -874,7 +874,9 @@ pub fn is_closed(wkb: &BinaryChunked) -> GResult<BooleanChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
         match geom.geometry_type() {
-            LineString | LinearRing | MultiLineString => geom.is_closed(),
+            LinearRing | LineString | CircularString | MultiLineString | MultiCurve => {
+                geom.is_closed()
+            }
             _ => Ok(false),
         }
     })
@@ -1818,14 +1820,12 @@ pub fn sjoin(
         .iter()
         .map(|v| v.as_ref().map(Geom::to_prepared_geom).transpose())
         .collect::<GResult<Vec<_>>>()?;
-    let mut left_index_builder = PrimitiveChunkedBuilder::<UInt32Type>::new(
-        "left_index".into(),
-        core::cmp::max(left.len(), right.len()),
-    );
-    let mut right_index_builder = PrimitiveChunkedBuilder::<UInt32Type>::new(
-        "right_index".into(),
-        core::cmp::max(left.len(), right.len()),
-    );
+
+    let builder_len = core::cmp::max(left.len(), right.len());
+    let mut left_index_builder =
+        PrimitiveChunkedBuilder::<UInt32Type>::new("left_index".into(), builder_len);
+    let mut right_index_builder =
+        PrimitiveChunkedBuilder::<UInt32Type>::new("right_index".into(), builder_len);
 
     for (right_index, wkb) in right.into_iter().enumerate() {
         if wkb.is_none() {

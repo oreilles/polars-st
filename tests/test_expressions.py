@@ -13,41 +13,35 @@ import polars_st as st
 from polars_st.geoexpr import GeoExprNameSpace as Geo
 from polars_st.geometry import GeometryType, PolarsGeometryType
 
-
-def gdf(values: list[str | None]):
-    s = pl.Series(values, dtype=pl.String())
-    return pl.select(geometry=st.from_wkt(s))
-
-
 empty_frame = pl.Series("geometry", [], pl.Binary()).to_frame()
 none_frame = pl.Series("geometry", [None], pl.Binary()).to_frame()
 
-point_empty = gdf(["POINT EMPTY"])
-point_2d = gdf(["POINT (1 2)"])
-point_3d = gdf(["POINT (1 2 3)"])
-line_empty = gdf(["LINESTRING EMPTY"])
-line_2d = gdf(["LINESTRING (0 0, 1 1)"])
-line_3d = gdf(["LINESTRING Z (0 0 0, 1 1 1, 2 2 2)"])
-poly_empty = gdf(["POLYGON EMPTY"])
-poly_2d = gdf(["POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"])
-poly_3d = gdf(["POLYGON Z ((0 0 1, 1 0 0, 1 1 1, 0 1 0, 0 0 1))"])
-multipoint_empty = gdf(["MULTIPOINT EMPTY"])
-multipoint_2d = gdf(["MULTIPOINT ((0 0), (1 1))"])
-multipoint_3d = gdf(["MULTIPOINT Z ((0 0 0), (1 1 1))"])
-multiline_empty = gdf(["MULTILINESTRING EMPTY"])
-multiline_2d = gdf(["MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))"])
-multiline_3d = gdf(["MULTILINESTRING Z ((0 0 0, 1 1 1), (2 2 2, 3 3 3))"])
-multipoly_empty = gdf(["MULTIPOLYGON EMPTY"])
-multipoly_2d = gdf(["MULTIPOLYGON (((0 0, 1 0, 0 1, 0 0)), ((2 2, 3 2, 2 3, 2 2)))"])
-multipoly_3d = gdf([
+point_empty = st.GeoDataFrame(["POINT EMPTY"])
+point_2d = st.GeoDataFrame(["POINT (1 2)"])
+point_3d = st.GeoDataFrame(["POINT (1 2 3)"])
+line_empty = st.GeoDataFrame(["LINESTRING EMPTY"])
+line_2d = st.GeoDataFrame(["LINESTRING (0 0, 1 1)"])
+line_3d = st.GeoDataFrame(["LINESTRING Z (0 0 0, 1 1 1, 2 2 2)"])
+poly_empty = st.GeoDataFrame(["POLYGON EMPTY"])
+poly_2d = st.GeoDataFrame(["POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"])
+poly_3d = st.GeoDataFrame(["POLYGON Z ((0 0 1, 1 0 0, 1 1 1, 0 1 0, 0 0 1))"])
+multipoint_empty = st.GeoDataFrame(["MULTIPOINT EMPTY"])
+multipoint_2d = st.GeoDataFrame(["MULTIPOINT ((0 0), (1 1))"])
+multipoint_3d = st.GeoDataFrame(["MULTIPOINT Z ((0 0 0), (1 1 1))"])
+multiline_empty = st.GeoDataFrame(["MULTILINESTRING EMPTY"])
+multiline_2d = st.GeoDataFrame(["MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))"])
+multiline_3d = st.GeoDataFrame(["MULTILINESTRING Z ((0 0 0, 1 1 1), (2 2 2, 3 3 3))"])
+multipoly_empty = st.GeoDataFrame(["MULTIPOLYGON EMPTY"])
+multipoly_2d = st.GeoDataFrame(["MULTIPOLYGON (((0 0, 1 0, 0 1, 0 0)), ((2 2, 3 2, 2 3, 2 2)))"])
+multipoly_3d = st.GeoDataFrame([
     "MULTIPOLYGON Z (((0 0 0, 1 0 0, 0 1 1, 0 0 0)), ((2 2 2, 3 2 3, 2 3 2, 2 2 2)))",
 ])
-collection_empty = gdf(["GEOMETRYCOLLECTION EMPTY"])
-collection_2d = gdf(["GEOMETRYCOLLECTION (POINT (0 0), LINESTRING (0 0, 1 1))"])
-collection_3d = gdf([
+collection_empty = st.GeoDataFrame(["GEOMETRYCOLLECTION EMPTY"])
+collection_2d = st.GeoDataFrame(["GEOMETRYCOLLECTION (POINT (0 0), LINESTRING (0 0, 1 1))"])
+collection_3d = st.GeoDataFrame([
     "GEOMETRYCOLLECTION (POINT (0 0), LINESTRING (0 0, 1 1), POLYGON ((0 0, 1 0, 1 1, 0 0)))",
 ])
-collection_mixed = gdf([
+collection_mixed = st.GeoDataFrame([
     "GEOMETRYCOLLECTION (POINT Z (0 0 0), LINESTRING (0 0, 1 1), POLYGON ((0 0, 1 0, 1 1, 0 0)))",
 ])
 
@@ -88,6 +82,9 @@ class Function:
     call: FunctionCallable
     dtype: pl.DataType
     args: dict[str, Any] = field(default_factory=dict)
+
+    def __call__(self):
+        return self.call(st.geom().st, **self.args)
 
 
 functions = [
@@ -231,7 +228,7 @@ aggregates = [
 @pytest.mark.parametrize("func", functions)
 def test_functions_empty_frame(frame: pl.DataFrame, func: Function):
     """Functions should work on empty frames."""
-    result = frame.select(func.call(st.geom().st, **func.args))
+    result = frame.select(func())
     assert result.schema == pl.Schema([("geometry", func.dtype)])
     assert len(result) == 0
 
@@ -240,7 +237,7 @@ def test_functions_empty_frame(frame: pl.DataFrame, func: Function):
 @pytest.mark.parametrize("func", functions)
 def test_functions_none_frame(frame: pl.DataFrame, func: Function):
     """Functions should work on full-null frames."""
-    result = frame.select(func.call(st.geom().st, **func.args))
+    result = frame.select(func())
     assert result.schema == pl.Schema([("geometry", func.dtype)])
     assert len(result) == 1
     assert result.item() is None
@@ -253,7 +250,7 @@ def test_functions_empty_frame_agg(frame: pl.DataFrame, func: Function):
     # Should file a bug report in polars for that (cannot concatenate empty list of arrays)
     if func.call == Geo.bounds:
         return
-    result = frame.group_by(0).agg(func.call(st.geom().st, **func.args)).drop("literal")
+    result = frame.group_by(0).agg(func()).drop("literal")
     assert result.schema == pl.Schema([("geometry", pl.List(func.dtype))])
     assert len(result) == 0
 
@@ -265,7 +262,7 @@ def test_functions_none_frame_agg(frame: pl.DataFrame, func: Function):
     # Skip since List(Object) is not supported
     if func.call in {Geo.to_dict, Geo.to_shapely}:
         return
-    result = frame.group_by(0).agg(func.call(st.geom().st, **func.args)).drop("literal")
+    result = frame.group_by(0).agg(func()).drop("literal")
     assert result.schema == pl.Schema([("geometry", pl.List(func.dtype))])
     assert len(result) == 1
     assert result.get_column("geometry").list.len().item() == 1
@@ -320,7 +317,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     if func.call in {Geo.coverage_union} and frame is collection_mixed:
         match = "IllegalArgumentException: Overlay input is mixed-dimensio"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if (
@@ -337,7 +334,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     ):
         match = "IllegalArgumentException: Overlay input is mixed-dimensio"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if func.call in {Geo.shared_paths} and geom_type not in {
@@ -346,7 +343,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     }:
         match = "IllegalArgumentException: Geometry is not linea"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if func.call in {Geo.get_interior_ring} and geom_type not in {
@@ -355,7 +352,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     }:
         match = "generic error: Geometry must be a Polygon or CurvePolygon"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if func.call in {
@@ -366,7 +363,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     } and geom_type not in {"LineString"}:
         match = "generic error: Geometry must be a LineString"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if func.call in {Geo.coverage_union} and geom_type not in {
@@ -380,13 +377,13 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     }:
         match = "generic error: Geometry must be a collection"
         with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func.call(st.geom().st, **func.args))
+            frame.select(func())
         return
 
     if func.call in {Geo.to_srid}:
         frame = frame.select(st.geom().st.set_srid(4326))
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="invalid value encountered in voronoi_polygons")
-        result = frame.select(func.call(st.geom().st, **func.args))
+        result = frame.select(func())
 
     assert result.schema == pl.Schema([("geometry", func.dtype)])
