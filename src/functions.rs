@@ -1933,11 +1933,8 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunke
             .map_err(|_| srid_err(geom_srid))?
             .map_err(|_| srid_err(geom_srid))?;
 
-        apply_proj_transform(&proj_src, &proj_dst, &geom)
-            .map(|mut geom| {
-                geom.set_srid(dest_srid as _);
-                geom
-            })?
-            .to_ewkb()
+        let mut transformed = apply_proj_transform(&proj_src, &proj_dst, &geom)?;
+        transformed.set_srid(dest_srid as _);
+        transformed.to_ewkb()
     })
 }
