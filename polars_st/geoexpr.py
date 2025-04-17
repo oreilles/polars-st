@@ -37,8 +37,8 @@ def register_plugin(op: str | None = None, is_aggregation: bool = False):  # noq
         func_name = op or func.__name__
         sig = signature(func)
         params = sig.parameters
-        expr_args = {k for k, v in params.items() if "Expr" in str(v.annotation)}
-        other_args = {k for k, v in params.items() if k not in expr_args}
+        expr_args = dict.fromkeys(k for k, v in params.items() if "Expr" in str(v.annotation))
+        other_args = dict.fromkeys(k for k, v in params.items() if k not in expr_args)
 
         @wraps(func)
         def wrapper(self: GeoExprNameSpace, *args: P.args, **kwargs: P.kwargs):  # noqa: ANN202
