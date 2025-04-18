@@ -456,10 +456,10 @@ fn cast(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     let into = &inputs[1];
-    let into = into.cast(&geometry_enum())?;
+    let into = into.strict_cast(&geometry_enum())?;
     let into = into.categorical()?;
     let into = into.cast(&D::UInt32)?;
-    let into = into.u32()?;
+    let into = into.u32().unwrap();
     functions::cast(wkb, into)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
