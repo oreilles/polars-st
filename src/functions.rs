@@ -267,6 +267,17 @@ pub fn from_geojson(json: &StringChunked) -> GResult<BinaryChunked> {
     json.try_apply_nonnull_values_generic(|json| Geometry::new_from_geojson(json)?.to_ewkb())
 }
 
+fn get_coordinate_type(dimension: usize) -> GResult<(bool, bool)> {
+    match dimension {
+        2 => Ok((false, false)),
+        3 => Ok((true, false)),
+        4 => Ok((true, true)),
+        _ => Err(geos::Error::GenericError(
+            "invalid coordinate size: must be 2, 3 or 4.".into(),
+        )),
+    }
+}
+
 fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
     let coords = unsafe { a.as_any().downcast_ref_unchecked::<LargeListArray>() };
     if coords.len() - coords.null_count() == 0 {
@@ -276,12 +287,11 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
     let lengths: Vec<usize> = offsets.lengths().collect();
     let is_uniform = coords.len() == 1 || lengths.windows(2).all(|s| s[0] == s[1]);
     if !is_uniform {
-        let msg = "invalid coordinates list: must be uniform".into();
+        let msg = "invalid coordinates list: size must be uniform".into();
         return Err(geos::Error::GenericError(msg));
     }
     let dimension = lengths[0];
-    let has_z = dimension > 2;
-    let has_m = dimension > 3;
+    let (has_z, has_m) = get_coordinate_type(dimension)?;
     let start = (*offsets.first()).try_into().unwrap();
     let values = &coords
         .values()
@@ -297,8 +307,7 @@ pub fn point(coords: &ListChunked) -> GResult<BinaryChunked> {
     coords.try_apply_nonnull_values_generic(|coord| {
         let coord = unsafe { coord.as_any().downcast_ref_unchecked::<Float64Array>() };
         let dimension = coord.len();
-        let has_z = dimension > 2;
-        let has_m = dimension > 3;
+        let (has_z, has_m) = get_coordinate_type(dimension)?;
         let coord = coord.as_slice().unwrap();
         let coord_seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
         Geometry::create_point(coord_seq)?.to_ewkb()
