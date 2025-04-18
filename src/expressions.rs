@@ -143,32 +143,32 @@ fn from_coords(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<S
 
     fn point(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::Float64.into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::point(coords).map_err(to_compute_err)
     }
     fn multipoint(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::multipoint(coords).map_err(to_compute_err)
     }
     fn linestring(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::linestring(coords).map_err(to_compute_err)
     }
     fn circularstring(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::circularstring(coords).map_err(to_compute_err)
     }
     fn multilinestring(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::List(D::List(D::Float64.into()).into()).into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::multilinestring(coords).map_err(to_compute_err)
     }
     fn polygon(coords: &Series) -> PolarsResult<BinaryChunked> {
         let coords = coords.cast(&D::List(D::List(D::List(D::Float64.into()).into()).into()))?;
-        let coords = coords.list()?;
+        let coords = coords.list().unwrap();
         functions::polygon(coords).map_err(to_compute_err)
     }
 
