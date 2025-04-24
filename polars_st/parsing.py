@@ -116,6 +116,22 @@ def linestring(coords: IntoExprColumn) -> GeoExpr:
 
     Examples:
         >>> df = pl.DataFrame({
+        ...     "coords": [
+        ...         [[0, 1], [2, 3], [4, 5]]
+        ...     ],
+        ... })
+        >>> df = df.select(geometry=st.linestring("coords"))
+        >>> df.st.to_wkt()
+        shape: (1, 1)
+        ┌────────────────────────────┐
+        │ geometry                   │
+        │ ---                        │
+        │ str                        │
+        ╞════════════════════════════╡
+        │ LINESTRING (0 1, 2 3, 4 5) │
+        └────────────────────────────┘
+
+        >>> df = pl.DataFrame({
         ...     "idx": [0, 0, 1, 1],
         ...     "x": [0, 1, 3, 5],
         ...     "y": [0, 2, 4, 6],
