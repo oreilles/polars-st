@@ -345,6 +345,7 @@ class GeoDataFrameNameSpace:
                 **kwargs,
             ),
             geometry=geometry_name,
+            crs=self._df.select(geom(geometry_name).st.srid())[0, 0],
         )
 
     @property
