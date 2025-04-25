@@ -349,7 +349,6 @@ class GeoDataFrameNameSpace:
                 msg = "DataFrame with mixed SRIDs aren't supported in GeoPandas"
                 raise ValueError(msg)
 
-
         return gpd.GeoDataFrame(
             self.to_shapely(geometry_name).to_pandas(
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
