@@ -464,13 +464,15 @@ class GeoSeriesNameSpace:
         **kwargs: Any,
     ) -> gpd.GeoSeries:
         """Convert this pl.Series to a geopandas GeoSeries."""
-        import geopandas as gpd
-
-        return gpd.GeoSeries(
-            self.to_shapely().to_pandas(
+        return (
+            self._series.to_frame()
+            .pipe(st)
+            .to_geopandas(
+                geometry_name=self._series.name,
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
                 **kwargs,
-            ),
+            )
+            .geometry
         )
 
     @property

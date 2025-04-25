@@ -90,7 +90,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
         if df.columns == ["column_0"]:
             df = df.rename({"column_0": geometry_name})
         if geometry_name not in df.columns:
-            msg = f"geometry column {geometry_name} not found"
+            msg = f'geometry column "{geometry_name}" not found'
             raise ValueError(msg)
 
         geometry_column = df.get_column(geometry_name)
@@ -339,12 +339,23 @@ class GeoDataFrameNameSpace:
         """Convert this DataFrame to a geopandas GeoDataFrame."""
         import geopandas as gpd
 
+        srids = self._df.select(geom(geometry_name).st.srid()).unique().drop_nulls()
+        match len(srids):
+            case 0:
+                crs = None
+            case 1:
+                crs = srids.item()
+            case _:
+                msg = "DataFrame with mixed SRIDs aren't supported in GeoPandas"
+                raise ValueError(msg)
+
         return gpd.GeoDataFrame(
             self.to_shapely(geometry_name).to_pandas(
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
                 **kwargs,
             ),
             geometry=geometry_name,
+            crs=crs,
         )
 
     @property
