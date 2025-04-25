@@ -339,13 +339,13 @@ class GeoDataFrameNameSpace:
         """Convert this DataFrame to a geopandas GeoDataFrame."""
         import geopandas as gpd
 
-        if self._df.is_empty():
-            crs = None
-        else:
-            try:
-                crs = self._df.select(geom(geometry_name).st.srid()).unique().item()
-            except ValueError:
-                # Multiple SRIDs found
+        srids = self._df.select(geom(geometry_name).st.srid()).unique().drop_nulls()
+        match len(srids):
+            case 0:
+                crs = None
+            case 1:
+                crs = srids.item()
+            case _:
                 msg = "DataFrame with mixed SRIDs aren't supported in GeoPandas"
                 raise ValueError(msg)
 
