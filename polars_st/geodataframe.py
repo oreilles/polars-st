@@ -340,11 +340,11 @@ class GeoDataFrameNameSpace:
         import geopandas as gpd
 
         return gpd.GeoDataFrame(
-            self._df.select(geom(geometry_name).st.to_shapely()).to_pandas(
+            self.to_shapely(geometry_name).to_pandas(
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
-                geometry=geometry_name,
                 **kwargs,
             ),
+            geometry=geometry_name,
         )
 
     @property
