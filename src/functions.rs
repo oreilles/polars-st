@@ -267,6 +267,17 @@ pub fn from_geojson(json: &StringChunked) -> GResult<BinaryChunked> {
     json.try_apply_nonnull_values_generic(|json| Geometry::new_from_geojson(json)?.to_ewkb())
 }
 
+pub fn rectangle(bounds: &ArrayChunked) -> GResult<BinaryChunked> {
+    bounds.try_apply_nonnull_values_generic(|bounds| {
+        let bounds = unsafe { bounds.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let xmin = unsafe { bounds.get_unchecked(0) }.unwrap_or(f64::NAN);
+        let ymin = unsafe { bounds.get_unchecked(1) }.unwrap_or(f64::NAN);
+        let xmax = unsafe { bounds.get_unchecked(2) }.unwrap_or(f64::NAN);
+        let ymax = unsafe { bounds.get_unchecked(3) }.unwrap_or(f64::NAN);
+        Geometry::create_rectangle(xmin, ymin, xmax, ymax)?.to_ewkb()
+    })
+}
+
 fn get_coordinate_type(dimension: usize) -> GResult<(bool, bool)> {
     match dimension {
         2 => Ok((false, false)),

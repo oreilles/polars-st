@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
     from polars_st.geoexpr import GeoExpr
     from polars_st.geometry import GeometryType
+    from polars_st.typing import IntoNumericExpr
 
 
 __all__ = [
@@ -29,6 +30,7 @@ __all__ = [
     "multipoint",
     "point",
     "polygon",
+    "rectangle",
 ]
 
 
@@ -241,6 +243,41 @@ def polygon(coords: IntoExprColumn) -> GeoExpr:
         function_name="from_coords",
         args=coords,
         kwargs={"into": "Polygon"},
+        is_elementwise=True,
+    ).pipe(lambda e: cast("GeoExpr", e))
+
+
+def rectangle(
+    xmin: IntoNumericExpr,
+    ymin: IntoNumericExpr,
+    xmax: IntoNumericExpr,
+    ymax: IntoNumericExpr,
+) -> GeoExpr:
+    """Create Polygon geometries from bounds.
+
+    Examples:
+        >>> df = pl.DataFrame({
+        ...     "xmin": [0.0, 5.0],
+        ...     "ymin": [0.0, 6.0],
+        ...     "xmax": [1.0, 7.0],
+        ...     "ymax": [2.0, 8.0],
+        ... })
+        >>> df = df.select(geometry=st.rectangle("xmin", "ymin", "xmax", "ymax"))
+        >>> df.st.to_wkt()
+        shape: (2, 1)
+        ┌─────────────────────────────────┐
+        │ geometry                        │
+        │ ---                             │
+        │ str                             │
+        ╞═════════════════════════════════╡
+        │ POLYGON ((0 0, 1 0, 1 2, 0 2, … │
+        │ POLYGON ((5 6, 7 6, 7 8, 5 8, … │
+        └─────────────────────────────────┘
+    """
+    return register_plugin_function(
+        plugin_path=Path(__file__).parent,
+        function_name="rectangle",
+        args=pl.concat_list(xmin, ymin, xmax, ymax),
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
