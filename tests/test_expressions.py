@@ -193,8 +193,8 @@ functions = [
     Function(Geo.skew, pl.Binary()),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": False}),
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": True}),
-    Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": True}),
     Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": False}),
+    Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": True}),
     Function(Geo.line_merge, pl.Binary(), {"directed": True}),
     Function(Geo.line_merge, pl.Binary(), {"directed": False}),
     Function(Geo.shared_paths, pl.Binary(), {"other": dummy_line}),
@@ -313,12 +313,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
     """Functions should work on every geometry type."""
     geom_type: GeometryType = frame.select(st.geometry_type()).item()
     geom_empty: bool = frame.select(st.is_empty()).item()
-
-    if func.call in {Geo.coverage_union} and frame is collection_mixed:
-        match = "IllegalArgumentException: Overlay input is mixed-dimensio"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func())
-        return
+    error = None
 
     if (
         func.call
@@ -332,41 +327,41 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         and geom_type == "GeometryCollection"
         and not geom_empty
     ):
-        match = "IllegalArgumentException: Overlay input is mixed-dimensio"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func())
-        return
+        error = "IllegalArgumentException: Overlay input is mixed-dimension"
 
-    if func.call in {Geo.shared_paths} and geom_type not in {
-        "LineString",
-        "MultiLineString",
-    }:
-        match = "IllegalArgumentException: Geometry is not linea"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func())
-        return
+    if func.call == Geo.coverage_union and frame is collection_mixed:
+        error = "IllegalArgumentException: Overlay input is mixed-dimension"
 
-    if func.call in {Geo.get_interior_ring} and geom_type not in {
-        "Polygon",
-        "CurvePolygon",
-    }:
-        match = "generic error: Geometry must be a Polygon or CurvePolygon"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func())
-        return
+    if func.call == Geo.shared_paths and geom_type not in {"LineString", "MultiLineString"}:
+        error = "IllegalArgumentException: Geometry is not lineal"
 
-    if func.call in {
-        Geo.offset_curve,
-        Geo.interpolate,
-        Geo.project,
-        Geo.get_point,
-    } and geom_type not in {"LineString"}:
-        match = "generic error: Geometry must be a LineString"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
-            frame.select(func())
-        return
+    if func.call == Geo.get_interior_ring and geom_type not in {"Polygon", "CurvePolygon"}:
+        error = "IllegalArgumentException: Argument is not a Surface"
 
-    if func.call in {Geo.coverage_union} and geom_type not in {
+    if func.call == Geo.get_point and geom_type not in {"LineString"}:
+        error = "IllegalArgumentException: Argument is not a SimpleCurve"
+
+    if (
+        func.call == Geo.project
+        and geom_type != "LineString"
+        and not (geom_type == "MultiLineString" and not geom_empty)
+    ):
+        error = "IllegalArgumentException: LinearIterator only supports lineal geometry components"
+        if geom_type != "Point" and geom_empty:
+            geos_func = "GEOSProjectNormalized_r" if func.args["normalized"] else "GEOSProject_r"
+            error = f"{geos_func} failed"
+
+    if (
+        func.call == Geo.interpolate
+        and geom_type not in {"LineString", "MultiLineString"}
+        and not (geom_type in {"MultiPoint", "MultiPolygon", "GeometryCollection"} and geom_empty)
+        and not (func.args["normalized"] and geom_empty)
+    ):
+        error = "IllegalArgumentException: LinearIterator only supports lineal geometry components"
+        if func.args["normalized"] and geom_type in {"Point", "MultiPoint"} and not geom_empty:
+            error = "IllegalArgumentException: LinearLocation::getCoordinate only works with LineString geometries"
+
+    if func.call == Geo.coverage_union and geom_type not in {
         "MultiPoint",
         "MultiLineString",
         "MultiPolygon",
@@ -375,13 +370,16 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
         "MultiCurve",
         "MultiSurface",
     }:
-        match = "generic error: Geometry must be a collection"
-        with pytest.raises(pl.exceptions.ComputeError, match=match):
+        error = "Geometry must be a collection"
+
+    if func.call == Geo.to_srid:
+        frame = frame.select(st.geom().st.set_srid(4326))
+
+    if error is not None:
+        with pytest.raises(pl.exceptions.ComputeError, match=error):
             frame.select(func())
         return
 
-    if func.call in {Geo.to_srid}:
-        frame = frame.select(st.geom().st.set_srid(4326))
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="invalid value encountered in voronoi_polygons")
         result = frame.select(func())

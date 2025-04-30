@@ -76,5 +76,5 @@ ignore = [
 "tests/*" = [
     "S101", # Assert
     "ANN", # Type annotations
-    "PLR0911", # Too many return statements
+    "C901" # Function is too complex
 ]

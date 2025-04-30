@@ -1,10 +1,8 @@
 use geos::GeometryTypes;
-use num_enum::IntoPrimitive;
-use num_enum::TryFromPrimitive;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use scroll::{Endian, IOread};
-use serde::Deserialize;
-use serde::Serialize;
-use std::io::{Error, Read};
+use serde::{Deserialize, Serialize};
+use std::io;
 
 pub struct WkbInfo {
     pub base_type: u32,
@@ -13,7 +11,7 @@ pub struct WkbInfo {
     pub srid: i32,
 }
 
-pub fn read_ewkb_header<R: Read>(raw: &mut R) -> Result<WkbInfo, Error> {
+pub fn read_ewkb_header<R: io::Read>(raw: &mut R) -> Result<WkbInfo, io::Error> {
     let byte_order = raw.ioread::<u8>()?;
     let is_little_endian = byte_order != 0;
     let endian = Endian::from(is_little_endian);
