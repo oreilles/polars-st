@@ -4,31 +4,44 @@ use scroll::{Endian, IOread};
 use serde::{Deserialize, Serialize};
 use std::io;
 
-pub struct WkbInfo {
-    pub base_type: u32,
+pub struct WKBHeader {
+    pub geometry_type: WKBGeometryType,
     pub has_z: bool,
     pub has_m: bool,
     pub srid: i32,
 }
 
-pub fn read_ewkb_header<R: io::Read>(raw: &mut R) -> Result<WkbInfo, io::Error> {
-    let byte_order = raw.ioread::<u8>()?;
-    let is_little_endian = byte_order != 0;
-    let endian = Endian::from(is_little_endian);
-    let type_id = raw.ioread_with::<u32>(endian)?;
-    let srid = if type_id & 0x2000_0000 == 0x2000_0000 {
-        raw.ioread_with::<i32>(endian)?
-    } else {
-        0
-    };
+impl TryFrom<&[u8]> for WKBHeader {
+    type Error = geos::Error;
 
-    let info = WkbInfo {
-        base_type: type_id & 0xFF,
-        has_z: type_id & 0x8000_0000 == 0x8000_0000,
-        has_m: type_id & 0x4000_0000 == 0x4000_0000,
-        srid,
-    };
-    Ok(info)
+    fn try_from(mut wkb: &[u8]) -> Result<Self, Self::Error> {
+        fn get_type_id_and_srid(wkb: &mut &[u8]) -> Result<(u32, i32), io::Error> {
+            let byte_order = wkb.ioread::<u8>()?;
+            let is_little_endian = byte_order != 0;
+            let endian = Endian::from(is_little_endian);
+            let type_id = wkb.ioread_with::<u32>(endian)?;
+            let srid = if type_id & 0x2000_0000 == 0x2000_0000 {
+                wkb.ioread_with::<i32>(endian)?
+            } else {
+                0
+            };
+            Ok((type_id, srid))
+        }
+
+        let (type_id, srid) = get_type_id_and_srid(&mut wkb)
+            .map_err(|_| geos::Error::GenericError("Invalid WKB Header".into()))?;
+
+        let geometry_type = WKBGeometryType::try_from(type_id & 0xFF).map_err(|_| {
+            geos::Error::GenericError(format!("Invalid geometry type id: {type_id}"))
+        })?;
+
+        Ok(Self {
+            geometry_type,
+            has_z: type_id & 0x8000_0000 != 0,
+            has_m: type_id & 0x4000_0000 != 0,
+            srid,
+        })
+    }
 }
 
 #[derive(Clone, Copy, Debug, IntoPrimitive, TryFromPrimitive, Serialize, Deserialize)]

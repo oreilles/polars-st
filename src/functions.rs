@@ -10,7 +10,7 @@ use crate::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
         try_ternary_elementwise_values, try_unary_elementwise_values_with_dtype,
     },
-    wkb::{read_ewkb_header, WKBGeometryType},
+    wkb::{WKBGeometryType, WKBHeader},
 };
 use geos::{
     BufferParams, CoordSeq, Error as GError, GResult, GeoJSONWriter, Geom, Geometry,
@@ -388,12 +388,8 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
 }
 
 pub fn get_type_id(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
-    wkb.try_apply_nonnull_values_generic(|mut wkb| {
-        read_ewkb_header(&mut wkb)
-            .map_err(|_| GError::GenericError("Invalid WKB header".into()))
-            .map(|header| WKBGeometryType::try_from(header.base_type))?
-            .map_err(|e| GError::GenericError(format!("Invalid geometry type: {e}")))
-            .map(u32::from)
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        WKBHeader::try_from(wkb).map(|header| header.geometry_type as u32)
     })
 }
 
@@ -409,19 +405,13 @@ pub fn get_num_dimensions(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
 }
 
 pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
-    wkb.try_apply_nonnull_values_generic(|mut wkb| {
-        read_ewkb_header(&mut wkb)
-            .map_err(|_| GError::GenericError("Invalid WKB header".into()))
-            .map(|header| 2 + u32::from(header.has_z) + u32::from(header.has_m))
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        WKBHeader::try_from(wkb).map(|header| 2 + u32::from(header.has_z) + u32::from(header.has_m))
     })
 }
 
 pub fn get_srid(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
-    wkb.try_apply_nonnull_values_generic(|mut wkb| {
-        read_ewkb_header(&mut wkb)
-            .map_err(|_| GError::GenericError("Invalid WKB header".into()))
-            .map(|header| header.srid)
-    })
+    wkb.try_apply_nonnull_values_generic(|wkb| WKBHeader::try_from(wkb).map(|header| header.srid))
 }
 
 pub fn set_srid(wkb: &BinaryChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
