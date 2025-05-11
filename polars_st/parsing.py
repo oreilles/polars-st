@@ -366,11 +366,12 @@ def from_ewkt(expr: IntoExprColumn) -> GeoExpr:
         ... ]).to_frame()
         >>> gdf = df.select(st.from_ewkt("geometry"))
     """
-    expr = wrap_expr(parse_into_expression(expr))
-    s = expr.str.extract_groups(r"^(SRID=(.*);)?(.+)$")
-    wkt = s.struct[2]
-    srid = s.struct[1].replace(dict.fromkeys((None, ""), "0"))
-    return from_wkt(wkt).st.set_srid(srid)
+    return register_plugin_function(
+        plugin_path=Path(__file__).parent,
+        function_name="from_ewkt",
+        args=[expr],
+        is_elementwise=True,
+    ).pipe(lambda e: cast("GeoExpr", e))
 
 
 def from_geojson(expr: IntoExprColumn) -> GeoExpr:

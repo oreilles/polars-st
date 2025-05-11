@@ -109,6 +109,14 @@ fn from_wkt(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Binary)]
+fn from_ewkt(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    functions::from_ewkt(inputs[0].str()?)
+        .map_err(to_compute_err)
+        .map(IntoSeries::into_series)
+}
+
+#[polars_expr(output_type=Binary)]
 fn from_geojson(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     functions::from_geojson(inputs[0].str()?)

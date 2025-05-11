@@ -263,6 +263,26 @@ pub fn from_wkt(wkt: &StringChunked) -> GResult<BinaryChunked> {
     wkt.try_apply_nonnull_values_generic(|wkt| Geometry::new_from_wkt(wkt)?.to_ewkb())
 }
 
+pub fn from_ewkt(wkt: &StringChunked) -> GResult<BinaryChunked> {
+    wkt.try_apply_nonnull_values_generic(|wkt| {
+        let geom = if wkt.starts_with("SRID=") {
+            let srid_end = wkt
+                .find(';')
+                .ok_or_else(|| GError::GenericError("Invalid EWKT".to_string()))?;
+            let srid: i32 = wkt[5..srid_end]
+                .parse()
+                .map_err(|_| GError::GenericError("Invalid SRID".to_string()))?;
+            let wkt = &wkt[(srid_end + 1)..];
+            let mut geom = Geometry::new_from_wkt(wkt)?;
+            geom.set_srid(srid);
+            geom
+        } else {
+            Geometry::new_from_wkt(wkt)?
+        };
+        geom.to_ewkb()
+    })
+}
+
 pub fn from_geojson(json: &StringChunked) -> GResult<BinaryChunked> {
     json.try_apply_nonnull_values_generic(|json| Geometry::new_from_geojson(json)?.to_ewkb())
 }
