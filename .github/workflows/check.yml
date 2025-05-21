@@ -45,8 +45,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          profile: minimal
           override: true
+          profile: minimal
+          components: rustfmt, clippy
 
       - name: Run Rust formatter
         run: cargo fmt --all -- --check
