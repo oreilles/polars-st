@@ -156,15 +156,15 @@ where
             try_unary_elementwise(ca1, |a| op(a, b.clone(), c.clone()))
         }
         (1, _, _) => {
-            let ca1 = ca1.new_from_index(ca2.len(), 0);
+            let ca1 = ca1.new_from_index(0, ca2.len());
             try_ternary_elementwise(&ca1, ca2, ca3, op)
         }
         (_, 1, _) => {
-            let ca2 = ca2.new_from_index(ca1.len(), 0);
+            let ca2 = ca2.new_from_index(0, ca1.len());
             try_ternary_elementwise(ca1, &ca2, ca3, op)
         }
         (_, _, 1) => {
-            let ca3 = ca3.new_from_index(ca1.len(), 0);
+            let ca3 = ca3.new_from_index(0, ca1.len());
             try_ternary_elementwise(ca1, ca2, &ca3, op)
         }
         _ => try_ternary_elementwise(ca1, ca2, ca3, op),
