@@ -892,6 +892,15 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def substring(
+        self,
+        start: IntoNumericExpr,
+        end: IntoNumericExpr,
+    ) -> GeoSeries:
+        """See [`GeoExprNameSpace.substring`][polars_st.GeoExprNameSpace.substring]."""
+        ...
+
+    @dispatch
     def line_merge(self, directed: bool = False) -> GeoSeries:
         """See [`GeoExprNameSpace.line_merge`][polars_st.GeoExprNameSpace.line_merge]."""
         ...

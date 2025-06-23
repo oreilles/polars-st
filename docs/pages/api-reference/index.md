@@ -140,6 +140,7 @@ hide:
 | **LineString operations** | | |
 | `interpolate` | | [`root`][polars_st.interpolate], [`Expr`][polars_st.GeoExprNameSpace.interpolate], [`Series`][polars_st.GeoSeriesNameSpace.interpolate] |
 | `project` | | [`Expr`][polars_st.GeoExprNameSpace.project], [`Series`][polars_st.GeoSeriesNameSpace.project] |
+| `substring` | Returns the substring of each line starting and ending at the given fractional locations. | [`root`][polars_st.substring], [`Expr`][polars_st.GeoExprNameSpace.substring], [`Series`][polars_st.GeoSeriesNameSpace.substring] |
 | `line_merge` | | [`root`][polars_st.line_merge], [`Expr`][polars_st.GeoExprNameSpace.line_merge], [`Series`][polars_st.GeoSeriesNameSpace.line_merge] |
 | `shared_paths` | | [`Expr`][polars_st.GeoExprNameSpace.shared_paths], [`Series`][polars_st.GeoSeriesNameSpace.shared_paths] |
 | **Aggregation** | | |

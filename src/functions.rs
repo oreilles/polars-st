@@ -1742,6 +1742,18 @@ pub fn project_normalized(a: &BinaryChunked, b: &BinaryChunked) -> GResult<Float
     })
 }
 
+pub fn substring(
+    wkb: &BinaryChunked,
+    start: &Float64Chunked,
+    end: &Float64Chunked,
+) -> GResult<BinaryChunked> {
+    broadcast_try_ternary_elementwise_values(wkb, start, end, |wkb, start, end| {
+        Geometry::new_from_wkb(wkb)?
+            .line_substring(start, end)?
+            .to_ewkb()
+    })
+}
+
 pub fn line_merge(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.line_merge()?.to_ewkb())
 }

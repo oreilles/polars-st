@@ -90,6 +90,7 @@ __all__ = [
     "simplify",
     "skew",
     "srid",
+    "substring",
     "symmetric_difference_all",
     "to_dict",
     "to_ewkt",
@@ -559,6 +560,15 @@ def interpolate(
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[interpolate()][polars_st.GeoExprNameSpace.interpolate]</code>."""  # noqa: E501
     return geom(*columns).st.interpolate(distance, normalized)
+
+
+def substring(
+    *columns: str,
+    start: IntoNumericExpr,
+    end: IntoNumericExpr,
+) -> GeoExpr:
+    """Syntactic sugar for <code>st.geom(columns).st.[substring(...)][polars_st.GeoExprNameSpace.substring]</code>."""  # noqa: E501
+    return geom(*columns).st.substring(start, end)
 
 
 def line_merge(*columns: str, directed: bool = False) -> GeoExpr:

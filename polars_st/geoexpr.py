@@ -889,6 +889,11 @@ class GeoExprNameSpace:
     ) -> pl.Expr: ...
 
     @register_plugin()
+    def substring(self, start: IntoNumericExpr, end: IntoNumericExpr) -> GeoExpr:
+        """Returns the substring of each line starting and ending at the given fractional locations."""  # noqa: E501
+        ...
+
+    @register_plugin()
     def line_merge(self, directed: bool = False) -> GeoExpr: ...
 
     @register_plugin()

@@ -195,6 +195,7 @@ functions = [
     Function(Geo.interpolate, pl.Binary(), {"distance": 1.0, "normalized": True}),
     Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": False}),
     Function(Geo.project, pl.Float64(), {"other": dummy_point, "normalized": True}),
+    Function(Geo.substring, pl.Binary(), {"start": 0.0, "end": 0.0}),
     Function(Geo.line_merge, pl.Binary(), {"directed": True}),
     Function(Geo.line_merge, pl.Binary(), {"directed": False}),
     Function(Geo.shared_paths, pl.Binary(), {"other": dummy_line}),
@@ -309,7 +310,7 @@ def test_aggregates(frame: pl.DataFrame, func: Aggregate):
 
 @pytest.mark.parametrize("frame", base_types)
 @pytest.mark.parametrize("func", functions)
-def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
+def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa: PLR0912
     """Functions should work on every geometry type."""
     geom_type: GeometryType = frame.select(st.geometry_type()).item()
     geom_empty: bool = frame.select(st.is_empty()).item()
@@ -340,6 +341,13 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):
 
     if func.call == Geo.get_point and geom_type not in {"LineString"}:
         error = "IllegalArgumentException: Argument is not a SimpleCurve"
+
+    if (
+        func.call == Geo.substring
+        and geom_type not in {"LineString", "MultiLineString"}
+        and not (geom_type == "GeometryCollection" and geom_empty)
+    ):
+        error = "IllegalArgumentException: Input geometry must be linear"
 
     if (
         func.call == Geo.project

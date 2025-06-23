@@ -82,6 +82,7 @@ The following functions can be used that way:
             - scale
             - skew
             - interpolate
+            - substring
             - line_merge
             - total_bounds
             - collect
