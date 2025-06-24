@@ -23,7 +23,7 @@ pip install polars-st
 >>> area = gdf.select(st.geom("geometry").st.area())
 ```
 
-Behind the scenes, the GeoDataFrame constructor will parse each geometry from the user input into its EWKB internal representation. WKT is used as an example here but [many different type of input are supported](/api-reference/creation). If the spatial data you have is already in a Series, you can also call the parser functions directly;
+Behind the scenes, the GeoDataFrame constructor will parse each geometry from the user input into its EWKB internal representation. WKT is used as an example here but [many different type of input are supported](./api-reference/creation). If the spatial data you have is already in a Series, you can also call the parser functions directly;
 
 ``` pycon
 >>> s = pl.Series(["POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))", "POLYGON ((0 0, 0 1, 1 1, 0 0))"])
