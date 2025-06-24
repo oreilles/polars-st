@@ -42,12 +42,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-          profile: minimal
-          components: rustfmt, clippy
+        run: |
+          rustup default nightly
+          rustup component add clippy rustfmt
 
       - name: Run Rust formatter
         run: cargo fmt --all -- --check

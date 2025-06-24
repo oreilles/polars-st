@@ -18,13 +18,8 @@ dependencies = [
     "pyogrio>=0.9.0",
 ]
 
-[project.urls]
-Homepage = "https://github.com/Oreilles/polars-st"
-Documentation = "https://oreilles.github.io/polars-st/"
-Issues = "https://github.com/Oreilles/polars-st/issues"
-
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "altair>=5.4.1",
     "black>=24.8.0",
     "geodatasets>=2024.8.0",
@@ -39,6 +34,14 @@ dev-dependencies = [
     "ruff>=0.6.4",
     "shapely>=2.0.6",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Oreilles/polars-st"
+Documentation = "https://oreilles.github.io/polars-st/"
+Issues = "https://github.com/Oreilles/polars-st/issues"
+
+[tool.uv]
+cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
