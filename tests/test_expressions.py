@@ -310,7 +310,7 @@ def test_aggregates(frame: pl.DataFrame, func: Aggregate):
 
 @pytest.mark.parametrize("frame", base_types)
 @pytest.mark.parametrize("func", functions)
-def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa: PLR0912
+def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa: C901, PLR0912
     """Functions should work on every geometry type."""
     geom_type: GeometryType = frame.select(st.geometry_type()).item()
     geom_empty: bool = frame.select(st.is_empty()).item()
