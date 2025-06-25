@@ -513,8 +513,9 @@ class GeoDataFrameNameSpace:
         """
         return (
             self._df.select(
-                properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
+                type=pl.lit("Feature"),
                 geometry=geom().st.to_geojson().str.json_decode(),
+                properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
             )
             .group_by(0)
             .agg(
@@ -548,8 +549,9 @@ class GeoDataFrameNameSpace:
             <BLANKLINE>
         """
         return self._df.select(
-            properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
+            type=pl.lit("Feature"),
             geometry=geom().st.to_geojson().str.json_decode(),
+            properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
         ).write_ndjson(file)
 
     def plot(self, geometry_name: str = "geometry", **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
