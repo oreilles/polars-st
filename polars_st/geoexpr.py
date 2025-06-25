@@ -100,7 +100,7 @@ class GeoExprNameSpace:
             function_name="geometry_type",
             args=[self._expr],
             is_elementwise=True,
-        ).map_batches(lambda s: pl.Series(s, dtype=PolarsGeometryType))
+        ).map_batches(lambda s: s.cast(PolarsGeometryType))
         # Needed because pola-rs/polars#22125, pola-rs/pyo3-polars#131
         # Cannot use cast either, see comments in pola-rs/polars#6106
 

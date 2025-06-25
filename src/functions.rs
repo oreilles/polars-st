@@ -20,11 +20,10 @@ use geos::{
 
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
-use polars_arrow::array::{Array, BinaryViewArray};
+use polars_arrow::array::{Array, BinaryViewArray, Float64Array, StaticArray};
 use proj4rs::errors::Error as ProjError;
 use proj4rs::Proj;
 use pyo3::prelude::*;
-use pyo3_polars::export::polars_core::utils::arrow::array::Float64Array;
 
 pub trait GeometryUtils {
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
@@ -91,7 +90,7 @@ where
                         let seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
                         Geometry::create_point(seq)
                     })
-                    .try_collect()
+                    .collect::<GResult<Vec<_>>>()
                     .and_then(Geometry::create_multipoint)
             }
             (MultiPoint, LineString | CircularString) => {
@@ -289,7 +288,7 @@ pub fn from_geojson(json: &StringChunked) -> GResult<BinaryChunked> {
 
 pub fn rectangle(bounds: &ArrayChunked) -> GResult<BinaryChunked> {
     bounds.try_apply_nonnull_values_generic(|bounds| {
-        let bounds = unsafe { bounds.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let bounds = bounds.as_any().downcast_ref::<Float64Array>().unwrap();
         let xmin = unsafe { bounds.get_unchecked(0) }.unwrap_or(f64::NAN);
         let ymin = unsafe { bounds.get_unchecked(1) }.unwrap_or(f64::NAN);
         let xmax = unsafe { bounds.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -310,7 +309,7 @@ fn get_coordinate_type(dimension: usize) -> GResult<(bool, bool)> {
 }
 
 fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
-    let coords = unsafe { a.as_any().downcast_ref_unchecked::<LargeListArray>() };
+    let coords = a.as_any().downcast_ref::<LargeListArray>().unwrap();
     if coords.len() - coords.null_count() == 0 {
         return CoordSeq::new(0, geos::CoordDimensions::TwoD);
     }
@@ -336,7 +335,7 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
 
 pub fn point(coords: &ListChunked) -> GResult<BinaryChunked> {
     coords.try_apply_nonnull_values_generic(|coord| {
-        let coord = unsafe { coord.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let coord = coord.as_any().downcast_ref::<Float64Array>().unwrap();
         let dimension = coord.len();
         let (has_z, has_m) = get_coordinate_type(dimension)?;
         let coord = coord.as_slice().unwrap();
@@ -378,10 +377,10 @@ pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
     }
 
     coords.try_apply_nonnull_values_generic(|a| {
-        let lines = unsafe { a.as_any().downcast_ref_unchecked::<LargeListArray>() };
+        let lines = a.as_any().downcast_ref::<LargeListArray>().unwrap();
         let lines = (0..lines.len())
             .map(|n| get_line_n(lines, n))
-            .try_collect()?;
+            .collect::<GResult<Vec<_>>>()?;
         Geometry::create_multiline_string(lines)?.to_ewkb()
     })
 }
@@ -395,14 +394,14 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
     }
 
     coords.try_apply_nonnull_values_generic(|a| {
-        let rings = unsafe { a.as_any().downcast_ref_unchecked::<LargeListArray>() };
+        let rings = a.as_any().downcast_ref::<LargeListArray>().unwrap();
         if rings.len() == 0 {
             return Geometry::create_empty_polygon()?.to_ewkb();
         }
         let exterior = get_ring_n(rings, 0)?;
         let interiors = (1..rings.len())
             .map(|n| get_ring_n(rings, n))
-            .try_collect()?;
+            .collect::<GResult<Vec<_>>>()?;
         Geometry::create_polygon(exterior, interiors)?.to_ewkb()
     })
 }
@@ -1336,7 +1335,7 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
 
 pub fn clip_by_rect(wkb: &BinaryChunked, rect: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, rect, |wkb, rect| {
-        let rect = unsafe { rect.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let rect = rect.as_any().downcast_ref::<Float64Array>().unwrap();
         let xmin = unsafe { rect.get_unchecked(0) }.unwrap_or(f64::NAN);
         let ymin = unsafe { rect.get_unchecked(1) }.unwrap_or(f64::NAN);
         let xmax = unsafe { rect.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1497,7 +1496,7 @@ pub fn translate(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<BinaryC
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1553,7 +1552,7 @@ pub fn scale_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResu
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1571,7 +1570,7 @@ pub fn scale_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1592,7 +1591,7 @@ pub fn scale_from_point(
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1606,7 +1605,7 @@ pub fn skew_from_centroid(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResul
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1624,7 +1623,7 @@ pub fn skew_from_center(wkb: &BinaryChunked, factors: &ArrayChunked) -> GResult<
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1645,7 +1644,7 @@ pub fn skew_from_point(
         if geom.is_empty()? {
             return geom.to_ewkb();
         }
-        let factors = unsafe { factors.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let factors = factors.as_any().downcast_ref::<Float64Array>().unwrap();
         let x = unsafe { factors.get_unchecked(0) }.unwrap_or(f64::NAN);
         let y = unsafe { factors.get_unchecked(1) }.unwrap_or(f64::NAN);
         let z = unsafe { factors.get_unchecked(2) }.unwrap_or(f64::NAN);
@@ -1655,7 +1654,7 @@ pub fn skew_from_point(
 
 pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
         Geometry::new_from_wkb(wkb)?
             .apply_affine_transform(
                 unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),
@@ -1677,7 +1676,7 @@ pub fn affine_transform_2d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResul
 
 pub fn affine_transform_3d(wkb: &BinaryChunked, matrix: &ArrayChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, matrix, |wkb, matrix| {
-        let matrix = unsafe { matrix.as_any().downcast_ref_unchecked::<Float64Array>() };
+        let matrix = matrix.as_any().downcast_ref::<Float64Array>().unwrap();
         Geometry::new_from_wkb(wkb)?
             .apply_affine_transform(
                 unsafe { matrix.get_unchecked(0) }.unwrap_or(f64::NAN),

@@ -48,7 +48,10 @@ where
     V::Array: ArrayFromIter<K> + ArrayFromIter<Option<K>>,
 {
     if lhs.len() == rhs.len() && (lhs.null_count() == lhs.len() || rhs.null_count() == rhs.len()) {
-        let arr = V::Array::full_null(lhs.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
+        let arr = V::Array::full_null(
+            lhs.len(),
+            V::get_static_dtype().to_arrow(CompatLevel::newest()),
+        );
 
         return Ok(ChunkedArray::with_chunk(lhs.name().clone(), arr));
     }
@@ -73,7 +76,10 @@ where
     V::Array: ArrayFromIter<K> + ArrayFromIter<Option<K>>,
 {
     if lhs.len() == rhs.len() && (lhs.null_count() == lhs.len() || rhs.null_count() == rhs.len()) {
-        let arr = V::Array::full_null(lhs.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
+        let arr = V::Array::full_null(
+            lhs.len(),
+            V::get_static_dtype().to_arrow(CompatLevel::newest()),
+        );
 
         return Ok(ChunkedArray::with_chunk(lhs.name().clone(), arr));
     }
@@ -104,7 +110,10 @@ where
             || ca2.null_count() == ca2.len()
             || ca2.null_count() == ca2.len())
     {
-        let arr = V::Array::full_null(ca1.len(), V::get_dtype().to_arrow(CompatLevel::newest()));
+        let arr = V::Array::full_null(
+            ca1.len(),
+            V::get_static_dtype().to_arrow(CompatLevel::newest()),
+        );
 
         return Ok(ChunkedArray::with_chunk(ca1.name().clone(), arr));
     }

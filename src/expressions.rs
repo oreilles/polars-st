@@ -1,6 +1,7 @@
 use crate::{
     args,
     functions::{self, GeometryUtils},
+    utils::try_reduce,
     wkb::WKBGeometryType,
 };
 use geos::{Geom, Geometry};
@@ -876,8 +877,8 @@ fn difference_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> Polars
     let wkb = validate_wkb(&inputs[0])?;
     let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
-        Some(g) => it.flatten().try_reduce(|a, b| a.difference_prec(&b, g)),
-        None => it.flatten().try_reduce(|a, b| a.difference(&b)),
+        Some(g) => try_reduce(it.flatten(), |a, b| a.difference_prec(&b, g)),
+        None => try_reduce(it.flatten(), |a, b| a.difference(&b)),
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
@@ -904,8 +905,8 @@ fn intersection_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> Pola
     let wkb = validate_wkb(&inputs[0])?;
     let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
-        Some(g) => it.flatten().try_reduce(|a, b| a.intersection_prec(&b, g)),
-        None => it.flatten().try_reduce(|a, b| a.intersection(&b)),
+        Some(g) => try_reduce(it.flatten(), |a, b| a.intersection_prec(&b, g)),
+        None => try_reduce(it.flatten(), |a, b| a.intersection(&b)),
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
@@ -938,8 +939,8 @@ fn symmetric_difference_all(
     let wkb = validate_wkb(&inputs[0])?;
     let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
-        Some(g) => it.flatten().try_reduce(|a, b| a.sym_difference_prec(&b, g)),
-        None => it.flatten().try_reduce(|a, b| a.sym_difference(&b)),
+        Some(g) => try_reduce(it.flatten(), |a, b| a.sym_difference_prec(&b, g)),
+        None => try_reduce(it.flatten(), |a, b| a.sym_difference(&b)),
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())
@@ -987,10 +988,8 @@ fn union_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResul
     let geom = validate_wkb(&inputs[0])?;
     let it = geom.into_iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
-        Some(g) => it
-            .flatten()
-            .try_reduce(|left, right| left.union_prec(&right, g)),
-        None => it.flatten().try_reduce(|left, right| left.union(&right)),
+        Some(g) => try_reduce(it.flatten(), |a, b| a.union_prec(&b, g)),
+        None => try_reduce(it.flatten(), |a, b| a.union(&b)),
     }
     .map(|geom| geom.unwrap_or_else(|| Geometry::new_from_wkt("GEOMETRYCOLLECTION EMPTY").unwrap()))
     .and_then(|geom| geom.to_ewkb())

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, cast, overload
+from typing import IO, TYPE_CHECKING, Any, Literal, cast, overload
 
 import polars as pl
 import polars.selectors as cs
@@ -15,7 +15,7 @@ from polars_st.geoseries import GeoSeries
 from polars_st.selectors import geom
 
 if TYPE_CHECKING:
-    from io import BytesIO, IOBase
+    from io import BytesIO
     from pathlib import Path
 
     import altair as alt
@@ -225,7 +225,7 @@ class GeoDataFrameNameSpace:
                 validate=validate,
                 coalesce=coalesce,
             )
-            .collect(_eager=True)
+            .collect()
             .pipe(lambda df: cast("GeoDataFrame", df))
         )
 
@@ -494,9 +494,9 @@ class GeoDataFrameNameSpace:
     def write_geojson(self, file: None = None) -> str: ...
 
     @overload
-    def write_geojson(self, file: IOBase | str | Path) -> None: ...
+    def write_geojson(self, file: str | Path | IO[bytes] | IO[str]) -> None: ...
 
-    def write_geojson(self, file: IOBase | str | Path | None = None) -> str | None:
+    def write_geojson(self, file: str | Path | IO[bytes] | IO[str] | None = None) -> str | None:
         r"""Serialize to GeoJSON FeatureCollection representation.
 
         The result will be invalid if the geometry column contains different geometry types.
@@ -529,9 +529,9 @@ class GeoDataFrameNameSpace:
     def write_ndgeojson(self, file: None = None) -> str: ...
 
     @overload
-    def write_ndgeojson(self, file: IOBase | str | Path) -> None: ...
+    def write_ndgeojson(self, file: str | Path | IO[bytes] | IO[str]) -> None: ...
 
-    def write_ndgeojson(self, file: IOBase | str | Path | None = None) -> str | None:
+    def write_ndgeojson(self, file: str | Path | IO[bytes] | IO[str] | None = None) -> str | None:
         """Serialize to newline-delimited GeoJSON representation.
 
         The result will be invalid if the geometry column contains different geometry types.
