@@ -286,6 +286,9 @@ def test_functions_empty_list_frame(frame: pl.DataFrame, func: Function):
 @pytest.mark.parametrize("func", functions)
 def test_functions_none_list_frame(frame: pl.DataFrame, func: Function):
     """Functions should work on full-null lists."""
+    # Skip since List(Object) is not supported
+    if func.call in {Geo.to_dict, Geo.to_shapely}:
+        return
     result = frame.select(st.geom().list.eval(func.call(st.element().st, **func.args)))
     assert result.schema == pl.Schema([("geometry", pl.List(func.dtype))])
     assert result.item().item() is None
