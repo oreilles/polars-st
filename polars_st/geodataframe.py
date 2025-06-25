@@ -491,12 +491,24 @@ class GeoDataFrameNameSpace:
         )
 
     @overload
-    def write_geojson(self, file: None = None) -> str: ...
+    def write_geojson(
+        self,
+        file: None = None,
+        geometry_name: str = "geometry",
+    ) -> str: ...
 
     @overload
-    def write_geojson(self, file: str | Path | IO[bytes] | IO[str]) -> None: ...
+    def write_geojson(
+        self,
+        file: str | Path | IO[bytes] | IO[str],
+        geometry_name: str = "geometry",
+    ) -> None: ...
 
-    def write_geojson(self, file: str | Path | IO[bytes] | IO[str] | None = None) -> str | None:
+    def write_geojson(
+        self,
+        file: str | Path | IO[bytes] | IO[str] | None = None,
+        geometry_name: str = "geometry",
+    ) -> str | None:
         r"""Serialize to GeoJSON FeatureCollection representation.
 
         The result will be invalid if the geometry column contains different geometry types.
@@ -508,31 +520,45 @@ class GeoDataFrameNameSpace:
             ... })
             >>> geojson = gdf.st.write_geojson()
             >>> print(geojson)
-            {"type":"FeatureCollection","features":[{"properties":{"name":"Alice"},"geometry":{"type":"Point","coordinates":[0.0,0.0]}},{"properties":{"name":"Bob"},"geometry":{"type":"Point","coordinates":[1.0,2.0]}}]}
+            {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[0.0,0.0]},"properties":{"name":"Alice"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}]}
             <BLANKLINE>
         """
         return (
             self._df.select(
                 type=pl.lit("Feature"),
-                geometry=geom().st.to_geojson().str.json_decode(),
-                properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
+                geometry=geom(geometry_name).st.to_geojson().str.json_decode(),
+                properties=pl.struct(cs.exclude(geom(geometry_name)))
+                if len(self._df.columns) > 1
+                else None,
             )
             .group_by(0)
             .agg(
                 type=pl.lit("FeatureCollection"),
-                features=pl.struct("properties", "geometry"),
+                features=pl.struct("type", "geometry", "properties"),
             )
             .select("type", "features")
             .write_ndjson(file)
         )
 
     @overload
-    def write_ndgeojson(self, file: None = None) -> str: ...
+    def write_ndgeojson(
+        self,
+        file: None = None,
+        geometry_name: str = "geometry",
+    ) -> str: ...
 
     @overload
-    def write_ndgeojson(self, file: str | Path | IO[bytes] | IO[str]) -> None: ...
+    def write_ndgeojson(
+        self,
+        file: str | Path | IO[bytes] | IO[str],
+        geometry_name: str = "geometry",
+    ) -> None: ...
 
-    def write_ndgeojson(self, file: str | Path | IO[bytes] | IO[str] | None = None) -> str | None:
+    def write_ndgeojson(
+        self,
+        file: str | Path | IO[bytes] | IO[str] | None = None,
+        geometry_name: str = "geometry",
+    ) -> str | None:
         """Serialize to newline-delimited GeoJSON representation.
 
         The result will be invalid if the geometry column contains different geometry types.
@@ -544,14 +570,16 @@ class GeoDataFrameNameSpace:
             ... })
             >>> ndgeojson = gdf.st.write_ndgeojson()
             >>> print(ndgeojson)
-            {"properties":{"name":"Alice"},"geometry":{"type":"Point","coordinates":[0.0,0.0]}}
-            {"properties":{"name":"Bob"},"geometry":{"type":"Point","coordinates":[1.0,2.0]}}
+            {"type":"Feature","geometry":{"type":"Point","coordinates":[0.0,0.0]},"properties":{"name":"Alice"}}
+            {"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}
             <BLANKLINE>
         """
         return self._df.select(
             type=pl.lit("Feature"),
-            geometry=geom().st.to_geojson().str.json_decode(),
-            properties=pl.struct(cs.exclude(geom())) if len(self._df.columns) > 1 else None,
+            geometry=geom(geometry_name).st.to_geojson().str.json_decode(),
+            properties=pl.struct(cs.exclude(geom(geometry_name)))
+            if len(self._df.columns) > 1
+            else None,
         ).write_ndjson(file)
 
     def plot(self, geometry_name: str = "geometry", **kwargs: Unpack[MarkConfigKwds]) -> alt.Chart:
