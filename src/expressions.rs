@@ -535,7 +535,7 @@ fn length(inputs: &[Series]) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
-#[polars_expr(output_type=Binary)]
+#[polars_expr(output_type=Float64)]
 fn distance(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
