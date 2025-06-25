@@ -35,6 +35,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --zig --release --out dist
           manylinux: auto
+          rust-toolchain: nightly
         env:
           RUSTFLAGS: "-Zlinker-features=-lld"
       - name: Upload wheels
