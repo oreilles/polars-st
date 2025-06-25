@@ -41,9 +41,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Rust
-        run: rustup component add clippy rustfmt
-
       - name: Run Rust formatter
         run: cargo fmt --all -- --check
 
