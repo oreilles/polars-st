@@ -211,13 +211,12 @@ fn from_coords(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<S
     .map(IntoSeries::into_series)
 }
 
-#[polars_expr(output_type_func=output_type_geometry_type)]
+#[polars_expr(output_type=UInt32)]
 fn geometry_type(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     functions::get_type_id(wkb)
         .map_err(to_compute_err)
-        .map(|ca| unsafe { CategoricalChunked::from_cats_and_dtype_unchecked(ca, geometry_enum()) })
         .map(IntoSeries::into_series)
 }
 
@@ -473,11 +472,8 @@ pub fn to_python_dict(
 fn cast(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let into = &inputs[1];
-    let into = into.strict_cast(&geometry_enum())?;
+    let into = &inputs[1].strict_cast(&geometry_enum())?;
     let into = into.categorical()?;
-    let into = into.cast(&D::UInt32)?;
-    let into = into.u32().unwrap();
     functions::cast(wkb, into)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)

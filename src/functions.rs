@@ -767,8 +767,8 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
         .collect::<GResult<Vec<Option<PyObject>>>>()
 }
 
-pub fn cast(wkb: &BinaryChunked, into: &UInt32Chunked) -> GResult<BinaryChunked> {
-    broadcast_try_binary_elementwise_values(wkb, into, |wkb, into| {
+pub fn cast(wkb: &BinaryChunked, into: &CategoricalChunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, into.physical(), |wkb, into| {
         let into: WKBGeometryType = into.try_into().unwrap();
         let into: GeometryTypes = into.try_into()?;
         Geometry::new_from_wkb(wkb)?.cast(into)?.to_ewkb()
