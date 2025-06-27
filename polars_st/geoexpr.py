@@ -13,6 +13,7 @@ from polars.plugins import register_plugin_function
 
 from polars_st import _lib
 from polars_st.geometry import GeometryType, PolarsGeometryType
+from polars_st.utils.internal import is_empty_method
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -34,6 +35,8 @@ __all__ = [
 
 def register_plugin(op: str | None = None, is_aggregation: bool = False):  # noqa: ANN202
     def decorator(func):  # noqa: ANN001, ANN202
+        assert is_empty_method(func)  # noqa: S101
+
         func_name = op or func.__name__
         sig = signature(func)
         params = sig.parameters
@@ -185,13 +188,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Expr:
         """Return the coordinates of each geometry."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="coordinates",
-            args=[self._expr],
-            kwargs={"output_dimension": output_dimension},
-            is_elementwise=True,
-        )
+        ...
 
     @register_plugin()
     def exterior_ring(self) -> GeoExpr:
@@ -211,12 +208,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def get_interior_ring(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth ring of Polygon geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="get_interior_ring",
-            args=[self._expr, index],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     @register_plugin()
     def count_geometries(self) -> pl.Expr:
@@ -226,12 +218,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def get_geometry(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth part of multipart geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="get_geometry",
-            args=[self._expr, index],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     @register_plugin()
     def count_points(self) -> pl.Expr:
@@ -241,12 +228,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def get_point(self, index: IntoIntegerExpr) -> GeoExpr:
         """Return the nth point of LineString geometries."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="get_point",
-            args=[self._expr, index],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     @register_plugin()
     def parts(self) -> pl.Expr:
@@ -265,13 +247,7 @@ class GeoExprNameSpace:
         mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
     ) -> GeoExpr:
         """Set the precision of each geometry to a certain grid size."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="set_precision",
-            args=[self._expr, grid_size],
-            kwargs={"mode": mode},
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     @register_plugin()
     def distance(self, other: IntoGeoExprColumn) -> pl.Expr:
@@ -285,13 +261,7 @@ class GeoExprNameSpace:
         densify: float | None = None,
     ) -> pl.Expr:
         """Return the hausdorff distance from each geometry to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="hausdorff_distance",
-            args=[self._expr, other],
-            kwargs={"densify": densify},
-            is_elementwise=True,
-        )
+        ...
 
     @register_plugin()
     def frechet_distance(
@@ -300,13 +270,7 @@ class GeoExprNameSpace:
         densify: float | None = None,
     ) -> pl.Expr:
         """Return the frechet distance from each geometry to other."""
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="frechet_distance",
-            args=[self._expr, other],
-            kwargs={"densify": densify},
-            is_elementwise=True,
-        )
+        ...
 
     # Projection operations
 
@@ -322,12 +286,7 @@ class GeoExprNameSpace:
         Args:
             srid: The geometry new SRID
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="set_srid",
-            args=[self._expr, srid],
-            is_elementwise=True,
-        ).pipe(lambda s: cast("GeoExpr", s))
+        ...
 
     @register_plugin()
     def to_srid(self, srid: IntoIntegerExpr) -> GeoExpr:
@@ -336,12 +295,7 @@ class GeoExprNameSpace:
         Args:
             srid: The srid code of the new CRS
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="to_srid",
-            args=[self._expr, srid],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+        ...
 
     # Serialization
 
@@ -440,6 +394,7 @@ class GeoExprNameSpace:
         """Convert each geometry to a GeoJSON-like Python [`dict`][] object."""
         return self._expr.map_batches(
             lambda s: pl.Series(s.name, _lib.to_python_dict(s), dtype=pl.Object),
+            return_dtype=pl.Object(),
             is_elementwise=True,
         )
 

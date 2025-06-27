@@ -20,6 +20,7 @@ from polars_st.parsing import (
     point,
     polygon,
 )
+from polars_st.utils.internal import is_empty_method
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -221,6 +222,8 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
 
 
 def dispatch(func):  # noqa: ANN001, ANN202 to preserve pylance type hints
+    assert is_empty_method(func)  # noqa: S101
+
     @wraps(func)
     def wrapper(self: GeoSeriesNameSpace, *args: P.args, **kwargs: P.kwargs) -> pl.Series:
         f = getattr(getattr(pl.col(self._series.name), "st"), func.__name__)  # noqa: B009
