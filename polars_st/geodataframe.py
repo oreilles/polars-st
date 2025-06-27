@@ -460,7 +460,6 @@ class GeoDataFrameNameSpace:
         geometry_type = geometry_types[0] if len(geometry_types) == 1 else "Unknown"
 
         srids = self._df.select(geom().st.srid().unique().drop_nulls())
-        crs = None
         if len(srids) == 1 and (srid := srids[0, 0]) != 0:
             crs = get_crs_from_code(srid)
             if crs is None:
@@ -472,8 +471,9 @@ class GeoDataFrameNameSpace:
         else:
             crs = None
 
+        geometry = geom(geometry_name).st.to_wkb(output_dimension=4, include_srid=False)
         write_arrow(
-            self._df.to_arrow(),
+            self._df.with_columns(geometry).to_arrow(),
             path=path,
             layer=layer,
             driver=driver,
