@@ -65,13 +65,6 @@ fn geometry_enum() -> DataType {
     D::Enum(Some(rev_mapping.into()), CategoricalOrdering::Physical)
 }
 
-fn output_type_geometry_type(input_fields: &[Field]) -> PolarsResult<Field> {
-    Ok(Field::new(
-        first_field_name(input_fields)?.clone(),
-        geometry_enum(),
-    ))
-}
-
 fn output_type_sjoin(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
         first_field_name(input_fields)?.clone(),
