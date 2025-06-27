@@ -52,11 +52,6 @@ pub struct SimplifyKwargs {
 }
 
 #[derive(Deserialize)]
-pub struct DWithinKwargs {
-    pub distance: f64,
-}
-
-#[derive(Deserialize)]
 pub struct DistanceDensifyKwargs {
     pub densify: Option<f64>,
 }

@@ -552,7 +552,7 @@ class GeoExprNameSpace:
         ...
 
     @register_plugin()
-    def dwithin(self, other: IntoGeoExprColumn, distance: float) -> pl.Expr:
+    def dwithin(self, other: IntoGeoExprColumn, distance: IntoNumericExpr) -> pl.Expr:
         """Return `True` when each geometry is within given distance to other."""
         ...
 

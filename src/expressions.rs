@@ -731,11 +731,13 @@ fn disjoint(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Boolean)]
-fn dwithin(inputs: &[Series], kwargs: args::DWithinKwargs) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<2>(inputs)?;
+fn dwithin(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<3>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::dwithin(left, right, kwargs.distance)
+    let distance = inputs[2].strict_cast(&D::Float64)?;
+    let distance = distance.f64().unwrap();
+    functions::dwithin(left, right, distance)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
 }

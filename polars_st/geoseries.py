@@ -563,7 +563,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def dwithin(self, other: IntoGeoExprColumn, distance: float) -> pl.Series:
+    def dwithin(self, other: IntoGeoExprColumn, distance: IntoNumericExpr) -> pl.Series:
         """See [`GeoExprNameSpace.dwithin`][polars_st.GeoExprNameSpace.dwithin]."""
         ...
 

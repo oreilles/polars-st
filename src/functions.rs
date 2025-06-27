@@ -980,11 +980,15 @@ pub fn disjoint(a: &BinaryChunked, b: &BinaryChunked) -> GResult<BooleanChunked>
     })
 }
 
-pub fn dwithin(a: &BinaryChunked, b: &BinaryChunked, distance: f64) -> GResult<BooleanChunked> {
-    broadcast_try_binary_elementwise_values(a, b, |a, b| {
+pub fn dwithin(
+    a: &BinaryChunked,
+    b: &BinaryChunked,
+    distance: &Float64Chunked,
+) -> GResult<BooleanChunked> {
+    broadcast_try_ternary_elementwise_values(a, b, distance, |a, b, distance| {
         let a = Geometry::new_from_wkb(a)?;
         let b = Geometry::new_from_wkb(b)?;
-        Geometry::distance(&a, &b).map(|d| d < distance)
+        Geometry::dwithin(&a, &b, distance)
     })
 }
 
