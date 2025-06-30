@@ -426,7 +426,11 @@ def from_shapely(expr: IntoExprColumn) -> GeoExpr:
 
     expr = wrap_expr(parse_into_expression(expr))
     res = expr.map_batches(
-        lambda s: pl.Series(s.name, list(shapely.to_wkb(s.to_numpy(), include_srid=True))),
+        lambda s: pl.Series(
+            s.name,
+            list(shapely.to_wkb(s.to_numpy(), include_srid=True)),
+            pl.Binary,
+        ),
         return_dtype=pl.Binary,
         is_elementwise=True,
     )
