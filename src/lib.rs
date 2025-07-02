@@ -10,6 +10,7 @@
 #![allow(clippy::cast_possible_truncation)]
 
 use pyo3::prelude::*;
+use pyo3_polars::PolarsAllocator;
 
 mod args;
 mod arity;
@@ -18,6 +19,9 @@ mod expressions;
 mod functions;
 mod utils;
 mod wkb;
+
+#[global_allocator]
+static ALLOC: PolarsAllocator = PolarsAllocator::new();
 
 #[pymodule]
 fn _lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
