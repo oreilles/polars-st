@@ -53,7 +53,7 @@ where
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
         let mut writer = WKBWriter::new()?;
         writer.set_include_SRID(true);
-        Ok(writer.write_wkb(self)?.into())
+        writer.write_wkb(self)
     }
 
     #[allow(clippy::too_many_lines)]
@@ -739,8 +739,7 @@ pub fn to_wkb(wkb: &BinaryChunked, params: &ToWkbKwargs) -> GResult<BinaryChunke
     writer.set_output_dimension(params.output_dimension.try_into()?);
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        let res: Vec<u8> = writer.write_wkb(&geom)?.into();
-        Ok(res)
+        writer.write_wkb(&geom)
     })
 }
 

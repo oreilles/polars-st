@@ -249,12 +249,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "c_vec"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdd7a427adc0135366d99db65b36dae9237130997e560ed61118041fb72be6e8"
-
-[[package]]
 name = "castaway"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -687,9 +681,8 @@ dependencies = [
 [[package]]
 name = "geos"
 version = "10.0.0"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#e046ed83c717318c7949e431bcdde7c3018a33aa"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
 dependencies = [
- "c_vec",
  "geos-sys",
  "libc",
  "num",
@@ -698,7 +691,7 @@ dependencies = [
 [[package]]
 name = "geos-src"
 version = "0.2.3"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#e046ed83c717318c7949e431bcdde7c3018a33aa"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
 dependencies = [
  "cmake",
 ]
@@ -706,7 +699,7 @@ dependencies = [
 [[package]]
 name = "geos-sys"
 version = "2.0.6"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#e046ed83c717318c7949e431bcdde7c3018a33aa"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
 dependencies = [
  "geos-src",
  "libc",
