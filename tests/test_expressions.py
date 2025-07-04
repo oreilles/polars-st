@@ -169,7 +169,7 @@ functions = [
     Function(Geo.offset_curve, pl.Binary(), {"distance": 1.0}),
     Function(Geo.centroid, pl.Binary()),
     Function(Geo.center, pl.Binary()),
-    Function(Geo.clip_by_rect, pl.Binary(), {"xmin": 0.0, "ymin": 0.0, "xmax": 1.0, "ymax": 1.0}),
+    Function(Geo.clip_by_rect, pl.Binary(), {"bounds": [0.0, 0.0, 1.0, 1.0]}),
     Function(Geo.concave_hull, pl.Binary()),
     Function(Geo.convex_hull, pl.Binary()),
     Function(Geo.segmentize, pl.Binary(), {"max_segment_length": 1.0}),
