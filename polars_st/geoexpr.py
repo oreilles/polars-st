@@ -33,11 +33,11 @@ __all__ = [
 ]
 
 
-def register_plugin(op: str | None = None, is_aggregation: bool = False):  # noqa: ANN202
+def register_plugin(is_aggregation: bool = False):  # noqa: ANN202
     def decorator(func):  # noqa: ANN001, ANN202
         assert is_empty_method(func)  # noqa: S101
 
-        func_name = op or func.__name__
+        func_name = func.__name__
         sig = signature(func)
         params = sig.parameters
         expr_args = dict.fromkeys(k for k, v in params.items() if "Expr" in str(v.annotation))
