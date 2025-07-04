@@ -713,13 +713,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def clip_by_rect(
-        self,
-        xmin: IntoNumericExpr,
-        ymin: IntoNumericExpr,
-        xmax: IntoNumericExpr,
-        ymax: IntoNumericExpr,
-    ) -> GeoSeries:
+    def clip_by_rect(self, bounds: IntoExprColumn) -> GeoSeries:
         """See [`GeoExprNameSpace.clip_by_rect`][polars_st.GeoExprNameSpace.clip_by_rect]."""
         ...
 

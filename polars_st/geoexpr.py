@@ -649,19 +649,10 @@ class GeoExprNameSpace:
         """Return the bounding box center of each geometry."""
         ...
 
-    def clip_by_rect(
-        self,
-        xmin: IntoNumericExpr,
-        ymin: IntoNumericExpr,
-        xmax: IntoNumericExpr,
-        ymax: IntoNumericExpr,
-    ) -> GeoExpr:
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="clip_by_rect",
-            args=[self._expr, pl.concat_list(xmin, ymin, xmax, ymax)],
-            is_elementwise=True,
-        ).pipe(lambda e: cast("GeoExpr", e))
+    @register_plugin()
+    def clip_by_rect(self, bounds: IntoExprColumn) -> GeoExpr:
+        """Clips each geometry by a bounding rectangle."""
+        ...
 
     @register_plugin()
     def convex_hull(self) -> GeoExpr:

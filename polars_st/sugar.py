@@ -407,15 +407,9 @@ def center(*columns: str) -> GeoExpr:
     return geom(*columns).st.center()
 
 
-def clip_by_rect(
-    *columns: str,
-    xmin: IntoNumericExpr,
-    ymin: IntoNumericExpr,
-    xmax: IntoNumericExpr,
-    ymax: IntoNumericExpr,
-) -> GeoExpr:
-    """Syntactic sugar for <code>st.geom(columns).st.[clip_by_rect()][polars_st.GeoExprNameSpace.clip_by_rect]</code>."""  # noqa: E501
-    return geom(*columns).st.clip_by_rect(xmin, ymin, xmax, ymax)
+def clip_by_rect(*columns: str, bounds: IntoExprColumn) -> GeoExpr:
+    """Syntactic sugar for <code>st.geom(columns).st.[clip_by_rect(...)][polars_st.GeoExprNameSpace.clip_by_rect]</code>."""  # noqa: E501
+    return geom(*columns).st.clip_by_rect(bounds)
 
 
 def convex_hull(*columns: str) -> GeoExpr:
