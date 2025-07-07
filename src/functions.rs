@@ -346,10 +346,18 @@ pub fn point(coords: &ListChunked) -> GResult<BinaryChunked> {
 
 pub fn multipoint(coords: &ListChunked) -> GResult<BinaryChunked> {
     coords.try_apply_nonnull_values_generic(|coords| {
-        // TODO: Avoid intermediate LineString representation
         let coord_seq = get_coordinate_seq_from_array(coords)?;
-        Geometry::create_line_string(coord_seq)?
-            .cast(MultiPoint)?
+        let dims: u32 = coord_seq.dimensions()?.into();
+        let has_z = dims > 2;
+        let has_m = dims > 3;
+        let coords = coord_seq.as_buffer(Some(dims as usize))?;
+        coords
+            .chunks_exact(dims as usize)
+            .into_iter()
+            .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, has_z, has_m))
+            .map(|seq| Geometry::create_point(seq?))
+            .collect::<GResult<Vec<_>>>()
+            .and_then(Geometry::create_multipoint)?
             .to_ewkb()
     })
 }
