@@ -89,7 +89,8 @@ fn validate_wkb(s: &Series) -> PolarsResult<&BinaryChunked> {
 #[polars_expr(output_type=Binary)]
 fn from_wkb(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
-    functions::from_wkb(inputs[0].binary()?)
+    let wkb = validate_wkb(&inputs[0])?;
+    functions::from_wkb(wkb)
         .map_err(to_compute_err)
         .map(IntoSeries::into_series)
 }
