@@ -1865,21 +1865,19 @@ pub fn sjoin(
         .collect::<GResult<Vec<_>>>()?;
 
     let builder_len = core::cmp::max(left.len(), right.len());
-    let (left_indicies, right_indicies) = (0..right.len())
+    (0..right.len())
         .into_par_iter()
         .map(|right_index| {
             let wkb = unsafe { right.get_unchecked(right_index) };
             let Some(wkb) = wkb else {
-                return (
+                return Ok((
                     UInt32Chunked::from_vec("".into(), vec![]),
                     UInt32Chunked::from_vec("".into(), vec![]),
-                );
+                ));
             };
-            let right_geom = Geometry::new_from_wkb(wkb).unwrap();
-            let mut left_indicies =
-                PrimitiveChunkedBuilder::<UInt32Type>::new("left_index".into(), builder_len);
-            let mut right_indicies =
-                PrimitiveChunkedBuilder::<UInt32Type>::new("right_index".into(), builder_len);
+            let right_geom = Geometry::new_from_wkb(wkb)?;
+            let mut left_indicies = PrimitiveChunkedBuilder::new("".into(), builder_len);
+            let mut right_indicies = PrimitiveChunkedBuilder::new("".into(), builder_len);
             spatial_index.query(&right_geom, |left_index| {
                 let left_geom = unsafe { left_geoms[*left_index].as_ref().unwrap_unchecked() };
                 if matches!(predicate(left_geom, &right_geom), Ok(true)) {
@@ -1887,22 +1885,21 @@ pub fn sjoin(
                     right_indicies.append_value(right_index as u32);
                 }
             });
-            (left_indicies.finish(), right_indicies.finish())
+            Ok((left_indicies.finish(), right_indicies.finish()))
         })
-        .reduce(
+        .try_reduce(
             || {
                 (
                     UInt32Chunked::from_vec("left_index".into(), vec![]),
                     UInt32Chunked::from_vec("right_index".into(), vec![]),
                 )
             },
-            |(mut acc_left, mut acc_right), (lefts, rights)| {
-                acc_left.extend(&lefts).expect("extend failed");
-                acc_right.extend(&rights).expect("extend failed");
-                (acc_left, acc_right)
+            |(mut left_acc, mut right_acc), (left, right)| {
+                left_acc.extend(&left).expect("extend failed");
+                right_acc.extend(&right).expect("extend failed");
+                Ok((left_acc, right_acc))
             },
-        );
-    Ok((left_indicies, right_indicies))
+        )
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {
