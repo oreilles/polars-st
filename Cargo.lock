@@ -681,7 +681,7 @@ dependencies = [
 [[package]]
 name = "geos"
 version = "10.0.0"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#7f31601102f974a1fe6dd921ef1f5c9b1a572c68"
 dependencies = [
  "geos-sys",
  "libc",
@@ -691,7 +691,7 @@ dependencies = [
 [[package]]
 name = "geos-src"
 version = "0.2.3"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#7f31601102f974a1fe6dd921ef1f5c9b1a572c68"
 dependencies = [
  "cmake",
 ]
@@ -699,7 +699,7 @@ dependencies = [
 [[package]]
 name = "geos-sys"
 version = "2.0.6"
-source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#593593b22b3849258c88a8beff03cb980da42a09"
+source = "git+https://github.com/Oreilles/rust-geos?branch=3.14#7f31601102f974a1fe6dd921ef1f5c9b1a572c68"
 dependencies = [
  "geos-src",
  "libc",
@@ -1961,6 +1961,7 @@ dependencies = [
  "proj4wkt",
  "pyo3",
  "pyo3-polars",
+ "rayon",
  "scroll",
  "serde",
 ]

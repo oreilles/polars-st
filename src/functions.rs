@@ -24,6 +24,7 @@ use polars_arrow::array::{Array, BinaryViewArray, Float64Array, StaticArray};
 use proj4rs::errors::Error as ProjError;
 use proj4rs::Proj;
 use pyo3::prelude::*;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub trait GeometryUtils {
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
@@ -1857,34 +1858,51 @@ pub fn sjoin(
         .into_iter()
         .map(|v| v.map(Geometry::new_from_wkb).transpose())
         .collect::<GResult<Vec<_>>>()?;
-    let mut spatial_index = strtree(&left_geoms)?;
+    let spatial_index = strtree(&left_geoms)?;
     let left_geoms = left_geoms
         .iter()
         .map(|v| v.as_ref().map(Geom::to_prepared_geom).transpose())
         .collect::<GResult<Vec<_>>>()?;
 
     let builder_len = core::cmp::max(left.len(), right.len());
-    let mut left_index_builder =
-        PrimitiveChunkedBuilder::<UInt32Type>::new("left_index".into(), builder_len);
-    let mut right_index_builder =
-        PrimitiveChunkedBuilder::<UInt32Type>::new("right_index".into(), builder_len);
-
-    for (right_index, wkb) in right.into_iter().enumerate() {
-        if wkb.is_none() {
-            continue;
-        }
-        let right_geom = Geometry::new_from_wkb(wkb.unwrap())?;
-        spatial_index.query(&right_geom, |left_index| {
-            let left_geom = left_geoms[*left_index]
-                .as_ref()
-                .expect("Shouldn't be able to match None");
-            if matches!(predicate(left_geom, &right_geom), Ok(true)) {
-                left_index_builder.append_value(*left_index as u32);
-                right_index_builder.append_value(right_index as u32);
-            }
-        });
-    }
-    Ok((left_index_builder.finish(), right_index_builder.finish()))
+    let (left_indicies, right_indicies) = (0..right.len())
+        .into_par_iter()
+        .map(|right_index| {
+            let wkb = unsafe { right.get_unchecked(right_index) };
+            let Some(wkb) = wkb else {
+                return (
+                    UInt32Chunked::from_vec("".into(), vec![]),
+                    UInt32Chunked::from_vec("".into(), vec![]),
+                );
+            };
+            let right_geom = Geometry::new_from_wkb(wkb).unwrap();
+            let mut left_indicies =
+                PrimitiveChunkedBuilder::<UInt32Type>::new("left_index".into(), builder_len);
+            let mut right_indicies =
+                PrimitiveChunkedBuilder::<UInt32Type>::new("right_index".into(), builder_len);
+            spatial_index.query(&right_geom, |left_index| {
+                let left_geom = unsafe { left_geoms[*left_index].as_ref().unwrap_unchecked() };
+                if matches!(predicate(left_geom, &right_geom), Ok(true)) {
+                    left_indicies.append_value(*left_index as u32);
+                    right_indicies.append_value(right_index as u32);
+                }
+            });
+            (left_indicies.finish(), right_indicies.finish())
+        })
+        .reduce(
+            || {
+                (
+                    UInt32Chunked::from_vec("left_index".into(), vec![]),
+                    UInt32Chunked::from_vec("right_index".into(), vec![]),
+                )
+            },
+            |(mut acc_left, mut acc_right), (lefts, rights)| {
+                acc_left.extend(&lefts).expect("extend failed");
+                acc_right.extend(&rights).expect("extend failed");
+                (acc_left, acc_right)
+            },
+        );
+    Ok((left_indicies, right_indicies))
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {
