@@ -188,12 +188,12 @@ fn from_coords(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<S
     let inputs = validate_inputs_length::<1>(inputs)?;
     let coords = &inputs[0];
     match (kwargs.into, &coords.dtype()) {
-        (Some(Point), t) => validate_point(t).and_then(|_| point(coords)),
-        (Some(MultiPoint), t) => validate_line(t).and_then(|_| multipoint(coords)),
-        (Some(LineString), t) => validate_line(t).and_then(|_| linestring(coords)),
-        (Some(CircularString), t) => validate_line(t).and_then(|_| circularstring(coords)),
-        (Some(MultiLineString), t) => validate_polygon(t).and_then(|_| multilinestring(coords)),
-        (Some(Polygon), t) => validate_polygon(t).and_then(|_| polygon(coords)),
+        (Some(Point), t) => validate_point(t).and_then(|()| point(coords)),
+        (Some(MultiPoint), t) => validate_line(t).and_then(|()| multipoint(coords)),
+        (Some(LineString), t) => validate_line(t).and_then(|()| linestring(coords)),
+        (Some(CircularString), t) => validate_line(t).and_then(|()| circularstring(coords)),
+        (Some(MultiLineString), t) => validate_polygon(t).and_then(|()| multilinestring(coords)),
+        (Some(Polygon), t) => validate_polygon(t).and_then(|()| polygon(coords)),
         (None, t) if validate_point(t).is_ok() => point(coords),
         (None, t) if validate_line(t).is_ok() => linestring(coords),
         (None, t) if validate_polygon(t).is_ok() => polygon(coords),

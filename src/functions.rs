@@ -354,7 +354,6 @@ pub fn multipoint(coords: &ListChunked) -> GResult<BinaryChunked> {
         let coords = coord_seq.as_buffer(Some(dims as usize))?;
         coords
             .chunks_exact(dims as usize)
-            .into_iter()
             .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, has_z, has_m))
             .map(|seq| Geometry::create_point(seq?))
             .collect::<GResult<Vec<_>>>()
