@@ -176,7 +176,6 @@ pub enum SpatialJoinPredicate {
     Touches,
     Covers,
     CoveredBy,
-    ContainsProperly,
 }
 
 #[derive(Deserialize)]

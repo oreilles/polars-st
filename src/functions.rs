@@ -15,7 +15,7 @@ use crate::{
 use geos::{
     BufferParams, CoordSeq, Error as GError, GResult, GeoJSONWriter, Geom, Geometry,
     GeometryTypes::{self, *},
-    PreparedGeometry, STRtree, SpatialIndex, WKBWriter, WKTWriter,
+    STRtree, SpatialIndex, WKBWriter, WKTWriter,
 };
 
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
@@ -1843,25 +1843,21 @@ pub fn sjoin(
 ) -> GResult<(UInt32Chunked, UInt32Chunked)> {
     let predicate = match predicate {
         SpatialJoinPredicate::IntersectsBbox => |_: &_, _: &_| Ok(true),
-        SpatialJoinPredicate::Intersects => PreparedGeometry::intersects,
-        SpatialJoinPredicate::Within => PreparedGeometry::within,
-        SpatialJoinPredicate::Contains => PreparedGeometry::contains,
-        SpatialJoinPredicate::Overlaps => PreparedGeometry::overlaps,
-        SpatialJoinPredicate::Crosses => PreparedGeometry::crosses,
-        SpatialJoinPredicate::Touches => PreparedGeometry::touches,
-        SpatialJoinPredicate::Covers => PreparedGeometry::covers,
-        SpatialJoinPredicate::CoveredBy => PreparedGeometry::covered_by,
-        SpatialJoinPredicate::ContainsProperly => PreparedGeometry::contains_properly,
+        SpatialJoinPredicate::Intersects => Geometry::intersects,
+        SpatialJoinPredicate::Within => Geometry::within,
+        SpatialJoinPredicate::Contains => Geometry::contains,
+        SpatialJoinPredicate::Overlaps => Geometry::overlaps,
+        SpatialJoinPredicate::Crosses => Geometry::crosses,
+        SpatialJoinPredicate::Touches => Geometry::touches,
+        SpatialJoinPredicate::Covers => Geometry::covers,
+        SpatialJoinPredicate::CoveredBy => Geometry::covered_by,
     };
     let left_geoms = left
         .into_iter()
         .map(|v| v.map(Geometry::new_from_wkb).transpose())
         .collect::<GResult<Vec<_>>>()?;
+
     let spatial_index = strtree(&left_geoms)?;
-    let left_geoms = left_geoms
-        .iter()
-        .map(|v| v.as_ref().map(Geom::to_prepared_geom).transpose())
-        .collect::<GResult<Vec<_>>>()?;
 
     let builder_len = core::cmp::max(left.len(), right.len());
     (0..right.len())
