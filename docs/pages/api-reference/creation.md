@@ -10,7 +10,6 @@
             - multilinestring
             - polygon
             - rectangle
-            - from_coords
             - from_wkb
             - from_wkt
             - from_ewkt

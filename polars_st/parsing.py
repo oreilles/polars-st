@@ -12,13 +12,11 @@ if TYPE_CHECKING:
     from polars._typing import IntoExprColumn
 
     from polars_st.geoexpr import GeoExpr
-    from polars_st.geometry import GeometryType
 
 
 __all__ = [
     "circularstring",
     "circularstring",
-    "from_coords",
     "from_ewkt",
     "from_geojson",
     "from_shapely",
@@ -74,9 +72,8 @@ def point(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="point",
         args=coords,
-        kwargs={"into": "Point"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -105,9 +102,8 @@ def multipoint(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="multipoint",
         args=coords,
-        kwargs={"into": "MultiPoint"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -152,9 +148,8 @@ def linestring(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="linestring",
         args=coords,
-        kwargs={"into": "LineString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -181,9 +176,8 @@ def circularstring(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="circularstring",
         args=coords,
-        kwargs={"into": "CircularString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -210,9 +204,8 @@ def multilinestring(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="multilinestring",
         args=coords,
-        kwargs={"into": "MultiLineString"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -239,9 +232,8 @@ def polygon(coords: IntoExprColumn) -> GeoExpr:
     """
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="from_coords",
+        function_name="polygon",
         args=coords,
-        kwargs={"into": "Polygon"},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
@@ -272,44 +264,6 @@ def rectangle(bounds: IntoExprColumn) -> GeoExpr:
         plugin_path=Path(__file__).parent,
         function_name="rectangle",
         args=bounds,
-        is_elementwise=True,
-    ).pipe(lambda e: cast("GeoExpr", e))
-
-
-def from_coords(coords: IntoExprColumn, into: GeometryType | None = None) -> GeoExpr:
-    """Create geometries from any coordinates.
-
-    Examples:
-        >>> df = pl.DataFrame({"coords": [[0, 1], [0, 2]]})
-        >>> df = df.select(geometry=st.from_coords("coords"))
-        >>> df.st.to_wkt()
-        shape: (2, 1)
-        ┌─────────────┐
-        │ geometry    │
-        │ ---         │
-        │ str         │
-        ╞═════════════╡
-        │ POINT (0 1) │
-        │ POINT (0 2) │
-        └─────────────┘
-
-        >>> df = pl.DataFrame({"coords": [[[0, 1], [2, 3]]]})
-        >>> df = df.select(geometry=st.from_coords("coords"))
-        >>> df.st.to_wkt()
-        shape: (1, 1)
-        ┌───────────────────────┐
-        │ geometry              │
-        │ ---                   │
-        │ str                   │
-        ╞═══════════════════════╡
-        │ LINESTRING (0 1, 2 3) │
-        └───────────────────────┘
-    """
-    return register_plugin_function(
-        plugin_path=Path(__file__).parent,
-        function_name="from_coords",
-        args=coords,
-        kwargs={"into": into},
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 

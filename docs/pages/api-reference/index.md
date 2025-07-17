@@ -19,7 +19,6 @@ hide:
 | `circularstring` | Create CircularString geometries from lists of coordinates. | [`root`][polars_st.circularstring] |
 | `multilinestring` | Create MultiLineString geometries from lists of lists of coordinates. | [`root`][polars_st.multilinestring] |
 | `polygon` | Create Polygon geometries from lists of lists of coordinates. | [`root`][polars_st.polygon] |
-| `from_coords` | Create geometries from any coordinates. | [`root`][polars_st.from_coords] |
 | `from_wkb` | Parse geometries from Well-Known Binary (WKB) representation | [`root`][polars_st.from_wkb] |
 | `from_wkt` | Parse geometries from Well-Known Text (WKT) representation | [`root`][polars_st.from_wkt] |
 | `from_ewkt` | Parse geometries from Extended Well-Known Text (EWKT) representation | [`root`][polars_st.from_ewkt] |

@@ -47,10 +47,7 @@ pub trait GeometryUtils {
     fn skew(&self, x: f64, y: f64, z: f64, x0: f64, y0: f64, z0: f64) -> GResult<Geometry>;
 }
 
-impl<T> GeometryUtils for T
-where
-    T: Geom,
-{
+impl<T: Geom> GeometryUtils for T {
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
         let mut writer = WKBWriter::new()?;
         writer.set_include_SRID(true);
@@ -377,8 +374,8 @@ pub fn circularstring(coords: &ListChunked) -> GResult<BinaryChunked> {
 }
 
 pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
-    fn get_line_n(coords: &LargeListArray, n: usize) -> GResult<Geometry> {
-        Geometry::create_line_string(match unsafe { coords.get_unchecked(n) } {
+    fn get_line(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
+        Geometry::create_line_string(match array {
             Some(array) => get_coordinate_seq_from_array(array),
             None => CoordSeq::new(0, geos::CoordDimensions::TwoD),
         }?)
@@ -386,16 +383,14 @@ pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
 
     coords.try_apply_nonnull_values_generic(|a| {
         let lines = a.as_any().downcast_ref::<LargeListArray>().unwrap();
-        let lines = (0..lines.len())
-            .map(|n| get_line_n(lines, n))
-            .collect::<GResult<Vec<_>>>()?;
+        let lines = lines.iter().map(get_line).collect::<GResult<Vec<_>>>()?;
         Geometry::create_multiline_string(lines)?.to_ewkb()
     })
 }
 
 pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
-    fn get_ring_n(coords: &LargeListArray, n: usize) -> GResult<Geometry> {
-        Geometry::create_linear_ring(match unsafe { coords.get_unchecked(n) } {
+    fn get_ring(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
+        Geometry::create_linear_ring(match array {
             Some(array) => get_coordinate_seq_from_array(array),
             None => CoordSeq::new(0, geos::CoordDimensions::TwoD),
         }?)
@@ -403,13 +398,11 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
 
     coords.try_apply_nonnull_values_generic(|a| {
         let rings = a.as_any().downcast_ref::<LargeListArray>().unwrap();
-        if rings.len() == 0 {
+        let mut rings = rings.iter();
+        let Some(exterior) = rings.next().map(get_ring).transpose()? else {
             return Geometry::create_empty_polygon()?.to_ewkb();
-        }
-        let exterior = get_ring_n(rings, 0)?;
-        let interiors = (1..rings.len())
-            .map(|n| get_ring_n(rings, n))
-            .collect::<GResult<Vec<_>>>()?;
+        };
+        let interiors = rings.map(get_ring).collect::<GResult<Vec<_>>>()?;
         Geometry::create_polygon(exterior, interiors)?.to_ewkb()
     })
 }

@@ -2,7 +2,6 @@ use crate::{
     args,
     functions::{self, GeometryUtils},
     utils::try_reduce,
-    wkb::WKBGeometryType,
 };
 use geos::{Geom, Geometry};
 use polars::{datatypes::DataType as D, prelude::array::ArrayNameSpace};
@@ -128,80 +127,29 @@ fn rectangle(inputs: &[Series]) -> PolarsResult<Series> {
         .map(IntoSeries::into_series)
 }
 
-#[polars_expr(output_type=Binary)]
-fn from_coords(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<Series> {
-    fn validate_point(dtype: &DataType) -> PolarsResult<()> {
-        match &dtype {
-            &D::List(inner) if inner.is_primitive_numeric() => Ok(()),
-            &D::Array(inner, 2..=4) if inner.is_primitive_numeric() => Ok(()),
-            &D::Array(inner, t) if inner.is_primitive_numeric() => {
-                Err(polars_err!(InvalidOperation: "invalid coordinates dimension: {t}"))
-            }
-            t => Err(polars_err!(InvalidOperation: "invalid coordinates dtype: {t}")),
+macro_rules! create_geometry {
+    ($name:ident, $cast_type:expr) => {
+        #[polars_expr(output_type = Binary)]
+        fn $name(inputs: &[Series]) -> PolarsResult<Series> {
+            let inputs = validate_inputs_length::<1>(inputs)?;
+            let coords = &inputs[0];
+            let coords = coords
+                .cast(&$cast_type)
+                .map_err(|_| polars_err!(InvalidOperation: "invalid coordinates dtype for {}: {}", stringify!($name), coords.dtype()))?;
+            let coords = coords.list().unwrap();
+            functions::$name(coords)
+                .map_err(to_compute_err)
+                .map(IntoSeries::into_series)
         }
-    }
-    fn validate_line(dtype: &DataType) -> PolarsResult<()> {
-        match &dtype {
-            &D::List(inner) | &D::Array(inner, _) => validate_point(inner),
-            t => Err(polars_err!(InvalidOperation: "invalid coordinates dtype: {t}")),
-        }
-    }
-    fn validate_polygon(dtype: &DataType) -> PolarsResult<()> {
-        match &dtype {
-            &D::List(inner) | &D::Array(inner, _) => validate_line(inner),
-            t => Err(polars_err!(InvalidOperation: "invalid coordinates dtype: {t}")),
-        }
-    }
-
-    fn point(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::Float64.into()))?;
-        let coords = coords.list().unwrap();
-        functions::point(coords).map_err(to_compute_err)
-    }
-    fn multipoint(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list().unwrap();
-        functions::multipoint(coords).map_err(to_compute_err)
-    }
-    fn linestring(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list().unwrap();
-        functions::linestring(coords).map_err(to_compute_err)
-    }
-    fn circularstring(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::List(D::Float64.into()).into()))?;
-        let coords = coords.list().unwrap();
-        functions::circularstring(coords).map_err(to_compute_err)
-    }
-    fn multilinestring(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::List(D::List(D::Float64.into()).into()).into()))?;
-        let coords = coords.list().unwrap();
-        functions::multilinestring(coords).map_err(to_compute_err)
-    }
-    fn polygon(coords: &Series) -> PolarsResult<BinaryChunked> {
-        let coords = coords.cast(&D::List(D::List(D::List(D::Float64.into()).into()).into()))?;
-        let coords = coords.list().unwrap();
-        functions::polygon(coords).map_err(to_compute_err)
-    }
-
-    use WKBGeometryType::*;
-    let inputs = validate_inputs_length::<1>(inputs)?;
-    let coords = &inputs[0];
-    match (kwargs.into, &coords.dtype()) {
-        (Some(Point), t) => validate_point(t).and_then(|()| point(coords)),
-        (Some(MultiPoint), t) => validate_line(t).and_then(|()| multipoint(coords)),
-        (Some(LineString), t) => validate_line(t).and_then(|()| linestring(coords)),
-        (Some(CircularString), t) => validate_line(t).and_then(|()| circularstring(coords)),
-        (Some(MultiLineString), t) => validate_polygon(t).and_then(|()| multilinestring(coords)),
-        (Some(Polygon), t) => validate_polygon(t).and_then(|()| polygon(coords)),
-        (None, t) if validate_point(t).is_ok() => point(coords),
-        (None, t) if validate_line(t).is_ok() => linestring(coords),
-        (None, t) if validate_polygon(t).is_ok() => polygon(coords),
-        (None, t) => Err(polars_err!(InvalidOperation: "invalid coordinates dtype: {t}")),
-        (Some(g), _) => Err(polars_err!(InvalidOperation: "unsupported geometry type: {g:?}")),
-    }
-    .map(IntoSeries::into_series)
+    };
 }
+
+create_geometry!(point, D::Float64.implode());
+create_geometry!(linestring, D::Float64.implode().implode());
+create_geometry!(multipoint, D::Float64.implode().implode());
+create_geometry!(circularstring, D::Float64.implode().implode());
+create_geometry!(multilinestring, D::Float64.implode().implode().implode());
+create_geometry!(polygon, D::Float64.implode().implode().implode());
 
 #[polars_expr(output_type=UInt32)]
 fn geometry_type(inputs: &[Series]) -> PolarsResult<Series> {

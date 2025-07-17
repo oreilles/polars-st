@@ -9,7 +9,6 @@ from polars.api import register_series_namespace
 from polars_st.casting import st
 from polars_st.parsing import (
     circularstring,
-    from_coords,
     from_ewkt,
     from_geojson,
     from_shapely,
@@ -78,7 +77,6 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             "ewkt",
             "geojson",
             "shapely",
-            "coords",
             "point",
             "multipoint",
             "linestring",
@@ -110,7 +108,18 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
                 case pl.Object:
                     geometry_format = "shapely"
                 case pl.List | pl.Array:
-                    geometry_format = "coords"
+                    inner = s.dtype.inner
+                    if inner.is_numeric():
+                        geometry_format = "point"
+                    elif inner in (pl.List, pl.Array):
+                        inner = inner.inner
+                        if inner.is_numeric():
+                            geometry_format = "linestring"
+                        elif inner in (pl.List, pl.Array):
+                            inner = inner.inner
+                            if inner.is_numeric():
+                                geometry_format = "polygon"
+
         match geometry_format:
             case None:
                 msg = f"Couldn't infer geometry format from dtype {s.dtype}"
@@ -125,8 +134,6 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
                 result = pl.select(from_geojson(s)).to_series()
             case "shapely":
                 result = pl.select(from_shapely(s)).to_series()
-            case "coords":
-                result = pl.select(from_coords(s)).to_series()
             case "point":
                 result = pl.select(point(s)).to_series()
             case "multipoint":
@@ -155,7 +162,6 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             "ewkt",
             "geojson",
             "shapely",
-            "coords",
             "point",
             "multipoint",
             "linestring",
