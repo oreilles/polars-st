@@ -85,46 +85,44 @@ fn validate_wkb(s: &Series) -> PolarsResult<&BinaryChunked> {
         .map_err(|_| polars_err!(InvalidOperation: "invalid series dtype: expected `binary`, got `{}` for geoseries with name `{}`", s.dtype(), s.name()))
 }
 
+macro_rules! wrap {
+    ($func:ident($first_arg:expr $(, $rest:expr)*)) => {
+        functions::$func($first_arg $(, $rest)*)
+            .map_err(to_compute_err)
+            .map(IntoSeries::into_series)
+    };
+}
+
 #[polars_expr(output_type=Binary)]
 fn from_wkb(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::from_wkb(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(from_wkb(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn from_wkt(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
-    functions::from_wkt(inputs[0].str()?)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(from_wkt(inputs[0].str()?))
 }
 
 #[polars_expr(output_type=Binary)]
 fn from_ewkt(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
-    functions::from_ewkt(inputs[0].str()?)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(from_ewkt(inputs[0].str()?))
 }
 
 #[polars_expr(output_type=Binary)]
 fn from_geojson(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
-    functions::from_geojson(inputs[0].str()?)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(from_geojson(inputs[0].str()?))
 }
 
 #[polars_expr(output_type=Binary)]
 fn rectangle(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let rect = inputs[0].strict_cast(&D::Array(D::Float64.into(), 4))?;
-    functions::rectangle(rect.array().unwrap())
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(rectangle(rect.array().unwrap()))
 }
 
 macro_rules! create_geometry {
@@ -137,9 +135,7 @@ macro_rules! create_geometry {
                 .cast(&$cast_type)
                 .map_err(|_| polars_err!(InvalidOperation: "invalid coordinates dtype for {}: {}", stringify!($name), coords.dtype()))?;
             let coords = coords.list().unwrap();
-            functions::$name(coords)
-                .map_err(to_compute_err)
-                .map(IntoSeries::into_series)
+            wrap!($name(coords))
         }
     };
 }
@@ -155,36 +151,28 @@ create_geometry!(polygon, D::Float64.implode().implode().implode());
 fn geometry_type(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_type_id(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_type_id(wkb))
 }
 
 #[polars_expr(output_type=Int32)]
 fn dimensions(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_num_dimensions(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_num_dimensions(wkb))
 }
 
 #[polars_expr(output_type=UInt32)]
 fn coordinate_dimension(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_coordinate_dimension(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_coordinate_dimension(wkb))
 }
 
 #[polars_expr(output_type_func=output_type_coordinates)]
 fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_coordinates(wkb, kwargs.output_dimension)
-        .map_err(to_compute_err)?
-        .into_series()
+    wrap!(get_coordinates(wkb, kwargs.output_dimension))?
         .with_name(wkb.name().clone())
         .strict_cast(&D::List(D::List(D::Float64.into()).into()))
 }
@@ -193,9 +181,7 @@ fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsR
 fn srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_srid(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_srid(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -204,99 +190,77 @@ fn set_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let srid = inputs[1].strict_cast(&D::Int32)?;
     let srid = srid.i32().unwrap();
-    functions::set_srid(wkb, srid)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(set_srid(wkb, srid))
 }
 
 #[polars_expr(output_type=Float64)]
 fn x(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_x(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_x(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
 fn y(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_y(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_y(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
 fn z(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_z(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_z(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
 fn m(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_m(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_m(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn exterior_ring(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_exterior_ring(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_exterior_ring(wkb))
 }
 
 #[polars_expr(output_type_func=output_type_geometry_list)]
 fn interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_interior_rings(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_interior_rings(wkb))
 }
 
 #[polars_expr(output_type=UInt32)]
 fn count_points(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_num_points(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_num_points(wkb))
 }
 
 #[polars_expr(output_type=UInt32)]
 fn count_interior_rings(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_num_interior_rings(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_num_interior_rings(wkb))
 }
 
 #[polars_expr(output_type=UInt32)]
 fn count_geometries(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_num_geometries(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_num_geometries(wkb))
 }
 
 #[polars_expr(output_type=UInt32)]
 fn count_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_num_coordinates(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_num_coordinates(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -305,9 +269,7 @@ fn get_point(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let index = inputs[1].strict_cast(&D::UInt32)?;
     let index = index.u32().unwrap();
-    functions::get_point_n(wkb, index)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_point_n(wkb, index))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -316,9 +278,7 @@ fn get_interior_ring(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let index = inputs[1].strict_cast(&D::UInt32)?;
     let index = index.u32().unwrap();
-    functions::get_interior_ring_n(wkb, index)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_interior_ring_n(wkb, index))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -327,27 +287,21 @@ fn get_geometry(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let index = inputs[1].strict_cast(&D::UInt32)?;
     let index = index.u32()?;
-    functions::get_geometry_n(wkb, index)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_geometry_n(wkb, index))
 }
 
 #[polars_expr(output_type_func=output_type_geometry_list)]
 fn parts(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_parts(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_parts(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
 fn precision(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_precision(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_precision(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -356,53 +310,40 @@ fn set_precision(inputs: &[Series], kwargs: args::SetPrecisionKwargs) -> PolarsR
     let wkb = validate_wkb(&inputs[0])?;
     let precision = inputs[1].strict_cast(&D::Float64)?;
     let precision = precision.f64().unwrap();
-    functions::set_precision(wkb, precision, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(set_precision(wkb, precision, &kwargs))
 }
 
 #[polars_expr(output_type=String)]
 fn to_wkt(inputs: &[Series], kwargs: args::ToWktKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::to_wkt(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(to_wkt(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=String)]
 fn to_ewkt(inputs: &[Series], kwargs: args::ToWktKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::to_ewkt(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(to_ewkt(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
 fn to_wkb(inputs: &[Series], kwargs: args::ToWkbKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::to_wkb(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(to_wkb(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=String)]
 fn to_geojson(inputs: &[Series], kwargs: args::ToGeoJsonKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::to_geojson(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(to_geojson(wkb, &kwargs))
 }
 
 #[pyfunction]
-pub fn to_python_dict(
-    py: Python,
-    pyseries: PySeries,
-) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
-    let wkb = validate_wkb(&pyseries.0)?;
+pub fn to_python_dict(py: Python, series: PySeries) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
+    let wkb = validate_wkb(&series.0)?;
     functions::to_python_dict(wkb, py)
         .map_err(to_compute_err)
         .map_err(Into::into)
@@ -414,36 +355,28 @@ fn cast(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let into = &inputs[1].strict_cast(&geometry_enum())?;
     let into = into.categorical()?;
-    functions::cast(wkb, into)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(cast(wkb, into))
 }
 
 #[polars_expr(output_type=Binary)]
 fn multi(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::multi(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(multi(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
 fn area(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::area(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(area(wkb))
 }
 
 #[polars_expr(output_type_func=output_type_bounds)]
 fn bounds(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::bounds(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(bounds(wkb))
 }
 
 #[polars_expr(output_type_func=output_type_bounds)]
@@ -467,9 +400,7 @@ fn total_bounds(inputs: &[Series]) -> PolarsResult<Series> {
 fn length(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::length(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(length(wkb))
 }
 
 #[polars_expr(output_type=Float64)]
@@ -477,9 +408,7 @@ fn distance(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::distance(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(distance(left, right))
 }
 
 #[polars_expr(output_type=Float64)]
@@ -491,11 +420,9 @@ fn hausdorff_distance(
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.densify {
-        Some(densify) => functions::hausdorff_distance_densify(left, right, densify),
-        None => functions::hausdorff_distance(left, right),
+        Some(densify) => wrap!(hausdorff_distance_densify(left, right, densify)),
+        None => wrap!(hausdorff_distance(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Float64)]
@@ -507,20 +434,16 @@ fn frechet_distance(
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.densify {
-        Some(densify) => functions::frechet_distance_densify(left, right, densify),
-        None => functions::frechet_distance(left, right),
+        Some(densify) => wrap!(frechet_distance_densify(left, right, densify)),
+        None => wrap!(frechet_distance(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Float64)]
 fn minimum_clearance(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::minimum_clearance(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(minimum_clearance(wkb))
 }
 
 // Predicates
@@ -529,81 +452,63 @@ fn minimum_clearance(inputs: &[Series]) -> PolarsResult<Series> {
 fn has_z(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::has_z(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(has_z(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn has_m(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::has_m(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(has_m(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_ccw(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_ccw(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_ccw(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_closed(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_closed(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_closed(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_empty(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_empty(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_empty(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_ring(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_ring(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_ring(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_simple(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_simple(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_simple(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
 fn is_valid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_valid(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_valid(wkb))
 }
 
 #[polars_expr(output_type=String)]
 fn is_valid_reason(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::is_valid_reason(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(is_valid_reason(wkb))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -611,9 +516,7 @@ fn crosses(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::crosses(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(crosses(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -621,9 +524,7 @@ fn contains(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::contains(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(contains(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -631,9 +532,7 @@ fn contains_properly(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::contains_properly(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(contains_properly(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -641,9 +540,7 @@ fn covered_by(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::covered_by(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(covered_by(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -651,9 +548,7 @@ fn covers(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::covers(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(covers(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -661,9 +556,7 @@ fn disjoint(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::disjoint(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(disjoint(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -673,9 +566,7 @@ fn dwithin(inputs: &[Series]) -> PolarsResult<Series> {
     let right = validate_wkb(&inputs[1])?;
     let distance = inputs[2].strict_cast(&D::Float64)?;
     let distance = distance.f64().unwrap();
-    functions::dwithin(left, right, distance)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(dwithin(left, right, distance))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -683,9 +574,7 @@ fn intersects(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::intersects(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(intersects(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -693,9 +582,7 @@ fn overlaps(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::overlaps(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(overlaps(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -703,9 +590,7 @@ fn touches(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::touches(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(touches(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -713,9 +598,7 @@ fn within(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::within(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(within(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -723,9 +606,7 @@ fn equals(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::equals(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(equals(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -733,9 +614,7 @@ fn equals_identical(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::equals_identical(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(equals_identical(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -743,9 +622,7 @@ fn equals_exact(inputs: &[Series], kwargs: args::EqualsExactKwargs) -> PolarsRes
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::equals_exact(left, right, kwargs.tolerance)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(equals_exact(left, right, kwargs.tolerance))
 }
 
 #[polars_expr(output_type=String)]
@@ -753,9 +630,7 @@ fn relate(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::relate(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(relate(left, right))
 }
 
 #[polars_expr(output_type=Boolean)]
@@ -763,9 +638,7 @@ fn relate_pattern(inputs: &[Series], kwargs: args::RelatePatternKwargs) -> Polar
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::relate_pattern(left, right, &kwargs.pattern)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(relate_pattern(left, right, &kwargs.pattern))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -777,9 +650,7 @@ fn intersects_xy(inputs: &[Series]) -> PolarsResult<Series> {
     let y = s.field_by_name("y")?.strict_cast(&D::Float64)?;
     let x = x.f64().unwrap();
     let y = y.f64().unwrap();
-    functions::intersects_xy(wkb, x, y)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(intersects_xy(wkb, x, y))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -791,9 +662,7 @@ fn contains_xy(inputs: &[Series]) -> PolarsResult<Series> {
     let y = s.field_by_name("y")?.strict_cast(&D::Float64)?;
     let x = x.f64().unwrap();
     let y = y.f64().unwrap();
-    functions::contains_xy(wkb, x, y)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(contains_xy(wkb, x, y))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -802,11 +671,9 @@ fn difference(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResu
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.grid_size {
-        Some(grid_size) => functions::difference_prec(left, right, grid_size),
-        None => functions::difference(left, right),
+        Some(grid_size) => wrap!(difference_prec(left, right, grid_size)),
+        None => wrap!(difference(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -830,11 +697,9 @@ fn intersection(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsRe
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.grid_size {
-        Some(grid_size) => functions::intersection_prec(left, right, grid_size),
-        None => functions::intersection(left, right),
+        Some(grid_size) => wrap!(intersection_prec(left, right, grid_size)),
+        None => wrap!(intersection(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -861,11 +726,9 @@ fn symmetric_difference(
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.grid_size {
-        Some(grid_size) => functions::sym_difference_prec(left, right, grid_size),
-        None => functions::sym_difference(left, right),
+        Some(grid_size) => wrap!(sym_difference_prec(left, right, grid_size)),
+        None => wrap!(sym_difference(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -891,20 +754,16 @@ fn unary_union(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsRes
     let inputs = validate_inputs_length::<1>(inputs)?;
     let geom = validate_wkb(&inputs[0])?;
     match kwargs.grid_size {
-        Some(grid_size) => functions::unary_union_prec(geom, grid_size),
-        None => functions::unary_union(geom),
+        Some(grid_size) => wrap!(unary_union_prec(geom, grid_size)),
+        None => wrap!(unary_union(geom)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
 fn disjoint_subset_union(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::disjoint_subset_union(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(disjoint_subset_union(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -913,11 +772,9 @@ fn union(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResult<Se
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.grid_size {
-        Some(grid_size) => functions::union_prec(left, right, grid_size),
-        None => functions::union(left, right),
+        Some(grid_size) => wrap!(union_prec(left, right, grid_size)),
+        None => wrap!(union(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -939,45 +796,35 @@ fn union_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResul
 fn coverage_union(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::coverage_union(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(coverage_union(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn coverage_union_all(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::coverage_union_all(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(coverage_union_all(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn polygonize(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::polygonize(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(polygonize(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn collect(inputs: &[Series], kwargs: args::CollectKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::collect(wkb, kwargs.into)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(collect(wkb, kwargs.into))
 }
 
 #[polars_expr(output_type=Binary)]
 fn boundary(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::boundary(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(boundary(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -986,9 +833,7 @@ fn buffer(inputs: &[Series], kwargs: args::BufferKwargs) -> PolarsResult<Series>
     let wkb = validate_wkb(&inputs[0])?;
     let distance = inputs[1].strict_cast(&D::Float64)?;
     let distance = distance.f64().unwrap();
-    functions::buffer(wkb, distance, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(buffer(wkb, distance, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -997,25 +842,19 @@ fn offset_curve(inputs: &[Series], kwargs: args::OffsetCurveKwargs) -> PolarsRes
     let wkb = validate_wkb(&inputs[0])?;
     let distance = inputs[1].strict_cast(&D::Float64)?;
     let distance = distance.f64().unwrap();
-    functions::offset_curve(wkb, distance, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(offset_curve(wkb, distance, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
 fn convex_hull(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
-    functions::convex_hull(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(convex_hull(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn concave_hull(inputs: &[Series], kwargs: args::ConcaveHullKwargs) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
-    functions::concave_hull(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(concave_hull(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1024,27 +863,21 @@ fn clip_by_rect(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let rect = inputs[1].strict_cast(&D::Array(D::Float64.into(), 4))?;
     let rect = rect.array()?;
-    functions::clip_by_rect(wkb, rect)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(clip_by_rect(wkb, rect))
 }
 
 #[polars_expr(output_type=Binary)]
 fn centroid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_centroid(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_centroid(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn center(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::get_center(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(get_center(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1054,9 +887,7 @@ fn delaunay_triangles(
 ) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::delaunay_triangulation(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(delaunay_triangulation(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1065,72 +896,56 @@ fn segmentize(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let tolerance = inputs[1].strict_cast(&D::Float64)?;
     let tolerance = tolerance.f64().unwrap();
-    functions::densify(wkb, tolerance)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(densify(wkb, tolerance))
 }
 
 #[polars_expr(output_type=Binary)]
 fn envelope(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::envelope(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(envelope(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn extract_unique_points(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::extract_unique_points(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(extract_unique_points(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 fn build_area(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::build_area(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(build_area(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn make_valid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::make_valid(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(make_valid(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn normalize(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::normalize(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(normalize(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn node(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::node(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(node(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn point_on_surface(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::point_on_surface(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(point_on_surface(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1139,18 +954,14 @@ pub fn remove_repeated_points(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let tolerance = inputs[1].strict_cast(&D::Float64)?;
     let tolerance = tolerance.f64().unwrap();
-    functions::remove_repeated_points(wkb, tolerance)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(remove_repeated_points(wkb, tolerance))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn reverse(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::reverse(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(reverse(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1160,20 +971,16 @@ pub fn simplify(inputs: &[Series], kwargs: args::SimplifyKwargs) -> PolarsResult
     let tolerance = inputs[1].strict_cast(&D::Float64)?;
     let tolerance = tolerance.f64().unwrap();
     match kwargs.preserve_topology {
-        true => functions::topology_preserve_simplify(wkb, tolerance),
-        false => functions::simplify(wkb, tolerance),
+        true => wrap!(topology_preserve_simplify(wkb, tolerance)),
+        false => wrap!(simplify(wkb, tolerance)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn force_2d(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::force_2d(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(force_2d(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1182,9 +989,7 @@ pub fn force_3d(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let z = inputs[1].strict_cast(&D::Float64)?;
     let z = z.f64().unwrap();
-    functions::force_3d(wkb, z)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(force_3d(wkb, z))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1194,27 +999,21 @@ pub fn snap(inputs: &[Series]) -> PolarsResult<Series> {
     let right = validate_wkb(&inputs[1])?;
     let tolerance = inputs[2].strict_cast(&D::Float64)?;
     let tolerance = tolerance.f64().unwrap();
-    functions::snap(left, right, tolerance)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(snap(left, right, tolerance))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn voronoi_polygons(inputs: &[Series], kwargs: args::VoronoiKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::voronoi_polygons(wkb, &kwargs)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(voronoi_polygons(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::minimum_rotated_rectangle(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(minimum_rotated_rectangle(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1223,9 +1022,7 @@ pub fn translate(inputs: &[Series]) -> PolarsResult<Series> {
     let wkb = validate_wkb(&inputs[0])?;
     let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
     let factors = factors.array()?;
-    functions::translate(wkb, factors)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(translate(wkb, factors))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1235,13 +1032,11 @@ pub fn rotate(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<
     let angle = inputs[1].strict_cast(&D::Float64)?;
     let angle = angle.f64().unwrap();
     match kwargs.origin {
-        args::TransformOrigin::XY(o) => functions::rotate_around_point(wkb, angle, &o),
-        args::TransformOrigin::XYZ(o) => functions::rotate_around_point(wkb, angle, &(o.0, o.1)),
-        args::TransformOrigin::Center => functions::rotate_around_center(wkb, angle),
-        args::TransformOrigin::Centroid => functions::rotate_around_centroid(wkb, angle),
+        args::TransformOrigin::XY(o) => wrap!(rotate_around_point(wkb, angle, &o)),
+        args::TransformOrigin::XYZ(o) => wrap!(rotate_around_point(wkb, angle, &(o.0, o.1))),
+        args::TransformOrigin::Center => wrap!(rotate_around_center(wkb, angle)),
+        args::TransformOrigin::Centroid => wrap!(rotate_around_centroid(wkb, angle)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1251,13 +1046,11 @@ pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<S
     let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
     let factors = factors.array()?;
     match kwargs.origin {
-        args::TransformOrigin::XY(o) => functions::scale_from_point(wkb, factors, &(o.0, o.1, 0.0)),
-        args::TransformOrigin::XYZ(origin) => functions::scale_from_point(wkb, factors, &origin),
-        args::TransformOrigin::Center => functions::scale_from_center(wkb, factors),
-        args::TransformOrigin::Centroid => functions::scale_from_centroid(wkb, factors),
+        args::TransformOrigin::XY(o) => wrap!(scale_from_point(wkb, factors, &(o.0, o.1, 0.0))),
+        args::TransformOrigin::XYZ(origin) => wrap!(scale_from_point(wkb, factors, &origin)),
+        args::TransformOrigin::Center => wrap!(scale_from_center(wkb, factors)),
+        args::TransformOrigin::Centroid => wrap!(scale_from_centroid(wkb, factors)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1267,14 +1060,13 @@ pub fn skew(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Se
     let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
     let factors = factors.array()?;
     match kwargs.origin {
-        args::TransformOrigin::XY(o) => functions::skew_from_point(wkb, factors, &(o.0, o.1, 0.0)),
-        args::TransformOrigin::XYZ(origin) => functions::skew_from_point(wkb, factors, &origin),
-        args::TransformOrigin::Center => functions::skew_from_center(wkb, factors),
-        args::TransformOrigin::Centroid => functions::skew_from_centroid(wkb, factors),
+        args::TransformOrigin::XY(o) => wrap!(skew_from_point(wkb, factors, &(o.0, o.1, 0.0))),
+        args::TransformOrigin::XYZ(origin) => wrap!(skew_from_point(wkb, factors, &origin)),
+        args::TransformOrigin::Center => wrap!(skew_from_center(wkb, factors)),
+        args::TransformOrigin::Centroid => wrap!(skew_from_centroid(wkb, factors)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
+
 #[polars_expr(output_type=Binary)]
 pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
@@ -1283,17 +1075,16 @@ pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
     match matrix.dtype() {
         D::Array(.., 6) => {
             let matrix = matrix.strict_cast(&D::Array(D::Float64.into(), 6))?;
-            functions::affine_transform_2d(wkb, matrix.array()?).map_err(to_compute_err)
+            wrap!(affine_transform_2d(wkb, matrix.array()?))
         }
         D::Array(.., 12) => {
             let matrix = matrix.strict_cast(&D::Array(D::Float64.into(), 12))?;
-            functions::affine_transform_3d(wkb, matrix.array()?).map_err(to_compute_err)
+            wrap!(affine_transform_3d(wkb, matrix.array()?))
         }
         _ => Err(to_compute_err(
             "matrix parameter should be of type array with shape (6 | 12)",
         )),
     }
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1303,11 +1094,9 @@ pub fn interpolate(inputs: &[Series], kwargs: args::InterpolateKwargs) -> Polars
     let distance = inputs[1].strict_cast(&D::Float64)?;
     let distance = distance.f64().unwrap();
     match kwargs.normalized {
-        true => functions::interpolate_normalized(wkb, distance),
-        false => functions::interpolate(wkb, distance),
+        true => wrap!(interpolate_normalized(wkb, distance)),
+        false => wrap!(interpolate(wkb, distance)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Float64)]
@@ -1316,11 +1105,9 @@ pub fn project(inputs: &[Series], kwargs: args::InterpolateKwargs) -> PolarsResu
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     match kwargs.normalized {
-        true => functions::project_normalized(left, right),
-        false => functions::project(left, right),
+        true => wrap!(project_normalized(left, right)),
+        false => wrap!(project(left, right)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1331,9 +1118,7 @@ pub fn substring(inputs: &[Series]) -> PolarsResult<Series> {
     let end = inputs[2].strict_cast(&D::Float64)?;
     let start = start.f64().unwrap();
     let end = end.f64().unwrap();
-    functions::substring(wkb, start, end)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(substring(wkb, start, end))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1341,11 +1126,9 @@ pub fn line_merge(inputs: &[Series], kwargs: args::LineMergeKwargs) -> PolarsRes
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     match kwargs.directed {
-        true => functions::line_merge_directed(wkb),
-        false => functions::line_merge(wkb),
+        true => wrap!(line_merge_directed(wkb)),
+        false => wrap!(line_merge(wkb)),
     }
-    .map_err(to_compute_err)
-    .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1353,9 +1136,7 @@ pub fn shared_paths(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::shared_paths(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(shared_paths(left, right))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1363,9 +1144,7 @@ pub fn shortest_line(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    functions::shortest_line(left, right)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(shortest_line(left, right))
 }
 
 #[polars_expr(output_type_func=output_type_sjoin)]
@@ -1375,23 +1154,19 @@ pub fn sjoin(inputs: &[Series], kwargs: args::SpatialJoinKwargs) -> PolarsResult
     let right = validate_wkb(&inputs[1])?;
     functions::sjoin(left, right, kwargs.predicate)
         .map_err(to_compute_err)
-        .map(|(left_index, right_index)| {
-            StructChunked::from_columns(
-                left.name().clone(),
-                left_index.len(),
-                &[left_index.into_column(), right_index.into_column()],
-            )
-            .map(IntoSeries::into_series)
+        .map(|(left, right)| {
+            let left = Series::from_vec("left_index".into(), left);
+            let right = Series::from_vec("right_index".into(), right);
+            StructChunked::from_series("".into(), left.len(), [left, right].iter())
         })?
+        .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
 pub fn flip_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    functions::flip_coordinates(wkb)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(flip_coordinates(wkb))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -1401,7 +1176,5 @@ pub fn to_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let srid = inputs[1].strict_cast(&D::Int64)?;
     let srid = srid.i64()?;
 
-    functions::to_srid(wkb, srid)
-        .map_err(to_compute_err)
-        .map(IntoSeries::into_series)
+    wrap!(to_srid(wkb, srid))
 }

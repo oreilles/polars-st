@@ -1833,7 +1833,7 @@ pub fn sjoin(
     left: &BinaryChunked,
     right: &BinaryChunked,
     predicate: SpatialJoinPredicate,
-) -> GResult<(UInt32Chunked, UInt32Chunked)> {
+) -> GResult<(Vec<u32>, Vec<u32>)> {
     let predicate = match predicate {
         SpatialJoinPredicate::IntersectsBbox => |_: &_, _: &_| Ok(true),
         SpatialJoinPredicate::Intersects => Geometry::intersects,
@@ -1852,39 +1852,30 @@ pub fn sjoin(
 
     let spatial_index = strtree(&left_geoms)?;
 
-    let builder_len = core::cmp::max(left.len(), right.len());
     (0..right.len())
         .into_par_iter()
         .map(|right_index| {
             let wkb = unsafe { right.get_unchecked(right_index) };
+            let mut left_indicies = vec![];
+            let mut right_indicies = vec![];
             let Some(wkb) = wkb else {
-                return Ok((
-                    UInt32Chunked::from_vec("".into(), vec![]),
-                    UInt32Chunked::from_vec("".into(), vec![]),
-                ));
+                return Ok((left_indicies, right_indicies));
             };
             let right_geom = Geometry::new_from_wkb(wkb)?;
-            let mut left_indicies = PrimitiveChunkedBuilder::new("".into(), builder_len);
-            let mut right_indicies = PrimitiveChunkedBuilder::new("".into(), builder_len);
             spatial_index.query(&right_geom, |left_index| {
                 let left_geom = unsafe { left_geoms[*left_index].as_ref().unwrap_unchecked() };
                 if matches!(predicate(left_geom, &right_geom), Ok(true)) {
-                    left_indicies.append_value(*left_index as u32);
-                    right_indicies.append_value(right_index as u32);
+                    left_indicies.push(*left_index as u32);
+                    right_indicies.push(right_index as u32);
                 }
             });
-            Ok((left_indicies.finish(), right_indicies.finish()))
+            Ok((left_indicies, right_indicies))
         })
         .try_reduce(
-            || {
-                (
-                    UInt32Chunked::from_vec("left_index".into(), vec![]),
-                    UInt32Chunked::from_vec("right_index".into(), vec![]),
-                )
-            },
+            || (vec![], vec![]),
             |(mut left_acc, mut right_acc), (left, right)| {
-                left_acc.extend(&left).expect("extend failed");
-                right_acc.extend(&right).expect("extend failed");
+                left_acc.extend(left);
+                right_acc.extend(right);
                 Ok((left_acc, right_acc))
             },
         )
