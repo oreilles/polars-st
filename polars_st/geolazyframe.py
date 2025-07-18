@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         FrameInitTypes,
         JoinStrategy,
         JoinValidation,
+        MaintainOrderJoin,
         Orientation,
         SchemaDefinition,
         SchemaDict,
@@ -84,6 +85,7 @@ class GeoLazyFrameNameSpace:
         validate: JoinValidation = "m:m",
         nulls_equal: bool = False,
         coalesce: bool | None = None,
+        maintain_order: MaintainOrderJoin | None = None,
         allow_parallel: bool = True,
         force_parallel: bool = False,
     ) -> LazyFrame:
@@ -136,6 +138,7 @@ class GeoLazyFrameNameSpace:
                 how="full",
                 suffix=suffix,
                 coalesce=coalesce,
+                maintain_order=maintain_order,
                 allow_parallel=allow_parallel,
                 force_parallel=force_parallel,
             )
@@ -146,6 +149,7 @@ class GeoLazyFrameNameSpace:
                 validate=validate,
                 nulls_equal=nulls_equal,
                 coalesce=coalesce,
+                maintain_order=maintain_order,
                 allow_parallel=allow_parallel,
                 force_parallel=force_parallel,
             )
