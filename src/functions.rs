@@ -15,7 +15,7 @@ use crate::{
 use geos::{
     BufferParams, CoordSeq, Error as GError, GResult, GeoJSONWriter, Geom, Geometry,
     GeometryTypes::{self, *},
-    STRtree, SpatialIndex, WKBWriter, WKTWriter,
+    PreparedGeometry, STRtree, SpatialIndex, WKBWriter, WKTWriter,
 };
 
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
@@ -1829,22 +1829,27 @@ fn strtree(geoms: &[Option<Geometry>]) -> GResult<STRtree<usize>> {
     )
 }
 
+type IdxNativeType = <IdxType as PolarsNumericType>::Native;
+
 pub fn sjoin(
     left: &BinaryChunked,
     right: &BinaryChunked,
     predicate: SpatialJoinPredicate,
-) -> GResult<(Vec<u32>, Vec<u32>)> {
-    let predicate = match predicate {
-        SpatialJoinPredicate::IntersectsBbox => |_: &_, _: &_| Ok(true),
-        SpatialJoinPredicate::Intersects => Geometry::intersects,
-        SpatialJoinPredicate::Within => Geometry::within,
-        SpatialJoinPredicate::Contains => Geometry::contains,
-        SpatialJoinPredicate::Overlaps => Geometry::overlaps,
-        SpatialJoinPredicate::Crosses => Geometry::crosses,
-        SpatialJoinPredicate::Touches => Geometry::touches,
-        SpatialJoinPredicate::Covers => Geometry::covers,
-        SpatialJoinPredicate::CoveredBy => Geometry::covered_by,
+) -> GResult<(Vec<IdxNativeType>, Vec<IdxNativeType>)> {
+    use SpatialJoinPredicate::*;
+    let predicate: fn(&PreparedGeometry<'_>, &Geometry) -> _ = match predicate {
+        IntersectsBbox => |_, _| Ok(true),
+        Intersects => |a, b| a.intersects(b),
+        Within => |a, b| a.within(b),
+        Contains => |a, b| a.contains(b),
+        Overlaps => |a, b| a.overlaps(b),
+        Crosses => |a, b| a.crosses(b),
+        Touches => |a, b| a.touches(b),
+        Covers => |a, b| a.covers(b),
+        CoveredBy => |a, b| a.covered_by(b),
+        ContainsProperly => |a, b| a.contains_properly(b),
     };
+
     let left_geoms = left
         .into_iter()
         .map(|v| v.map(Geometry::new_from_wkb).transpose())
@@ -1862,11 +1867,12 @@ pub fn sjoin(
                 return Ok((left_indicies, right_indicies));
             };
             let right_geom = Geometry::new_from_wkb(wkb)?;
+            let right_geom_prepared = right_geom.to_prepared_geom()?;
             spatial_index.query(&right_geom, |left_index| {
                 let left_geom = unsafe { left_geoms[*left_index].as_ref().unwrap_unchecked() };
-                if matches!(predicate(left_geom, &right_geom), Ok(true)) {
-                    left_indicies.push(*left_index as u32);
-                    right_indicies.push(right_index as u32);
+                if matches!(predicate(&right_geom_prepared, left_geom), Ok(true)) {
+                    left_indicies.push(*left_index as _);
+                    right_indicies.push(right_index as _);
                 }
             });
             Ok((left_indicies, right_indicies))

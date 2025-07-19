@@ -77,6 +77,7 @@ class GeoLazyFrameNameSpace:
             "touches",
             "covers",
             "covered_by",
+            "contains_properly",
         ] = "intersects",
         *,
         left_on: str | Expr | None = None,
