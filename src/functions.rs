@@ -63,7 +63,7 @@ impl<T: Geom> GeometryUtils for T {
                 if t.is_collection() {
                     let geoms = (0..self.get_num_geometries()?)
                         .map(|n| self.get_geometry_n(n)?.clone())
-                        .collect::<Result<_, _>>()?;
+                        .collect::<GResult<_>>()?;
                     Geometry::create_geometry_collection(geoms)
                 } else {
                     Geometry::create_geometry_collection(vec![Geom::clone(self)?])
@@ -88,7 +88,7 @@ impl<T: Geom> GeometryUtils for T {
                         let seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
                         Geometry::create_point(seq)
                     })
-                    .collect::<GResult<Vec<_>>>()
+                    .collect::<GResult<_>>()
                     .and_then(Geometry::create_multipoint)
             }
             (MultiPoint, LineString | CircularString) => {
@@ -140,7 +140,7 @@ impl<T: Geom> GeometryUtils for T {
                     1 => Geometry::create_polygon(rings.next().unwrap()?, vec![]),
                     _ => {
                         let outer = rings.next().unwrap()?;
-                        let inner = rings.collect::<Result<_, _>>()?;
+                        let inner = rings.collect::<GResult<_>>()?;
                         Geometry::create_polygon(outer, inner)
                     }
                 }
@@ -148,7 +148,7 @@ impl<T: Geom> GeometryUtils for T {
             (MultiPolygon, MultiSurface) => {
                 let geoms = (0..self.get_num_geometries()?)
                     .map(|n| self.get_geometry_n(n)?.clone())
-                    .collect::<Result<_, _>>()?;
+                    .collect::<GResult<_>>()?;
                 Geometry::create_multisurface(geoms)
             }
             (Polygon, MultiPolygon) => {
@@ -353,7 +353,7 @@ pub fn multipoint(coords: &ListChunked) -> GResult<BinaryChunked> {
             .chunks_exact(dims as usize)
             .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, has_z, has_m))
             .map(|seq| Geometry::create_point(seq?))
-            .collect::<GResult<Vec<_>>>()
+            .collect::<GResult<_>>()
             .and_then(Geometry::create_multipoint)?
             .to_ewkb()
     })
@@ -383,7 +383,7 @@ pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
 
     coords.try_apply_nonnull_values_generic(|a| {
         let lines = a.as_any().downcast_ref::<LargeListArray>().unwrap();
-        let lines = lines.iter().map(get_line).collect::<GResult<Vec<_>>>()?;
+        let lines = lines.iter().map(get_line).collect::<GResult<_>>()?;
         Geometry::create_multiline_string(lines)?.to_ewkb()
     })
 }
@@ -402,7 +402,7 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
         let Some(exterior) = rings.next().map(get_ring).transpose()? else {
             return Geometry::create_empty_polygon()?.to_ewkb();
         };
-        let interiors = rings.map(get_ring).collect::<GResult<Vec<_>>>()?;
+        let interiors = rings.map(get_ring).collect::<GResult<_>>()?;
         Geometry::create_polygon(exterior, interiors)?.to_ewkb()
     })
 }
@@ -753,18 +753,13 @@ pub fn to_geojson(wkb: &BinaryChunked, params: &ToGeoJsonKwargs) -> GResult<Stri
 }
 
 pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyObject>>> {
-    let json = PyModule::import(py, "json").expect("Failed to load json");
+    let json = py.import("json").expect("Failed to import json");
     let loads = json.getattr("loads").expect("Failed to get json.loads");
-    wkb.into_iter()
-        .map(|wkb| {
-            wkb.map(|wkb| {
-                Geometry::new_from_wkb(wkb)
-                    .and_then(|geom| geom.to_geojson())
-                    .map(|json| loads.call1((json,)).expect("Invalid GeoJSON").into())
-            })
-            .transpose()
-        })
-        .collect::<GResult<Vec<Option<PyObject>>>>()
+    let to = |wkb| {
+        let json = Geometry::new_from_wkb(wkb)?.to_geojson()?;
+        Ok(loads.call1((json,)).expect("Invalid GeoJSON").into())
+    };
+    wkb.iter().map(|wkb| wkb.map(to).transpose()).collect()
 }
 
 pub fn cast(wkb: &BinaryChunked, into: &CategoricalChunked) -> GResult<BinaryChunked> {
@@ -1207,10 +1202,7 @@ pub fn coverage_union(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
 }
 
 fn collect_geometry_vec(wkb: &BinaryChunked) -> GResult<Vec<Geometry>> {
-    wkb.into_iter()
-        .flatten()
-        .map(Geometry::new_from_wkb)
-        .collect()
+    wkb.iter().flatten().map(Geometry::new_from_wkb).collect()
 }
 
 pub fn coverage_union_all(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
@@ -1243,12 +1235,12 @@ fn collection_supertype(wkb: &BinaryChunked) -> GResult<GeometryTypes> {
         .unique()
         .unwrap()
         .sort(false)
-        .into_iter()
+        .iter()
         .flatten()
         .map(WKBGeometryType::try_from)
         .map(Result::unwrap)
         .map(TryInto::try_into)
-        .collect::<Result<_, _>>()?;
+        .collect::<GResult<_>>()?;
     Ok(match &geometry_types.as_slice() {
         &[Point] => MultiPoint,
         &[LineString] => MultiLineString,
@@ -1851,7 +1843,7 @@ pub fn sjoin(
     };
 
     let left_geoms = left
-        .into_iter()
+        .iter()
         .map(|v| v.map(Geometry::new_from_wkb).transpose())
         .collect::<GResult<Vec<_>>>()?;
 
