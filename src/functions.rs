@@ -8,7 +8,7 @@ use crate::{
     },
     arity::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
-        try_ternary_elementwise_values, try_unary_elementwise_values_with_dtype,
+        try_unary_elementwise_values_with_dtype,
     },
     wkb::{WKBGeometryType, WKBHeader},
 };
@@ -1067,30 +1067,6 @@ pub fn relate_pattern(
     })
 }
 
-pub fn intersects_xy(
-    wkb: &BinaryChunked,
-    x: &Float64Chunked,
-    y: &Float64Chunked,
-) -> GResult<BooleanChunked> {
-    try_ternary_elementwise_values(wkb, x, y, |wkb, x, y| {
-        Geometry::new_from_wkb(wkb)?
-            .to_prepared_geom()?
-            .intersects_xy(x, y)
-    })
-}
-
-pub fn contains_xy(
-    wkb: &BinaryChunked,
-    x: &Float64Chunked,
-    y: &Float64Chunked,
-) -> GResult<BooleanChunked> {
-    try_ternary_elementwise_values(wkb, x, y, |wkb, x, y| {
-        Geometry::new_from_wkb(wkb)?
-            .to_prepared_geom()?
-            .contains_xy(x, y)
-    })
-}
-
 pub fn difference(a: &BinaryChunked, b: &BinaryChunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(a, b, |a, b| {
         let a = Geometry::new_from_wkb(a)?;
@@ -1918,12 +1894,12 @@ impl ProjCache {
         Self(HashMap::<u16, Proj>::new())
     }
 
-    fn get(&mut self, srid: u16) -> Result<Proj, ProjError> {
+    #[allow(clippy::ref_as_ptr)]
+    fn get(&mut self, srid: u16) -> Result<*const Proj, ProjError> {
         Ok(match self.0.entry(srid) {
-            std::collections::hash_map::Entry::Occupied(proj) => proj.into_mut(),
+            std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
             std::collections::hash_map::Entry::Vacant(e) => e.insert(Proj::from_epsg_code(srid)?),
-        }
-        .clone())
+        } as *const Proj)
     }
 }
 
@@ -1946,7 +1922,7 @@ pub fn to_srid(wkb: &BinaryChunked, srid: &Int64Chunked) -> GResult<BinaryChunke
             return Err(GError::GenericError(format!("Unknown SRID: {dest_srid}")));
         };
 
-        let mut transformed = apply_proj_transform(&proj_src, &proj_dst, &geom)?;
+        let mut transformed = unsafe { apply_proj_transform(&*proj_src, &*proj_dst, &geom)? };
         transformed.set_srid(dest_srid as _);
         transformed.to_ewkb()
     })

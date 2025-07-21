@@ -91,40 +91,6 @@ where
 }
 
 #[inline]
-pub fn try_ternary_elementwise_values<T, U, G, V, F, K, E>(
-    ca1: &ChunkedArray<T>,
-    ca2: &ChunkedArray<U>,
-    ca3: &ChunkedArray<G>,
-    mut op: F,
-) -> Result<ChunkedArray<V>, E>
-where
-    T: PolarsDataType,
-    U: PolarsDataType,
-    G: PolarsDataType,
-    V: PolarsDataType,
-    F: for<'a> FnMut(T::Physical<'a>, U::Physical<'a>, G::Physical<'a>) -> Result<K, E>,
-    V::Array: ArrayFromIter<K> + ArrayFromIter<Option<K>>,
-{
-    if (ca1.len() == ca2.len() && ca1.len() == ca3.len())
-        && (ca1.null_count() == ca1.len()
-            || ca2.null_count() == ca2.len()
-            || ca2.null_count() == ca2.len())
-    {
-        let arr = V::Array::full_null(
-            ca1.len(),
-            V::get_static_dtype().to_arrow(CompatLevel::newest()),
-        );
-
-        return Ok(ChunkedArray::with_chunk(ca1.name().clone(), arr));
-    }
-
-    try_ternary_elementwise(ca1, ca2, ca3, |a, b, c| match (a, b, c) {
-        (Some(a), Some(b), Some(c)) => Ok(Some(op(a, b, c)?)),
-        _ => Ok(None),
-    })
-}
-
-#[inline]
 pub fn broadcast_try_ternary_elementwise<T, U, G, V, F, K, E>(
     ca1: &ChunkedArray<T>,
     ca2: &ChunkedArray<U>,

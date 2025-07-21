@@ -82,7 +82,15 @@ fn validate_inputs_length<const M: usize>(inputs: &[Series]) -> PolarsResult<&[S
 
 fn validate_wkb(s: &Series) -> PolarsResult<&BinaryChunked> {
     s.binary()
-        .map_err(|_| polars_err!(InvalidOperation: "invalid series dtype: expected `binary`, got `{}` for geoseries with name `{}`", s.dtype(), s.name()))
+        .map_err(|_| polars_err!(InvalidOperation: "invalid dtype for geoseries `{}`: expected `binary`, got `{}`", s.dtype(), s.name()))
+}
+
+macro_rules! extract {
+    ($out:ident, $s:expr, $dt:expr, $f:ident) => {
+        let type_err = |_| polars_err!(InvalidOperation:"invalid dtype for series `{}`: `{}`", $s.dtype(), $s.name());
+        let tmp = $s.strict_cast(&$dt).map_err(type_err)?;
+        let $out = tmp.$f().unwrap();
+    };
 }
 
 macro_rules! wrap {
@@ -121,8 +129,8 @@ fn from_geojson(inputs: &[Series]) -> PolarsResult<Series> {
 #[polars_expr(output_type=Binary)]
 fn rectangle(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
-    let rect = inputs[0].strict_cast(&D::Array(D::Float64.into(), 4))?;
-    wrap!(rectangle(rect.array().unwrap()))
+    extract!(rect, inputs[0], D::Array(D::Float64.into(), 4), array);
+    wrap!(rectangle(rect))
 }
 
 macro_rules! create_geometry {
@@ -188,8 +196,7 @@ fn srid(inputs: &[Series]) -> PolarsResult<Series> {
 fn set_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let srid = inputs[1].strict_cast(&D::Int32)?;
-    let srid = srid.i32().unwrap();
+    extract!(srid, inputs[1], D::Int32, i32);
     wrap!(set_srid(wkb, srid))
 }
 
@@ -267,8 +274,7 @@ fn count_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
 fn get_point(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let index = inputs[1].strict_cast(&D::UInt32)?;
-    let index = index.u32().unwrap();
+    extract!(index, inputs[1], D::UInt32, u32);
     wrap!(get_point_n(wkb, index))
 }
 
@@ -276,8 +282,7 @@ fn get_point(inputs: &[Series]) -> PolarsResult<Series> {
 fn get_interior_ring(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let index = inputs[1].strict_cast(&D::UInt32)?;
-    let index = index.u32().unwrap();
+    extract!(index, inputs[1], D::UInt32, u32);
     wrap!(get_interior_ring_n(wkb, index))
 }
 
@@ -285,8 +290,7 @@ fn get_interior_ring(inputs: &[Series]) -> PolarsResult<Series> {
 fn get_geometry(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let index = inputs[1].strict_cast(&D::UInt32)?;
-    let index = index.u32()?;
+    extract!(index, inputs[1], D::UInt32, u32);
     wrap!(get_geometry_n(wkb, index))
 }
 
@@ -308,8 +312,7 @@ fn precision(inputs: &[Series]) -> PolarsResult<Series> {
 fn set_precision(inputs: &[Series], kwargs: args::SetPrecisionKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let precision = inputs[1].strict_cast(&D::Float64)?;
-    let precision = precision.f64().unwrap();
+    extract!(precision, inputs[1], D::Float64, f64);
     wrap!(set_precision(wkb, precision, &kwargs))
 }
 
@@ -353,8 +356,7 @@ pub fn to_python_dict(py: Python, series: PySeries) -> Result<Vec<Option<PyObjec
 fn cast(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let into = &inputs[1].strict_cast(&geometry_enum())?;
-    let into = into.categorical()?;
+    extract!(into, inputs[1], geometry_enum(), categorical);
     wrap!(cast(wkb, into))
 }
 
@@ -564,8 +566,7 @@ fn dwithin(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<3>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    let distance = inputs[2].strict_cast(&D::Float64)?;
-    let distance = distance.f64().unwrap();
+    extract!(distance, inputs[2], D::Float64, f64);
     wrap!(dwithin(left, right, distance))
 }
 
@@ -639,30 +640,6 @@ fn relate_pattern(inputs: &[Series], kwargs: args::RelatePatternKwargs) -> Polar
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
     wrap!(relate_pattern(left, right, &kwargs.pattern))
-}
-
-#[polars_expr(output_type=Binary)]
-fn intersects_xy(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<2>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    let s = inputs[1].struct_()?;
-    let x = s.field_by_name("x")?.strict_cast(&D::Float64)?;
-    let y = s.field_by_name("y")?.strict_cast(&D::Float64)?;
-    let x = x.f64().unwrap();
-    let y = y.f64().unwrap();
-    wrap!(intersects_xy(wkb, x, y))
-}
-
-#[polars_expr(output_type=Binary)]
-fn contains_xy(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<2>(inputs)?;
-    let wkb = validate_wkb(&inputs[0])?;
-    let s = inputs[1].struct_()?;
-    let x = s.field_by_name("x")?.strict_cast(&D::Float64)?;
-    let y = s.field_by_name("y")?.strict_cast(&D::Float64)?;
-    let x = x.f64().unwrap();
-    let y = y.f64().unwrap();
-    wrap!(contains_xy(wkb, x, y))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -831,8 +808,7 @@ fn boundary(inputs: &[Series]) -> PolarsResult<Series> {
 fn buffer(inputs: &[Series], kwargs: args::BufferKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let distance = inputs[1].strict_cast(&D::Float64)?;
-    let distance = distance.f64().unwrap();
+    extract!(distance, inputs[1], D::Float64, f64);
     wrap!(buffer(wkb, distance, &kwargs))
 }
 
@@ -840,8 +816,7 @@ fn buffer(inputs: &[Series], kwargs: args::BufferKwargs) -> PolarsResult<Series>
 fn offset_curve(inputs: &[Series], kwargs: args::OffsetCurveKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let distance = inputs[1].strict_cast(&D::Float64)?;
-    let distance = distance.f64().unwrap();
+    extract!(distance, inputs[1], D::Float64, f64);
     wrap!(offset_curve(wkb, distance, &kwargs))
 }
 
@@ -861,8 +836,7 @@ fn concave_hull(inputs: &[Series], kwargs: args::ConcaveHullKwargs) -> PolarsRes
 fn clip_by_rect(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let rect = inputs[1].strict_cast(&D::Array(D::Float64.into(), 4))?;
-    let rect = rect.array()?;
+    extract!(rect, inputs[1], D::Array(D::Float64.into(), 4), array);
     wrap!(clip_by_rect(wkb, rect))
 }
 
@@ -894,8 +868,7 @@ fn delaunay_triangles(
 fn segmentize(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let tolerance = inputs[1].strict_cast(&D::Float64)?;
-    let tolerance = tolerance.f64().unwrap();
+    extract!(tolerance, inputs[1], D::Float64, f64);
     wrap!(densify(wkb, tolerance))
 }
 
@@ -952,8 +925,7 @@ pub fn point_on_surface(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn remove_repeated_points(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let tolerance = inputs[1].strict_cast(&D::Float64)?;
-    let tolerance = tolerance.f64().unwrap();
+    extract!(tolerance, inputs[1], D::Float64, f64);
     wrap!(remove_repeated_points(wkb, tolerance))
 }
 
@@ -968,8 +940,7 @@ pub fn reverse(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn simplify(inputs: &[Series], kwargs: args::SimplifyKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let tolerance = inputs[1].strict_cast(&D::Float64)?;
-    let tolerance = tolerance.f64().unwrap();
+    extract!(tolerance, inputs[1], D::Float64, f64);
     match kwargs.preserve_topology {
         true => wrap!(topology_preserve_simplify(wkb, tolerance)),
         false => wrap!(simplify(wkb, tolerance)),
@@ -987,8 +958,7 @@ pub fn force_2d(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn force_3d(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let z = inputs[1].strict_cast(&D::Float64)?;
-    let z = z.f64().unwrap();
+    extract!(z, inputs[1], D::Float64, f64);
     wrap!(force_3d(wkb, z))
 }
 
@@ -997,8 +967,7 @@ pub fn snap(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<3>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    let tolerance = inputs[2].strict_cast(&D::Float64)?;
-    let tolerance = tolerance.f64().unwrap();
+    extract!(tolerance, inputs[2], D::Float64, f64);
     wrap!(snap(left, right, tolerance))
 }
 
@@ -1020,8 +989,7 @@ pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn translate(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
-    let factors = factors.array()?;
+    extract!(factors, inputs[1], D::Array(D::Float64.into(), 3), array);
     wrap!(translate(wkb, factors))
 }
 
@@ -1029,8 +997,7 @@ pub fn translate(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn rotate(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let angle = inputs[1].strict_cast(&D::Float64)?;
-    let angle = angle.f64().unwrap();
+    extract!(angle, inputs[1], D::Float64, f64);
     match kwargs.origin {
         args::TransformOrigin::XY(o) => wrap!(rotate_around_point(wkb, angle, &o)),
         args::TransformOrigin::XYZ(o) => wrap!(rotate_around_point(wkb, angle, &(o.0, o.1))),
@@ -1043,8 +1010,7 @@ pub fn rotate(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<
 pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
-    let factors = factors.array()?;
+    extract!(factors, inputs[1], D::Array(D::Float64.into(), 3), array);
     match kwargs.origin {
         args::TransformOrigin::XY(o) => wrap!(scale_from_point(wkb, factors, &(o.0, o.1, 0.0))),
         args::TransformOrigin::XYZ(origin) => wrap!(scale_from_point(wkb, factors, &origin)),
@@ -1057,8 +1023,7 @@ pub fn scale(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<S
 pub fn skew(inputs: &[Series], kwargs: args::TransformKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let factors = inputs[1].strict_cast(&D::Array(D::Float64.into(), 3))?;
-    let factors = factors.array()?;
+    extract!(factors, inputs[1], D::Array(D::Float64.into(), 3), array);
     match kwargs.origin {
         args::TransformOrigin::XY(o) => wrap!(skew_from_point(wkb, factors, &(o.0, o.1, 0.0))),
         args::TransformOrigin::XYZ(origin) => wrap!(skew_from_point(wkb, factors, &origin)),
@@ -1074,12 +1039,12 @@ pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
     let matrix = &inputs[1];
     match matrix.dtype() {
         D::Array(.., 6) => {
-            let matrix = matrix.strict_cast(&D::Array(D::Float64.into(), 6))?;
-            wrap!(affine_transform_2d(wkb, matrix.array()?))
+            extract!(matrix, matrix, D::Array(D::Float64.into(), 6), array);
+            wrap!(affine_transform_2d(wkb, matrix))
         }
         D::Array(.., 12) => {
-            let matrix = matrix.strict_cast(&D::Array(D::Float64.into(), 12))?;
-            wrap!(affine_transform_3d(wkb, matrix.array()?))
+            extract!(matrix, matrix, D::Array(D::Float64.into(), 12), array);
+            wrap!(affine_transform_3d(wkb, matrix))
         }
         _ => Err(to_compute_err(
             "matrix parameter should be of type array with shape (6 | 12)",
@@ -1091,8 +1056,7 @@ pub fn affine_transform(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn interpolate(inputs: &[Series], kwargs: args::InterpolateKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let distance = inputs[1].strict_cast(&D::Float64)?;
-    let distance = distance.f64().unwrap();
+    extract!(distance, inputs[1], D::Float64, f64);
     match kwargs.normalized {
         true => wrap!(interpolate_normalized(wkb, distance)),
         false => wrap!(interpolate(wkb, distance)),
@@ -1114,10 +1078,8 @@ pub fn project(inputs: &[Series], kwargs: args::InterpolateKwargs) -> PolarsResu
 pub fn substring(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<3>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let start = inputs[1].strict_cast(&D::Float64)?;
-    let end = inputs[2].strict_cast(&D::Float64)?;
-    let start = start.f64().unwrap();
-    let end = end.f64().unwrap();
+    extract!(start, inputs[1], D::Float64, f64);
+    extract!(end, inputs[2], D::Float64, f64);
     wrap!(substring(wkb, start, end))
 }
 
@@ -1173,8 +1135,6 @@ pub fn flip_coordinates(inputs: &[Series]) -> PolarsResult<Series> {
 pub fn to_srid(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let srid = inputs[1].strict_cast(&D::Int64)?;
-    let srid = srid.i64()?;
-
+    extract!(srid, inputs[1], D::Int64, i64);
     wrap!(to_srid(wkb, srid))
 }
