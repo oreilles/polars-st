@@ -20,21 +20,30 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             target: x86_64
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04-arm
             target: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
+      - name: Install build dependencies
+        run: wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 20
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --zig --release --out dist
-          manylinux: auto
+          args: --release --out dist
+          container: off
+        env:
+          CC: "clang-20"
+          CXX: "clang++-20"
+          AR: "llvm-ar-20"
+          CFLAGS: "-O3 -flto -fvisibility=hidden"
+          CXXFLAGS: "-O3 -flto -fvisibility=hidden"
+          RUSTFLAGS: "-C strip=symbols -C codegen-units=1 -Clto=thin -Clinker-plugin-lto -C embed-bitcode -Clink-arg=-fuse-ld=lld -Clinker=clang-20"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -49,13 +58,17 @@ jobs:
         platform:
           - runner: macos-13
             target: x86_64
+            brew_prefix: /usr/local
           - runner: macos-14
             target: aarch64
+            brew_prefix: /opt/homebrew
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
+      - name: Install build dependencies
+        run: brew install llvm lld
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -66,6 +79,13 @@ jobs:
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
+        env:
+          CC: ${{ matrix.platform.brew_prefix }}/opt/llvm/bin/clang
+          CXX: ${{ matrix.platform.brew_prefix }}/opt/llvm/bin/clang++
+          AR: ${{ matrix.platform.brew_prefix }}/opt/llvm/bin/llvm-ar
+          CFLAGS: -O3 -flto -fvisibility=hidden
+          CXXFLAGS: -O3 -flto -fvisibility=hidden
+          RUSTFLAGS: -C strip=symbols -C codegen-units=1 -Clto=thin -Clinker-plugin-lto -C embed-bitcode -Clink-arg=-fuse-ld=lld -Clinker=${{ github.workspace }}/macos-linker.sh
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -85,6 +105,10 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist
+        env:
+          CFLAGS: "-O3 -flto -fvisibility=hidden"
+          CXXFLAGS: "-O3 -flto -fvisibility=hidden"
+          RUSTFLAGS: "-C strip=symbols -C codegen-units=1 -C lto=thin -C linker-plugin-lto -C embed-bitcode -C linker=lld-link.exe"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -105,19 +129,3 @@ jobs:
         with:
           name: wheels-sdist
           path: dist
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: [linux, macos, windows, sdist]
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}
-        with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*
