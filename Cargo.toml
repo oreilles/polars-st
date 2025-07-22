@@ -14,6 +14,7 @@ crate-type = ["cdylib"]
 [dependencies]
 crs-definitions = "0.3"
 geos = { git = "https://github.com/Oreilles/rust-geos", branch = "3.14", features = ["static", "v3_14_0"]}
+geo-index = "0.3.1"
 num_enum = "0.7.3"
 polars = { version = "0.49.1", features = ["dtype-struct", "dtype-array", "dtype-categorical"] }
 polars-arrow = { version = "0.49.1" }

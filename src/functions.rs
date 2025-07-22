@@ -12,12 +12,12 @@ use crate::{
     },
     wkb::{WKBGeometryType, WKBHeader},
 };
+use geo_index::rtree::{sort::STRSort, RTreeBuilder, RTreeIndex};
 use geos::{
     BufferParams, CoordSeq, Error as GError, GResult, GeoJSONWriter, Geom, Geometry,
     GeometryTypes::{self, *},
-    PreparedGeometry, STRtree, SpatialIndex, WKBWriter, WKTWriter,
+    PreparedGeometry, WKBWriter, WKTWriter,
 };
-
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
 use polars_arrow::array::{Array, BinaryViewArray, Float64Array, StaticArray};
@@ -1784,19 +1784,6 @@ pub fn voronoi_polygons(wkb: &BinaryChunked, params: &VoronoiKwargs) -> GResult<
         .map(|res| BinaryChunked::from_slice(wkb.name().clone(), &[res]))
 }
 
-fn strtree(geoms: &[Option<Geometry>]) -> GResult<STRtree<usize>> {
-    let length = geoms.len();
-    geoms.iter().enumerate().try_fold(
-        STRtree::<usize>::with_capacity(length)?,
-        |mut tree, (index, geom)| {
-            if let Some(geom) = geom {
-                tree.insert(geom, index);
-            }
-            Ok(tree)
-        },
-    )
-}
-
 type IdxNativeType = <IdxType as PolarsNumericType>::Native;
 
 pub fn sjoin(
@@ -1820,10 +1807,25 @@ pub fn sjoin(
 
     let left_geoms = left
         .iter()
-        .map(|v| v.map(Geometry::new_from_wkb).transpose())
+        .enumerate()
+        .filter_map(|(i, wkb)| {
+            Geometry::new_from_wkb(wkb?)
+                .and_then(|geom| Ok((!geom.is_empty()?).then_some((i, geom))))
+                .transpose()
+        })
         .collect::<GResult<Vec<_>>>()?;
 
-    let spatial_index = strtree(&left_geoms)?;
+    let sindex = {
+        let builder = left_geoms.iter().try_fold(
+            RTreeBuilder::<f64>::new(left_geoms.len() as u32),
+            |mut builder, (_idx, geom)| {
+                let extent = geom.get_extent()?;
+                builder.add(extent[0], extent[1], extent[2], extent[3]);
+                Ok(builder)
+            },
+        )?;
+        builder.finish::<STRSort>()
+    };
 
     (0..right.len())
         .into_par_iter()
@@ -1836,13 +1838,15 @@ pub fn sjoin(
             };
             let right_geom = Geometry::new_from_wkb(wkb)?;
             let right_geom_prepared = right_geom.to_prepared_geom()?;
-            spatial_index.query(&right_geom, |left_index| {
-                let left_geom = unsafe { left_geoms[*left_index].as_ref().unwrap_unchecked() };
-                if matches!(predicate(&right_geom_prepared, left_geom), Ok(true)) {
+            let extent = right_geom.get_extent()?;
+            let sindex_hits = sindex.search(extent[0], extent[1], extent[2], extent[3]);
+            for sindex_hit in sindex_hits {
+                let (left_index, left_geom) = &left_geoms[sindex_hit as usize];
+                if predicate(&right_geom_prepared, left_geom)? {
                     left_indicies.push(*left_index as _);
                     right_indicies.push(right_index as _);
                 }
-            });
+            }
             Ok((left_indicies, right_indicies))
         })
         .try_reduce(
