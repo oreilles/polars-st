@@ -63,7 +63,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
     def st(self) -> GeoSeriesNameSpace:
         return GeoSeriesNameSpace(self)
 
-    def __new__(  # noqa: C901, PLR0912, PYI034
+    def __new__(  # noqa: C901, PLR0912, PLR0915, PYI034
         cls,
         name: str | ArrayLike | None = None,
         values: ArrayLike | None = None,
