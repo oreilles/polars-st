@@ -1829,6 +1829,9 @@ pub fn sjoin(
                 return Ok((left_indicies, right_indicies));
             };
             let right_geom = Geometry::new_from_wkb(wkb)?;
+            if right_geom.is_empty()? {
+                return Ok((left_indicies, right_indicies));
+            }
             let right_geom_prepared = right_geom.to_prepared_geom()?;
             let extent = right_geom.get_extent()?;
             for hit in sindex.search(extent[0], extent[1], extent[2], extent[3]) {
