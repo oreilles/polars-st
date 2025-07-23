@@ -1851,9 +1851,9 @@ pub fn sjoin(
         })
         .try_reduce(
             || (vec![], vec![]),
-            |(mut left_acc, mut right_acc), (left, right)| {
-                left_acc.extend(left);
-                right_acc.extend(right);
+            |(mut left_acc, mut right_acc), (mut left, mut right)| {
+                left_acc.append(&mut left);
+                right_acc.append(&mut right);
                 Ok((left_acc, right_acc))
             },
         )
