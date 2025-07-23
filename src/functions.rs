@@ -1808,40 +1808,31 @@ pub fn sjoin(
     let left_geoms = left
         .iter()
         .enumerate()
-        .filter_map(|(i, wkb)| {
-            Geometry::new_from_wkb(wkb?)
-                .and_then(|geom| Ok((!geom.is_empty()?).then_some((i, geom))))
-                .transpose()
-        })
+        .filter_map(|(i, w)| w.map(|w| Geometry::new_from_wkb(w).map(|g| (i, g))))
         .collect::<GResult<Vec<_>>>()?;
 
     let sindex = {
-        let builder = left_geoms.iter().try_fold(
-            RTreeBuilder::<f64>::new(left_geoms.len() as u32),
-            |mut builder, (_idx, geom)| {
-                let extent = geom.get_extent()?;
-                builder.add(extent[0], extent[1], extent[2], extent[3]);
-                Ok(builder)
-            },
-        )?;
+        let mut builder = RTreeBuilder::new(left_geoms.len() as u32);
+        for (_, geometry) in left_geoms.iter() {
+            let extent = geometry.get_extent()?;
+            builder.add(extent[0], extent[1], extent[2], extent[3]);
+        }
         builder.finish::<STRSort>()
     };
 
     (0..right.len())
         .into_par_iter()
         .map(|right_index| {
-            let wkb = unsafe { right.get_unchecked(right_index) };
             let mut left_indicies = vec![];
             let mut right_indicies = vec![];
-            let Some(wkb) = wkb else {
+            let Some(wkb) = (unsafe { right.get_unchecked(right_index) }) else {
                 return Ok((left_indicies, right_indicies));
             };
             let right_geom = Geometry::new_from_wkb(wkb)?;
             let right_geom_prepared = right_geom.to_prepared_geom()?;
             let extent = right_geom.get_extent()?;
-            let sindex_hits = sindex.search(extent[0], extent[1], extent[2], extent[3]);
-            for sindex_hit in sindex_hits {
-                let (left_index, left_geom) = &left_geoms[sindex_hit as usize];
+            for hit in sindex.search(extent[0], extent[1], extent[2], extent[3]) {
+                let (left_index, left_geom) = &left_geoms[hit as usize];
                 if predicate(&right_geom_prepared, left_geom)? {
                     left_indicies.push(*left_index as _);
                     right_indicies.push(right_index as _);
