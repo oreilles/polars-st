@@ -321,11 +321,19 @@ class GeoDataFrameNameSpace:
             >>> dicts[0]
             {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [0.0, 0.0]}, 'properties': {'name': 'Alice'}}
         """  # noqa: E501
-        return self._df.select(
-            type=pl.lit("Feature"),
-            geometry=geom(geometry_name).st.to_dict(),
-            properties=pl.struct(cs.exclude(geometry_name)) if len(self._df.columns) > 1 else None,
-        ).to_dicts()
+        geometry_column_idx = self._df.get_column_index(geometry_name)
+        property_columns_idx = [i for i in range(len(self._df.columns)) if i != geometry_column_idx]
+
+        def to_geojson_dict(row: tuple) -> dict:
+            return {
+                "type": "Feature",
+                "properties": {self._df.columns[i]: row[i] for i in property_columns_idx}
+                if len(property_columns_idx) > 0
+                else None,
+                "geometry": row[geometry_column_idx],
+            }
+
+        return [to_geojson_dict(row) for row in self.to_dict()._df.row_tuples()]  # noqa: SLF001
 
     def to_geopandas(
         self,
