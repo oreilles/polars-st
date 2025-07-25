@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import altair as alt
     import geopandas as gpd
     from altair.vegalite.v5.schema._config import MarkConfigKwds
+    from lonboard import Map
     from polars._typing import PolarsDataType
     from typing_extensions import Unpack
 
@@ -989,3 +990,6 @@ class GeoSeriesNameSpace:
         for available options.
         """
         return self._series.to_frame().pipe(st).plot(**kwargs)
+
+    def explore(self) -> Map:
+        return self._series.to_frame().pipe(st).explore(self._series.name)

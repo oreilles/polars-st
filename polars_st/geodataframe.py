@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import IO, TYPE_CHECKING, Any, Literal, cast, overload
 
 import polars as pl
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     import altair as alt
     import geopandas as gpd
     from altair.vegalite.v5.schema._config import MarkConfigKwds
+    from lonboard import Map
     from polars._typing import (
         FrameInitTypes,
         JoinStrategy,
@@ -346,23 +348,13 @@ class GeoDataFrameNameSpace:
         """Convert this DataFrame to a geopandas GeoDataFrame."""
         import geopandas as gpd
 
-        srids = self._df.select(geom(geometry_name).st.srid()).unique().drop_nulls()
-        match len(srids):
-            case 0:
-                crs = None
-            case 1:
-                crs = srids.item()
-            case _:
-                msg = "DataFrame with mixed SRIDs aren't supported in GeoPandas"
-                raise ValueError(msg)
-
         return gpd.GeoDataFrame(
             self.to_shapely(geometry_name).to_pandas(
                 use_pyarrow_extension_array=use_pyarrow_extension_array,
                 **kwargs,
             ),
             geometry=geometry_name,
-            crs=crs,
+            crs=get_unique_crs_or_raise(self._df, geometry_name),
         )
 
     @property
@@ -463,22 +455,12 @@ class GeoDataFrameNameSpace:
         """
         geometry_types = self._df.select(
             geom(geometry_name).st.geometry_type().unique().drop_nulls()
-        ).to_series()
-        geometry_type = geometry_types[0] if len(geometry_types) == 1 else "Unknown"
+        )
+        geometry_type = geometry_types.item() if len(geometry_types) == 1 else "Unknown"
 
-        srids = self._df.select(geom().st.srid().unique().drop_nulls())
-        if len(srids) == 1 and (srid := srids[0, 0]) != 0:
-            crs = get_crs_from_code(srid)
-            if crs is None:
-                msg = f"Couldn't find CRS information for SRID {srid}"
-                raise ValueError(msg)
-        elif len(srids) > 1:
-            msg = "DataFrame with mixed SRIDs aren't supported"
-            raise ValueError(msg)
-        else:
-            crs = None
-
+        crs = get_unique_crs_or_raise(self._df, geometry_name)
         geometry = geom(geometry_name).st.to_wkb(output_dimension=4, include_srid=False)
+
         write_arrow(
             self._df.with_columns(geometry).to_arrow(),
             path=path,
@@ -637,3 +619,32 @@ class GeoDataFrameNameSpace:
             .mark_geoshape(**kwargs)
             .interactive()
         )
+
+    def explore(self, geometry_name: str = "geometry") -> Map:
+        from lonboard import viz
+
+        table = self._df.to_arrow()
+
+        geom_metadata = {b"ARROW:extension:name": b"geoarrow.wkb"}
+        if (crs := get_unique_crs_or_raise(self._df, geometry_name)) is not None:
+            crs_metadata = {"crs_type": "wkt2:2019", "crs": crs}
+            geom_metadata[b"ARROW:extension:metadata"] = json.dumps(crs_metadata).encode("utf-8")
+
+        geom_field_index = table.schema.get_field_index(geometry_name)
+        geom_field = table.schema.field(geom_field_index).with_metadata(geom_metadata)
+        table = table.set_column(geom_field_index, geom_field, table.column(geom_field_index))
+
+        return viz(table)
+
+
+def get_unique_crs_or_raise(df: GeoDataFrame, geometry_name: str) -> str | None:
+    srids = df.select(geom(geometry_name).st.srid()).unique().drop_nulls()
+    if len(srids) == 1 and (srid := srids.item()) != 0:
+        if (crs := get_crs_from_code(srid)) is None:
+            msg = f"Couldn't find CRS information for SRID {srid}"
+            raise ValueError(msg)
+        return crs
+    if len(srids) == 0:
+        return None
+    msg = "DataFrames with mixed SRIDs aren't supported"
+    raise ValueError(msg)
