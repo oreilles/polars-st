@@ -164,9 +164,10 @@ pub struct LineMergeKwargs {
     pub directed: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum SpatialJoinPredicate {
+#[serde(tag = "type", content = "param")]
+pub enum SjoinPredicate {
     IntersectsBbox,
     Intersects,
     Within,
@@ -177,11 +178,12 @@ pub enum SpatialJoinPredicate {
     Covers,
     CoveredBy,
     ContainsProperly,
+    Dwithin(f64),
 }
 
 #[derive(Deserialize)]
-pub struct SpatialJoinKwargs {
-    pub predicate: SpatialJoinPredicate,
+pub struct SjoinKwargs {
+    pub predicate: SjoinPredicate,
 }
 
 #[derive(Deserialize)]
