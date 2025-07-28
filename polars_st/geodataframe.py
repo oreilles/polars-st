@@ -330,13 +330,13 @@ class GeoDataFrameNameSpace:
         def to_geojson_dict(row: tuple) -> dict:
             return {
                 "type": "Feature",
+                "geometry": row[geometry_column_idx],
                 "properties": {self._df.columns[i]: row[i] for i in property_columns_idx}
                 if len(property_columns_idx) > 0
                 else None,
-                "geometry": row[geometry_column_idx],
             }
 
-        return [to_geojson_dict(row) for row in self.to_dict()._df.row_tuples()]  # noqa: SLF001
+        return [to_geojson_dict(row) for row in self.to_dict(geometry_name)._df.row_tuples()]  # noqa: SLF001
 
     def to_geopandas(
         self,

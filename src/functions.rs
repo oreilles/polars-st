@@ -23,7 +23,10 @@ use polars::prelude::*;
 use polars_arrow::array::{Array, BinaryViewArray, Float64Array, StaticArray};
 use proj4rs::errors::Error as ProjError;
 use proj4rs::Proj;
-use pyo3::prelude::*;
+use pyo3::{
+    prelude::*,
+    types::{PyDict, PyList, PyListMethods},
+};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub trait GeometryUtils {
@@ -753,12 +756,93 @@ pub fn to_geojson(wkb: &BinaryChunked, params: &ToGeoJsonKwargs) -> GResult<Stri
 }
 
 pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyObject>>> {
-    let json = py.import("json").expect("Failed to import json");
-    let loads = json.getattr("loads").expect("Failed to get json.loads");
-    let to = |wkb| {
-        let json = Geometry::new_from_wkb(wkb)?.to_geojson()?;
-        Ok(loads.call1((json,)).expect("Invalid GeoJSON").into())
-    };
+    fn dict<'py, C>(py: Python<'py>, g: &str, v: C) -> PyObject
+    where
+        C: IntoPyObject<'py>,
+    {
+        let dict = PyDict::new(py);
+        dict.set_item("type", g).unwrap();
+        dict.set_item("coordinates", v).unwrap();
+        dict.into()
+    }
+    fn coord_seq<T: Geom>(geom: &T) -> GResult<Vec<Vec<f64>>> {
+        if geom.is_empty()? {
+            return Ok(vec![]);
+        }
+        let dims: u32 = geom.get_coordinate_dimension()?.into();
+        let buffer = geom.get_coord_seq()?.as_buffer(Some(dims as usize))?;
+        let coords = buffer
+            .chunks_exact(dims as usize)
+            .map(<[f64]>::to_vec)
+            .collect();
+        Ok(coords)
+    }
+    fn point<T: Geom>(point: &T) -> GResult<Vec<f64>> {
+        Ok(coord_seq(point)?.into_iter().next().unwrap_or(vec![]))
+    }
+    fn multipoint<T: Geom>(points: &T) -> GResult<Vec<Vec<f64>>> {
+        let num_points = points.get_num_geometries()?;
+        let mut coordinates = Vec::with_capacity(num_points);
+        for n in 0..num_points {
+            coordinates.push(point(&points.get_geometry_n(n)?)?);
+        }
+        Ok(coordinates)
+    }
+    fn linestring<T: Geom>(line: &T) -> GResult<Vec<Vec<f64>>> {
+        coord_seq(line)
+    }
+    fn multilinestring<T: Geom>(lines: &T) -> GResult<Vec<Vec<Vec<f64>>>> {
+        let num_lines = lines.get_num_geometries()?;
+        let mut coordinates = Vec::with_capacity(num_lines);
+        for n in 0..num_lines {
+            coordinates.push(linestring(&lines.get_geometry_n(n)?)?);
+        }
+        Ok(coordinates)
+    }
+    fn polygon<T: Geom>(polygon: &T) -> GResult<Vec<Vec<Vec<f64>>>> {
+        let mut coordinates = Vec::new();
+        if !polygon.is_empty()? {
+            coordinates.push(coord_seq(&polygon.get_exterior_ring()?)?);
+            for n in 0..polygon.get_num_interior_rings()? {
+                coordinates.push(coord_seq(&polygon.get_interior_ring_n(n)?)?);
+            }
+        }
+        Ok(coordinates)
+    }
+    fn multipolygon<T: Geom>(polygons: &T) -> GResult<Vec<Vec<Vec<Vec<f64>>>>> {
+        let num_polygons = polygons.get_num_geometries()?;
+        let mut coordinates = Vec::with_capacity(num_polygons);
+        for n in 0..num_polygons {
+            coordinates.push(polygon(&polygons.get_geometry_n(n)?)?);
+        }
+        Ok(coordinates)
+    }
+    fn geometrycollection<T: Geom>(py: Python<'_>, collection: &T) -> GResult<PyObject> {
+        let geometries = PyList::empty(py);
+        for n in 0..collection.get_num_geometries()? {
+            let geometry = collection.get_geometry_n(n)?;
+            geometries.append(geom_to_dict(py, &geometry)?).unwrap();
+        }
+        let dict = PyDict::new(py);
+        dict.set_item("type", "GeometryCollection").unwrap();
+        dict.set_item("geometries", geometries).unwrap();
+        Ok(dict.into())
+    }
+    fn geom_to_dict<T: Geom>(py: Python<'_>, geom: &T) -> GResult<PyObject> {
+        match geom.geometry_type()? {
+            Point => Ok(dict(py, "Point", point(geom)?)),
+            LineString => Ok(dict(py, "LineString", linestring(geom)?)),
+            Polygon => Ok(dict(py, "Polygon", polygon(geom)?)),
+            MultiPoint => Ok(dict(py, "MultiPoint", multipoint(geom)?)),
+            MultiLineString => Ok(dict(py, "MultiLineString", multilinestring(geom)?)),
+            MultiPolygon => Ok(dict(py, "MultiPolygon", multipolygon(geom)?)),
+            GeometryCollection => geometrycollection(py, geom),
+            t => Err(GError::GenericError(format!(
+                "Unsupported geometry type: {t:?}"
+            ))),
+        }
+    }
+    let to = |wkb| geom_to_dict(py, &Geometry::new_from_wkb(wkb)?);
     wkb.iter().map(|wkb| wkb.map(to).transpose()).collect()
 }
 

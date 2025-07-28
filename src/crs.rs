@@ -18,9 +18,9 @@ pub fn get_crs_authority(definition: &str) -> Option<(&str, &str)> {
 }
 
 #[pyfunction]
-pub fn get_crs_from_code(srid: i64) -> Option<String> {
+pub fn get_crs_from_code(srid: i64) -> Option<&'static str> {
     srid.try_into()
         .ok()
         .and_then(crs_definitions::from_code)
-        .map(|def| def.wkt.to_owned())
+        .map(|def| def.wkt)
 }
