@@ -331,9 +331,7 @@ class GeoDataFrameNameSpace:
             return {
                 "type": "Feature",
                 "geometry": row[geometry_column_idx],
-                "properties": {self._df.columns[i]: row[i] for i in property_columns_idx}
-                if len(property_columns_idx) > 0
-                else None,
+                "properties": {self._df.columns[i]: row[i] for i in property_columns_idx},
             }
 
         return [to_geojson_dict(row) for row in self.to_dict(geometry_name)._df.row_tuples()]  # noqa: SLF001
@@ -602,16 +600,13 @@ class GeoDataFrameNameSpace:
         Altair [GeoShape](https://altair-viz.github.io/user_guide/marks/geoshape.html) documentation
         for available options.
 
-        Please note that the dataframe will be converted to a GeoJSON FeatureCollection, so
-        columns will need to be prefixed with `properties.` for access in Altair functions.
-
         Examples:
             >>> url = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
             >>> plot = (
             ...     st.read_file(url)
             ...     .with_columns(st.simplify(tolerance=1))
             ...     .st.plot()
-            ...     .encode(color="properties.CONTINENT:N")
+            ...     .encode(color="CONTINENT:N")
             ...     .configure_legend(title=None)
             ...     .properties(height=150)
             ... )
@@ -626,12 +621,19 @@ class GeoDataFrameNameSpace:
             ... ]})
             >>> plot = (
             ...     df.st.plot(blend="difference")
-            ...     .encode(fill=alt.Color("properties.color:N", scale=None))
+            ...     .encode(fill=alt.Color("color:N", scale=None))
             ...     .project("identity", reflectY=True, pointRadius=100)
             ...     .properties(height=200)
             ... )
         """
         import altair as alt
 
-        chart = alt.Chart({"values": self.to_dicts(geometry_name)})
-        return chart.mark_geoshape(**kwargs).interactive()
+        return (
+            alt.Chart(
+                self.to_dict(geometry_name)
+                .rename({geometry_name: "geometry"})
+                .with_columns(type=pl.lit("Feature"))
+            )
+            .mark_geoshape(**kwargs)
+            .interactive()
+        )
