@@ -6,9 +6,11 @@ use crate::{
 use geos::{Geom, Geometry};
 use polars::{datatypes::DataType as D, prelude::array::ArrayNameSpace};
 use polars::{error::to_compute_err, prelude::*};
-use polars_arrow::array::{Array, FixedSizeListArray, Float64Array, Utf8ViewArray};
+use polars_arrow as arrow;
+use polars_arrow::array::{Array, FixedSizeListArray, Float64Array};
+use polars_python::{error::PyPolarsErr, PySeries};
 use pyo3::prelude::*;
-use pyo3_polars::{derive::polars_expr, error::PyPolarsErr, PySeries};
+use pyo3_polars::derive::polars_expr;
 
 fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
     fields
@@ -38,30 +40,34 @@ fn output_type_geometry_list(input_fields: &[Field]) -> PolarsResult<Field> {
     ))
 }
 
-fn geometry_enum() -> DataType {
-    static GEOMETRY_TYPES: [Option<&str>; 18] = [
-        Some("Unknown"),
-        Some("Point"),
-        Some("LineString"),
-        Some("Polygon"),
-        Some("MultiPoint"),
-        Some("MultiLineString"),
-        Some("MultiPolygon"),
-        Some("GeometryCollection"),
-        Some("CircularString"),
-        Some("CompoundCurve"),
-        Some("CurvePolygon"),
-        Some("MultiCurve"),
-        Some("MultiSurface"),
-        Some("Curve"),
-        Some("Surface"),
-        Some("PolyhedralSurface"),
-        Some("Tin"),
-        Some("Triangle"),
-    ];
-    let cats = Utf8ViewArray::from_slice(GEOMETRY_TYPES);
-    let rev_mapping = RevMapping::build_local(cats);
-    D::Enum(Some(rev_mapping.into()), CategoricalOrdering::Physical)
+fn geometry_enum() -> &'static DataType {
+    use std::sync::OnceLock;
+    static GEOMETRY_ENUM: OnceLock<DataType> = OnceLock::new();
+
+    GEOMETRY_ENUM.get_or_init(|| {
+        let cats = FrozenCategories::new([
+            "Unknown",
+            "Point",
+            "LineString",
+            "Polygon",
+            "MultiPoint",
+            "MultiLineString",
+            "MultiPolygon",
+            "GeometryCollection",
+            "CircularString",
+            "CompoundCurve",
+            "CurvePolygon",
+            "MultiCurve",
+            "MultiSurface",
+            "Curve",
+            "Surface",
+            "PolyhedralSurface",
+            "Tin",
+            "Triangle",
+        ])
+        .unwrap();
+        D::from_frozen_categories(cats)
+    })
 }
 
 fn output_type_sjoin(input_fields: &[Field]) -> PolarsResult<Field> {
@@ -345,8 +351,12 @@ fn to_geojson(inputs: &[Series], kwargs: args::ToGeoJsonKwargs) -> PolarsResult<
 }
 
 #[pyfunction]
-pub fn to_python_dict(py: Python, series: PySeries) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
-    let wkb = validate_wkb(&series.0)?;
+pub fn to_python_dict(
+    py: Python,
+    capsule: &Bound<'_, PyAny>,
+) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
+    let series = PySeries::from_arrow_c_stream(&py.get_type::<pyo3::types::PyNone>(), capsule)?;
+    let wkb = validate_wkb(&series.series)?;
     functions::to_python_dict(wkb, py)
         .map_err(to_compute_err)
         .map_err(Into::into)
@@ -356,7 +366,7 @@ pub fn to_python_dict(py: Python, series: PySeries) -> Result<Vec<Option<PyObjec
 fn cast(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<2>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    extract!(into, inputs[1], geometry_enum(), categorical);
+    extract!(into, inputs[1], geometry_enum(), cat8);
     wrap!(cast(wkb, into))
 }
 

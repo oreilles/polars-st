@@ -31,21 +31,28 @@ impl TryFrom<&[u8]> for WKBHeader {
         let (type_id, srid) = get_type_id_and_srid(&mut wkb)
             .map_err(|_| geos::Error::GenericError("Invalid WKB Header".into()))?;
 
-        let geometry_type = WKBGeometryType::try_from(type_id & 0xFF).map_err(|_| {
+        let has_z = type_id & 0x8000_0000 != 0;
+        let has_m = type_id & 0x4000_0000 != 0;
+
+        let type_id: u8 = (type_id & 0xFF)
+            .try_into()
+            .map_err(|_| geos::Error::GenericError("Invalid WKB Header".into()))?;
+
+        let geometry_type = WKBGeometryType::try_from(type_id).map_err(|_| {
             geos::Error::GenericError(format!("Invalid geometry type id: {type_id}"))
         })?;
 
         Ok(Self {
             geometry_type,
-            has_z: type_id & 0x8000_0000 != 0,
-            has_m: type_id & 0x4000_0000 != 0,
+            has_z,
+            has_m,
             srid,
         })
     }
 }
 
 #[derive(Clone, Copy, Debug, IntoPrimitive, TryFromPrimitive, Serialize, Deserialize)]
-#[repr(u32)]
+#[repr(u8)]
 pub enum WKBGeometryType {
     Unknown = 0,
     Point = 1,

@@ -410,9 +410,9 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
     })
 }
 
-pub fn get_type_id(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
+pub fn get_type_id(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
-        WKBHeader::try_from(wkb).map(|header| header.geometry_type as u32)
+        WKBHeader::try_from(wkb).map(|header| header.geometry_type.into())
     })
 }
 
@@ -846,7 +846,7 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
     wkb.iter().map(|wkb| wkb.map(to).transpose()).collect()
 }
 
-pub fn cast(wkb: &BinaryChunked, into: &CategoricalChunked) -> GResult<BinaryChunked> {
+pub fn cast(wkb: &BinaryChunked, into: &Categorical8Chunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(wkb, into.physical(), |wkb, into| {
         let into: WKBGeometryType = into.try_into().unwrap();
         let into: GeometryTypes = into.try_into()?;

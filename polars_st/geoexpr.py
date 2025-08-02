@@ -393,7 +393,7 @@ class GeoExprNameSpace:
     def to_dict(self) -> pl.Expr:
         """Convert each geometry to a GeoJSON-like Python [`dict`][] object."""
         return self._expr.map_batches(
-            lambda s: pl.Series(s.name, _lib.to_python_dict(s), dtype=pl.Object),
+            lambda s: pl.Series(s.name, _lib.to_python_dict(s._s), dtype=pl.Object),  # noqa: SLF001
             return_dtype=pl.Object(),
             is_elementwise=True,
         )
