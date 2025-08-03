@@ -46,7 +46,7 @@ def test_to_geopandas_mixed_srids():
         "geometry": ["POINT(0 0)", "POINT(1 2)"],
         "srid": [4326, 3857],
     }).with_columns(st.set_srid(srid="srid"))
-    msg = "DataFrame with mixed SRIDs aren't supported in GeoPandas"
+    msg = "DataFrame with mixed SRIDs aren't supported for this operation"
     with pytest.raises(ValueError, match=msg):
         gdf.pipe(st.st).to_geopandas()
 

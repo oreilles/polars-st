@@ -43,7 +43,9 @@ def test_series_signatures_matches_expr():
     series_funcs: dict[str, Callable] = {
         name: func
         for name, func in st.geoseries.GeoSeriesNameSpace.__dict__.items()
-        if callable(func) and not name.startswith("_") and name not in {"plot", "to_geopandas"}
+        if callable(func)
+        and not name.startswith("_")
+        and name not in {"plot", "explore", "to_geopandas"}
     }
     assert set(expr_funcs.keys()) == set(series_funcs.keys())
     for expr_func, series_func in zip(expr_funcs.values(), series_funcs.values(), strict=True):

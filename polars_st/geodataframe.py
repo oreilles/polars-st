@@ -639,12 +639,14 @@ class GeoDataFrameNameSpace:
 
 def get_unique_crs_or_raise(df: GeoDataFrame, geometry_name: str) -> str | None:
     srids = df.select(geom(geometry_name).st.srid()).unique().drop_nulls()
-    if len(srids) == 1 and (srid := srids.item()) != 0:
-        if (crs := get_crs_from_code(srid)) is None:
+    if len(srids) == 1 and (srid := srids[0, 0]) != 0:
+        crs = get_crs_from_code(srid)
+        if crs is None:
             msg = f"Couldn't find CRS information for SRID {srid}"
             raise ValueError(msg)
-        return crs
-    if len(srids) == 0:
-        return None
-    msg = "DataFrames with mixed SRIDs aren't supported"
-    raise ValueError(msg)
+    elif len(srids) > 1:
+        msg = "DataFrame with mixed SRIDs aren't supported for this operation"
+        raise ValueError(msg)
+    else:
+        crs = None
+    return crs
