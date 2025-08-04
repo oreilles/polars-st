@@ -25,6 +25,7 @@ dev = [
     "geodatasets>=2024.8.0",
     "geopandas>=1.0.1",
     "ipykernel>=6.29.5",
+    "lonboard>=0.11.1",
     "maturin[zig]>=1.7.4",
     "mkdocs-material>=9.5.34",
     "mkdocs>=1.6.1",
