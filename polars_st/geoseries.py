@@ -28,6 +28,12 @@ if TYPE_CHECKING:
     import geopandas as gpd
     from altair.vegalite.v5.schema._config import MarkConfigKwds
     from lonboard import Map
+    from lonboard.types.layer import (
+        PathLayerKwargs,
+        PolygonLayerKwargs,
+        ScatterplotLayerKwargs,
+    )
+    from lonboard.types.map import MapKwargs
     from polars._typing import PolarsDataType
     from typing_extensions import Unpack
 
@@ -991,5 +997,22 @@ class GeoSeriesNameSpace:
         """
         return self._series.to_frame().pipe(st).plot(**kwargs)
 
-    def explore(self) -> Map:
-        return self._series.to_frame().pipe(st).explore(self._series.name)
+    def explore(
+        self,
+        *,
+        scatterplot_kwargs: ScatterplotLayerKwargs | None = None,
+        path_kwargs: PathLayerKwargs | None = None,
+        polygon_kwargs: PolygonLayerKwargs | None = None,
+        map_kwargs: MapKwargs | None = None,
+    ) -> Map:
+        return (
+            self._series.to_frame()
+            .pipe(st)
+            .explore(
+                self._series.name,
+                scatterplot_kwargs=scatterplot_kwargs,
+                path_kwargs=path_kwargs,
+                polygon_kwargs=polygon_kwargs,
+                map_kwargs=map_kwargs,
+            )
+        )

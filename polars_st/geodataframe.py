@@ -23,6 +23,12 @@ if TYPE_CHECKING:
     import geopandas as gpd
     from altair.vegalite.v5.schema._config import MarkConfigKwds
     from lonboard import Map
+    from lonboard.types.layer import (
+        PathLayerKwargs,
+        PolygonLayerKwargs,
+        ScatterplotLayerKwargs,
+    )
+    from lonboard.types.map import MapKwargs
     from polars._typing import (
         FrameInitTypes,
         JoinStrategy,
@@ -620,7 +626,15 @@ class GeoDataFrameNameSpace:
             .interactive()
         )
 
-    def explore(self, geometry_name: str = "geometry") -> Map:
+    def explore(
+        self,
+        geometry_name: str = "geometry",
+        *,
+        scatterplot_kwargs: ScatterplotLayerKwargs | None = None,
+        path_kwargs: PathLayerKwargs | None = None,
+        polygon_kwargs: PolygonLayerKwargs | None = None,
+        map_kwargs: MapKwargs | None = None,
+    ) -> Map:
         from lonboard import viz
 
         table = self._df.to_arrow()
@@ -634,7 +648,13 @@ class GeoDataFrameNameSpace:
         geom_field = table.schema.field(geom_field_index).with_metadata(geom_metadata)
         table = table.set_column(geom_field_index, geom_field, table.column(geom_field_index))
 
-        return viz(table)
+        return viz(
+            table,
+            scatterplot_kwargs=scatterplot_kwargs,
+            path_kwargs=path_kwargs,
+            polygon_kwargs=polygon_kwargs,
+            map_kwargs=map_kwargs,
+        )
 
 
 def get_unique_crs_or_raise(df: GeoDataFrame, geometry_name: str) -> str | None:

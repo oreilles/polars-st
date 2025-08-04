@@ -71,12 +71,12 @@ plugins:
       handlers:
         python:
           paths: [.]
-          import:
-          - url: https://docs.python.org/3/objects.inv
-            domains: [std, py]
+          inventories:
+          - https://docs.python.org/3/objects.inv
           - https://docs.pola.rs/api/python/stable/objects.inv
           - https://geopandas.org/en/stable/objects.inv
           - https://altair-viz.github.io/objects.inv
+          - http://developmentseed.org/lonboard/latest/objects.inv
           options:
             show_source: false
             members_order: source
