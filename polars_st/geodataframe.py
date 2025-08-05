@@ -617,11 +617,9 @@ class GeoDataFrameNameSpace:
         import altair as alt
 
         return (
-            alt.Chart(
-                self.to_dict(geometry_name)
-                .rename({geometry_name: "geometry"})
-                .with_columns(type=pl.lit("Feature"))
-            )
+            self._df.with_columns(type=pl.lit("Feature"), geometry=geom(geometry_name).st.to_dict())
+            .drop([geometry_name] if geometry_name != "geometry" else [])
+            .pipe(alt.Chart)
             .mark_geoshape(**kwargs)
             .interactive()
         )
@@ -637,14 +635,18 @@ class GeoDataFrameNameSpace:
     ) -> Map:
         from lonboard import viz
 
-        table = self._df.to_arrow()
+        table = (
+            self._df.with_columns(geometry=geometry_name)
+            .drop([geometry_name] if geometry_name != "geometry" else [])
+            .pipe(lambda gdf: gdf.to_arrow())
+        )
 
         geom_metadata = {b"ARROW:extension:name": b"geoarrow.wkb"}
         if (crs := get_unique_crs_or_raise(self._df, geometry_name)) is not None:
             crs_metadata = {"crs_type": "wkt2:2019", "crs": crs}
             geom_metadata[b"ARROW:extension:metadata"] = json.dumps(crs_metadata).encode("utf-8")
 
-        geom_field_index = table.schema.get_field_index(geometry_name)
+        geom_field_index = table.schema.get_field_index("geometry")
         geom_field = table.schema.field(geom_field_index).with_metadata(geom_metadata)
         table = table.set_column(geom_field_index, geom_field, table.column(geom_field_index))
 
