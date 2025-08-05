@@ -134,22 +134,24 @@ fn from_geojson(inputs: &[Series]) -> PolarsResult<Series> {
 
 #[polars_expr(output_type=Binary)]
 fn rectangle(inputs: &[Series]) -> PolarsResult<Series> {
-    let inputs = validate_inputs_length::<1>(inputs)?;
+    let inputs = validate_inputs_length::<2>(inputs)?;
     extract!(rect, inputs[0], D::Array(D::Float64.into(), 4), array);
-    wrap!(rectangle(rect))
+    extract!(srid, inputs[1], D::Int32, i32);
+    wrap!(rectangle(rect, srid))
 }
 
 macro_rules! create_geometry {
     ($name:ident, $cast_type:expr) => {
         #[polars_expr(output_type = Binary)]
         fn $name(inputs: &[Series]) -> PolarsResult<Series> {
-            let inputs = validate_inputs_length::<1>(inputs)?;
+            let inputs = validate_inputs_length::<2>(inputs)?;
             let coords = &inputs[0];
             let coords = coords
                 .cast(&$cast_type)
                 .map_err(|_| polars_err!(InvalidOperation: "invalid coordinates dtype for {}: {}", stringify!($name), coords.dtype()))?;
             let coords = coords.list().unwrap();
-            wrap!($name(coords))
+            extract!(srid, inputs[1], D::Int32, i32);
+            wrap!($name(coords, srid))
         }
     };
 }

@@ -287,14 +287,16 @@ pub fn from_geojson(json: &StringChunked) -> GResult<BinaryChunked> {
     json.try_apply_nonnull_values_generic(|json| Geometry::new_from_geojson(json)?.to_ewkb())
 }
 
-pub fn rectangle(bounds: &ArrayChunked) -> GResult<BinaryChunked> {
-    bounds.try_apply_nonnull_values_generic(|bounds| {
+pub fn rectangle(bounds: &ArrayChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(bounds, srid, |bounds, srid| {
         let bounds = bounds.as_any().downcast_ref::<Float64Array>().unwrap();
         let xmin = unsafe { bounds.get_unchecked(0) }.unwrap_or(f64::NAN);
         let ymin = unsafe { bounds.get_unchecked(1) }.unwrap_or(f64::NAN);
         let xmax = unsafe { bounds.get_unchecked(2) }.unwrap_or(f64::NAN);
         let ymax = unsafe { bounds.get_unchecked(3) }.unwrap_or(f64::NAN);
-        Geometry::create_rectangle(xmin, ymin, xmax, ymax)?.to_ewkb()
+        let mut geom = Geometry::create_rectangle(xmin, ymin, xmax, ymax)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
@@ -334,49 +336,56 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
     CoordSeq::new_from_buffer(values, values.len() / dimension, has_z, has_m)
 }
 
-pub fn point(coords: &ListChunked) -> GResult<BinaryChunked> {
-    coords.try_apply_nonnull_values_generic(|coord| {
+pub fn point(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(coords, srid, |coord, srid| {
         let coord = coord.as_any().downcast_ref::<Float64Array>().unwrap();
         let dimension = coord.len();
         let (has_z, has_m) = get_coordinate_type(dimension)?;
         let coord = coord.as_slice().unwrap();
         let coord_seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
-        Geometry::create_point(coord_seq)?.to_ewkb()
+        let mut geom = Geometry::create_point(coord_seq)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
-pub fn multipoint(coords: &ListChunked) -> GResult<BinaryChunked> {
-    coords.try_apply_nonnull_values_generic(|coords| {
+pub fn multipoint(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
         let coord_seq = get_coordinate_seq_from_array(coords)?;
         let dims: u32 = coord_seq.dimensions()?.into();
         let has_z = dims > 2;
         let has_m = dims > 3;
         let coords = coord_seq.as_buffer(Some(dims as usize))?;
-        coords
+        let mut geom = coords
             .chunks_exact(dims as usize)
             .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, has_z, has_m))
             .map(|seq| Geometry::create_point(seq?))
             .collect::<GResult<_>>()
-            .and_then(Geometry::create_multipoint)?
-            .to_ewkb()
+            .and_then(Geometry::create_multipoint)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
-pub fn linestring(coords: &ListChunked) -> GResult<BinaryChunked> {
-    coords.try_apply_nonnull_values_generic(|coords| {
+pub fn linestring(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
         let coord_seq = get_coordinate_seq_from_array(coords)?;
-        Geometry::create_line_string(coord_seq)?.to_ewkb()
+        let mut geom = Geometry::create_line_string(coord_seq)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
-pub fn circularstring(coords: &ListChunked) -> GResult<BinaryChunked> {
-    coords.try_apply_nonnull_values_generic(|coords| {
+pub fn circularstring(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
         let coord_seq = get_coordinate_seq_from_array(coords)?;
-        Geometry::create_circular_string(coord_seq)?.to_ewkb()
+        let mut geom = Geometry::create_circular_string(coord_seq)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
-pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
+pub fn multilinestring(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
     fn get_line(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
         Geometry::create_line_string(match array {
             Some(array) => get_coordinate_seq_from_array(array),
@@ -384,14 +393,16 @@ pub fn multilinestring(coords: &ListChunked) -> GResult<BinaryChunked> {
         }?)
     }
 
-    coords.try_apply_nonnull_values_generic(|a| {
-        let lines = a.as_any().downcast_ref::<LargeListArray>().unwrap();
+    broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
+        let lines = coords.as_any().downcast_ref::<LargeListArray>().unwrap();
         let lines = lines.iter().map(get_line).collect::<GResult<_>>()?;
-        Geometry::create_multiline_string(lines)?.to_ewkb()
+        let mut geom = Geometry::create_multiline_string(lines)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 
-pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
+pub fn polygon(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
     fn get_ring(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
         Geometry::create_linear_ring(match array {
             Some(array) => get_coordinate_seq_from_array(array),
@@ -399,14 +410,16 @@ pub fn polygon(coords: &ListChunked) -> GResult<BinaryChunked> {
         }?)
     }
 
-    coords.try_apply_nonnull_values_generic(|a| {
-        let rings = a.as_any().downcast_ref::<LargeListArray>().unwrap();
+    broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
+        let rings = coords.as_any().downcast_ref::<LargeListArray>().unwrap();
         let mut rings = rings.iter();
         let Some(exterior) = rings.next().map(get_ring).transpose()? else {
             return Geometry::create_empty_polygon()?.to_ewkb();
         };
         let interiors = rings.map(get_ring).collect::<GResult<_>>()?;
-        Geometry::create_polygon(exterior, interiors)?.to_ewkb()
+        let mut geom = Geometry::create_polygon(exterior, interiors)?;
+        geom.set_srid(srid);
+        geom.to_ewkb()
     })
 }
 

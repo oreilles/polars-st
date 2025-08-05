@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from polars._typing import IntoExprColumn
 
     from polars_st.geoexpr import GeoExpr
+    from polars_st.typing import IntoIntegerExpr
 
 
 __all__ = [
@@ -31,7 +32,7 @@ __all__ = [
 ]
 
 
-def point(coords: IntoExprColumn) -> GeoExpr:
+def point(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create Point geometries from coordinates.
 
     Examples:
@@ -73,12 +74,12 @@ def point(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="point",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def multipoint(coords: IntoExprColumn) -> GeoExpr:
+def multipoint(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create MultiPoint geometries from list of coordinates.
 
     Examples:
@@ -103,12 +104,12 @@ def multipoint(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="multipoint",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def linestring(coords: IntoExprColumn) -> GeoExpr:
+def linestring(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create LineString geometries from lists of coordinates.
 
     Examples:
@@ -149,12 +150,12 @@ def linestring(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="linestring",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def circularstring(coords: IntoExprColumn) -> GeoExpr:
+def circularstring(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create CircularString geometries from lists of coordinates.
 
     Examples:
@@ -177,12 +178,12 @@ def circularstring(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="circularstring",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def multilinestring(coords: IntoExprColumn) -> GeoExpr:
+def multilinestring(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create MultiLineString geometries from lists of lists of coordinates.
 
     Examples:
@@ -205,12 +206,12 @@ def multilinestring(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="multilinestring",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def polygon(coords: IntoExprColumn) -> GeoExpr:
+def polygon(coords: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create Polygon geometries from lists of lists of coordinates.
 
     Examples:
@@ -233,12 +234,12 @@ def polygon(coords: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="polygon",
-        args=coords,
+        args=[coords, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
 
-def rectangle(bounds: IntoExprColumn) -> GeoExpr:
+def rectangle(bounds: IntoExprColumn, srid: IntoIntegerExpr = 0) -> GeoExpr:
     """Create Polygon geometries from bounds.
 
     Examples:
@@ -263,7 +264,7 @@ def rectangle(bounds: IntoExprColumn) -> GeoExpr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="rectangle",
-        args=bounds,
+        args=[bounds, srid],
         is_elementwise=True,
     ).pipe(lambda e: cast("GeoExpr", e))
 
