@@ -1690,6 +1690,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#polars_st.GeoSeriesNameSpace.to_geoarrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_geoarrow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#polars_st.GeoSeriesNameSpace.explore" class="md-nav__link">
     <span class="md-ellipsis">
       explore
@@ -2900,6 +2909,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#polars_st.GeoSeriesNameSpace.to_geoarrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_geoarrow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#polars_st.GeoSeriesNameSpace.explore" class="md-nav__link">
     <span class="md-ellipsis">
       explore
@@ -3132,12 +3150,12 @@ for parameters documentation.</p>
   </span>
 
 <a href="#polars_st.GeoSeriesNameSpace.__geo_interface__" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">__geo_interface__</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict">dict</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">__geo_interface__</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Return a GeoJSON GeometryCollection <a class="autorefs autorefs-external" href="https://docs.python.org/3/reference/expressions.html#dict"><code>dict</code></a> representation of the DataFrame.</p>
+        <p>Return a GeoJSON GeometryCollection <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict"><code>dict</code></a> representation of the DataFrame.</p>
 
     </div>
 
@@ -5823,12 +5841,36 @@ for available options.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="polars_st.GeoSeriesNameSpace.to_geoarrow" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">polars_st.GeoSeriesNameSpace.to_geoarrow</span>
+
+
+<a href="#polars_st.GeoSeriesNameSpace.to_geoarrow" class="headerlink" title="Permanent link">#</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">to_geoarrow</span><span class="p">()</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="polars_st.GeoSeriesNameSpace.explore" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">polars_st.GeoSeriesNameSpace.explore</span>
 
 
 <a href="#polars_st.GeoSeriesNameSpace.explore" class="headerlink" title="Permanent link">#</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">explore</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="lonboard.Map">Map</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">explore</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">scatterplot_kwargs</span><span class="p">:</span> <span class="n"><span title="lonboard.types.layer.ScatterplotLayerKwargs">ScatterplotLayerKwargs</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">path_kwargs</span><span class="p">:</span> <span class="n"><span title="lonboard.types.layer.PathLayerKwargs">PathLayerKwargs</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">polygon_kwargs</span><span class="p">:</span> <span class="n"><span title="lonboard.types.layer.PolygonLayerKwargs">PolygonLayerKwargs</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">map_kwargs</span><span class="p">:</span> <span class="n"><span title="lonboard.types.map.MapKwargs">MapKwargs</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;lonboard.Map&lt;/code&gt;" href="http://developmentseed.org/lonboard/latest/api/map/#lonboard.Map">Map</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
