@@ -355,7 +355,7 @@ class GeoExprNameSpace:
         """Serialize each geometry as WKB (Well-Known Binary).
 
         Args:
-            output_dimension :
+            output_dimension:
                 The output dimension for the WKB. Specifying 3 means that up to 3 dimensions
                 will be written but 2D geometries will still be represented as 2D in the WKB
                 representation.
