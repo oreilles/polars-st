@@ -1,5 +1,5 @@
 import polars as pl
-from polars.polars import PySeries
+from polars._plr import PySeries
 
 __version__: str
 

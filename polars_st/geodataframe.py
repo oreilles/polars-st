@@ -506,7 +506,7 @@ class GeoDataFrameNameSpace:
     ) -> str | None:
         r"""Serialize to GeoJSON FeatureCollection representation.
 
-        The result will be invalid if the geometry column contains different geometry types.
+        All geometries in the DataFrame must be of the same type.
 
         Examples:
             >>> gdf = st.GeoDataFrame({
@@ -518,10 +518,11 @@ class GeoDataFrameNameSpace:
             {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[0.0,0.0]},"properties":{"name":"Alice"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}]}
             <BLANKLINE>
         """
+        geometries = self._df.select(geom(geometry_name).st.to_geojson()).to_series()
         return (
             self._df.select(
                 type=pl.lit("Feature"),
-                geometry=geom(geometry_name).st.to_geojson().str.json_decode(),
+                geometry=geometries.str.json_decode(),
                 properties=pl.struct(cs.exclude(geom(geometry_name)))
                 if len(self._df.columns) > 1
                 else None,
@@ -556,7 +557,7 @@ class GeoDataFrameNameSpace:
     ) -> str | None:
         """Serialize to newline-delimited GeoJSON representation.
 
-        The result will be invalid if the geometry column contains different geometry types.
+        All geometries in the DataFrame must be of the same type.
 
         Examples:
             >>> gdf = st.GeoDataFrame({
@@ -569,9 +570,10 @@ class GeoDataFrameNameSpace:
             {"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}
             <BLANKLINE>
         """
+        geometries = self._df.select(geom(geometry_name).st.to_geojson()).to_series()
         return self._df.select(
             type=pl.lit("Feature"),
-            geometry=geom(geometry_name).st.to_geojson().str.json_decode(),
+            geometry=geometries.str.json_decode(),
             properties=pl.struct(cs.exclude(geom(geometry_name)))
             if len(self._df.columns) > 1
             else None,

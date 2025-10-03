@@ -13,7 +13,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dynamic = ["version", "license"]
 dependencies = [
-    "polars>=1.30.0",
+    "polars>=1.34.0",
     "pyarrow>=19.0.1", # TODO: remove once fixed https://github.com/pola-rs/pyo3-polars/pull/132
     "pyogrio>=0.9.0",
 ]
@@ -55,25 +55,22 @@ reportPrivateImportUsage = "none"
 [tool.ruff]
 target-version="py310"
 line-length = 100
-
-[tool.ruff.format]
-preview = true
-
-[tool.ruff.lint]
-pydocstyle.convention = "google"
-select = ["ALL"]
-fixable = ["ALL"]
-ignore = [
+lint.pydocstyle.convention = "google"
+lint.select = ["ALL"]
+lint.fixable = ["ALL"]
+lint.ignore = [
     "FBT", # Boolean traps
     "PIE790", # Unnecessary `...` literal
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
     "PLR0913", # Too many arguments in function definition
-    "PD901", # Avoid using the generic variable name `df` for DataFrames
     "ISC001",  # Single line implicit string concatenation (unexpected behavior)
     "COM812",  # Missing trailing comma (unexpected behavior)
     "D1", # Missing docstring in public module
     "PLC0415", # `import` should be at the top-level of a file
 ]
+
+[tool.ruff.format]
+preview = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [

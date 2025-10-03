@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast, overload
 
 import polars as pl
-from polars.dependencies import pandas as pd
+from polars._dependencies import pandas as pd
 from pyogrio import read_arrow
 
 from polars_st.casting import st

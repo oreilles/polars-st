@@ -6,7 +6,6 @@ use crate::{
 use geos::{Geom, Geometry};
 use polars::{datatypes::DataType as D, prelude::array::ArrayNameSpace};
 use polars::{error::to_compute_err, prelude::*};
-use polars_arrow as arrow;
 use polars_arrow::array::{Array, FixedSizeListArray, Float64Array};
 use polars_python::{error::PyPolarsErr, PySeries};
 use pyo3::prelude::*;
@@ -357,8 +356,9 @@ pub fn to_python_dict(
     py: Python,
     capsule: &Bound<'_, PyAny>,
 ) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
-    let series = PySeries::from_arrow_c_stream(&py.get_type::<pyo3::types::PyNone>(), capsule)?;
-    let wkb = validate_wkb(&series.series)?;
+    let pyseries = PySeries::from_arrow_c_stream(&py.get_type::<pyo3::types::PyNone>(), capsule)?;
+    let series = pyseries.series.read();
+    let wkb = validate_wkb(&series)?;
     functions::to_python_dict(wkb, py)
         .map_err(to_compute_err)
         .map_err(Into::into)
