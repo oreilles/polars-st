@@ -393,6 +393,7 @@ class GeoDataFrameNameSpace:
         layer: str | None = None,
         driver: str | None = None,
         geometry_name: str = "geometry",
+        crs: str | None = None,
         encoding: str | None = None,
         append: bool = False,
         dataset_metadata: dict | None = None,
@@ -425,6 +426,9 @@ class GeoDataFrameNameSpace:
             geometry_name:
                 The name of the column in the input data that will be written as the
                 geometry field.
+            crs:
+                WKT-encoded CRS of the geometries to be written. If not provided, the
+                CRS will be infered from the geometries.
             encoding:
                 Only used for the .dbf file of ESRI Shapefiles. If not specified,
                 uses the default locale.
@@ -464,7 +468,7 @@ class GeoDataFrameNameSpace:
         )
         geometry_type = geometry_types.item() if len(geometry_types) == 1 else "Unknown"
 
-        crs = get_unique_crs_or_raise(self._df, geometry_name)
+        crs = crs if crs is not None else get_unique_crs_or_raise(self._df, geometry_name)
         geometry = geom(geometry_name).st.to_wkb(output_dimension=4, include_srid=False)
 
         write_arrow(
