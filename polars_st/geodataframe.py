@@ -392,7 +392,7 @@ class GeoDataFrameNameSpace:
         path: str | BytesIO,
         layer: str | None = None,
         driver: str | None = None,
-        geometry_name: str = "geometry",
+        geometry_name: str | None = "geometry",
         crs: str | None = None,
         encoding: str | None = None,
         append: bool = False,
@@ -425,7 +425,7 @@ class GeoDataFrameNameSpace:
 
             geometry_name:
                 The name of the column in the input data that will be written as the
-                geometry field.
+                geometry field, or `None` if the geometry should not be written.
             crs:
                 WKT-encoded CRS of the geometries to be written. If not provided, the
                 CRS will be infered from the geometries.
@@ -463,16 +463,21 @@ class GeoDataFrameNameSpace:
                 do this (for example if an option exists as both dataset and layer
                 option).
         """
-        geometry_types = self._df.select(
-            geom(geometry_name).st.geometry_type().unique().drop_nulls()
-        )
-        geometry_type = geometry_types.item() if len(geometry_types) == 1 else "Unknown"
+        if geometry_name is not None:
+            geometry_types = self._df.select(
+                geom(geometry_name).st.geometry_type().unique().drop_nulls()
+            )
+            geometry_type = geometry_types.item() if len(geometry_types) == 1 else "Unknown"
 
-        crs = crs if crs is not None else get_unique_crs_or_raise(self._df, geometry_name)
-        geometry = geom(geometry_name).st.to_wkb(output_dimension=4, include_srid=False)
+            crs = crs if crs is not None else get_unique_crs_or_raise(self._df, geometry_name)
+            geometry = geom(geometry_name).st.to_wkb(output_dimension=4, include_srid=False)
+            arrow_obj = self._df.with_columns(geometry).to_arrow()
+        else:
+            arrow_obj = self._df.to_arrow()
+            geometry_type = "Unknown"
 
         write_arrow(
-            self._df.with_columns(geometry).to_arrow(),
+            arrow_obj,
             path=path,
             layer=layer,
             driver=driver,
