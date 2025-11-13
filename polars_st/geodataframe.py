@@ -474,7 +474,7 @@ class GeoDataFrameNameSpace:
             arrow_obj = self._df.with_columns(geometry).to_arrow()
         else:
             arrow_obj = self._df.to_arrow()
-            geometry_type = "Unknown"
+            geometry_type = None  # If geometry_name is None, geometry_type must also be None
 
         write_arrow(
             arrow_obj,
