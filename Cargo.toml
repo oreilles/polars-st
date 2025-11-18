@@ -20,7 +20,7 @@ polars = "0.51.0"
 polars-arrow = "0.51.0"
 polars-python = "0.51.0"
 proj4rs = { version = "0.1.5", features = ["crs-definitions"] }
-proj4wkt = { git = "https://github.com/3liz/proj4wkt-rs", branch = "main" }
+proj4wkt = "0.1.1"
 pyo3 = { version = "0.25", features = ["abi3-py39"] }
 pyo3-polars = { version = "0.24.0", features = ["derive", "dtype-array", "dtype-struct", "dtype-categorical"] }
 rayon = "1.10.0"

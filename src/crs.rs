@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 fn wkt_to_authority(i: &str) -> Option<(&str, &str)> {
     match Builder::new().parse(i) {
         Ok(Node::PROJCRS(p)) => p.projection.authority.map(|a| (a.name, a.code)),
+        Ok(Node::GEOGCRS(g)) => g.authority.map(|a| (a.name, a.code)),
         _ => None,
     }
 }
