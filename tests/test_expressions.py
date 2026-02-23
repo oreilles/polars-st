@@ -11,7 +11,12 @@ import pytest
 
 import polars_st as st
 from polars_st.geoexpr import GeoExprNameSpace as Geo
-from polars_st.geometry import GeometryType, PolarsGeometryType
+from polars_st.geometry import (
+    GeometryType,
+    PolarsCoordinateType,
+    PolarsDimensionType,
+    PolarsGeometryType,
+)
 
 empty_frame = pl.Series("geometry", [], pl.Binary()).to_frame()
 none_frame = pl.Series("geometry", [None], pl.Binary()).to_frame()
@@ -89,8 +94,9 @@ class Function:
 
 functions = [
     Function(Geo.geometry_type, PolarsGeometryType),
-    Function(Geo.dimensions, pl.Int32()),
-    Function(Geo.coordinate_dimension, pl.UInt32()),
+    Function(Geo.coordinate_type, PolarsCoordinateType),
+    Function(Geo.coordinate_dimension, pl.UInt8()),
+    Function(Geo.dimension, PolarsDimensionType),
     Function(Geo.srid, pl.Int32()),
     Function(Geo.set_srid, pl.Binary(), {"srid": 3857}),
     Function(Geo.to_srid, pl.Binary(), {"srid": 3857}),
@@ -187,6 +193,7 @@ functions = [
     Function(Geo.simplify, pl.Binary(), {"tolerance": 1.0, "preserve_topology": True}),
     Function(Geo.flip_coordinates, pl.Binary()),
     Function(Geo.minimum_rotated_rectangle, pl.Binary()),
+    Function(Geo.maximum_inscribed_circle, pl.Binary(), {"tolerance": 1.0}),
     Function(Geo.translate, pl.Binary()),
     Function(Geo.rotate, pl.Binary(), {"angle": 90}),
     Function(Geo.scale, pl.Binary()),
@@ -339,11 +346,31 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
     if func.call == Geo.shared_paths and geom_type not in {"LineString", "MultiLineString"}:
         error = "IllegalArgumentException: Geometry is not lineal"
 
-    if func.call == Geo.get_interior_ring and geom_type not in {"Polygon", "CurvePolygon"}:
+    if func.call == Geo.exterior_ring and geom_type not in {"Polygon", "CurvePolygon"}:
+        error = "IllegalArgumentException: Invalid argument \\(must be a Surface\\)"
+
+    if func.call in {
+        Geo.count_interior_rings,
+        Geo.get_interior_ring,
+        Geo.interior_rings,
+    } and geom_type not in {"Polygon", "CurvePolygon"}:
         error = "IllegalArgumentException: Argument is not a Surface"
 
-    if func.call == Geo.get_point and geom_type not in {"LineString"}:
+    if func.call in {Geo.x, Geo.y, Geo.z, Geo.m} and geom_type != "Point":
+        error = "IllegalArgumentException: Argument is not a Point"
+
+    if func.call == Geo.boundary and geom_type == "GeometryCollection":
+        error = "IllegalArgumentException: Operation not supported by GeometryCollection"
+
+    if func.call in {Geo.count_points, Geo.get_point} and geom_type != "LineString":
         error = "IllegalArgumentException: Argument is not a SimpleCurve"
+
+    if func.call == Geo.is_closed and geom_type not in {
+        "LineString",
+        "MultiLineString",
+        "MultiCurve",
+    }:
+        error = "IllegalArgumentException: Argument is not a Curve, MultiLineString, or MultiCurve"
 
     if (
         func.call == Geo.substring
@@ -358,7 +385,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         and not (geom_type == "MultiLineString" and not geom_empty)
     ):
         error = "IllegalArgumentException: LinearIterator only supports lineal geometry components"
-        if geom_type != "Point" and geom_empty:
+        if geom_type not in {"Point", "Polygon"} and geom_empty:
             geos_func = "GEOSProjectNormalized_r" if func.args["normalized"] else "GEOSProject_r"
             error = f"{geos_func} failed"
 
@@ -383,11 +410,20 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
     }:
         error = "Geometry must be a collection"
 
+    if func.call == Geo.maximum_inscribed_circle:
+        if geom_type not in {"Polygon", "MultiPolygon"}:
+            if geom_type == "GeometryCollection":
+                error = "IllegalArgumentException: Operation not supported by GeometryCollection"
+            else:
+                error = "IllegalArgumentException: Input must be a Polygon or MultiPolygon"
+        elif geom_empty:
+            error = "IllegalArgumentException: Empty input is not supported"
+
     if func.call == Geo.to_srid:
         frame = frame.select(st.geom().st.set_srid(4326))
 
     if error is not None:
-        with pytest.raises(pl.exceptions.ComputeError, match=error):
+        with pytest.raises(pl.exceptions.ComputeError, match=f"{error}$"):
             frame.select(func())
         return
 

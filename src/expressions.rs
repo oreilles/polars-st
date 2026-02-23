@@ -18,6 +18,30 @@ fn first_field_name(fields: &[Field]) -> PolarsResult<&PlSmallStr> {
         .ok_or_else(|| to_compute_err("Invalid number of arguments."))
 }
 
+#[allow(unused)]
+fn output_type_geometry_type(input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        first_field_name(input_fields)?.clone(),
+        geometry_enum().clone(),
+    ))
+}
+
+#[allow(unused)]
+fn output_type_coordinate_type(input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        first_field_name(input_fields)?.clone(),
+        coord_type_enum().clone(),
+    ))
+}
+
+#[allow(unused)]
+fn output_type_dimension(input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        first_field_name(input_fields)?.clone(),
+        dimension_type_enum().clone(),
+    ))
+}
+
 fn output_type_bounds(input_fields: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new(
         first_field_name(input_fields)?.clone(),
@@ -65,6 +89,26 @@ fn geometry_enum() -> &'static DataType {
             "Triangle",
         ])
         .unwrap();
+        D::from_frozen_categories(cats)
+    })
+}
+
+fn coord_type_enum() -> &'static DataType {
+    use std::sync::OnceLock;
+    static COORD_TYPE_ENUM: OnceLock<DataType> = OnceLock::new();
+
+    COORD_TYPE_ENUM.get_or_init(|| {
+        let cats = FrozenCategories::new(["XY", "XYZ", "XYZM", "XYM"]).unwrap();
+        D::from_frozen_categories(cats)
+    })
+}
+
+fn dimension_type_enum() -> &'static DataType {
+    use std::sync::OnceLock;
+    static DIMENSION_TYPE_ENUM: OnceLock<DataType> = OnceLock::new();
+
+    DIMENSION_TYPE_ENUM.get_or_init(|| {
+        let cats = FrozenCategories::new(["Point", "Curve", "Surface"]).unwrap();
         D::from_frozen_categories(cats)
     })
 }
@@ -162,32 +206,39 @@ create_geometry!(circularstring, D::Float64.implode().implode());
 create_geometry!(multilinestring, D::Float64.implode().implode().implode());
 create_geometry!(polygon, D::Float64.implode().implode().implode());
 
-#[polars_expr(output_type=UInt32)]
+#[polars_expr(output_type=UInt8)]
 fn geometry_type(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     wrap!(get_type_id(wkb))
 }
 
-#[polars_expr(output_type=Int32)]
-fn dimensions(inputs: &[Series]) -> PolarsResult<Series> {
+#[polars_expr(output_type=UInt8)]
+fn dimension(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    wrap!(get_num_dimensions(wkb))
+    wrap!(get_dimension(wkb))
 }
 
-#[polars_expr(output_type=UInt32)]
+#[polars_expr(output_type=UInt8)]
 fn coordinate_dimension(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     wrap!(get_coordinate_dimension(wkb))
 }
 
+#[polars_expr(output_type=UInt8)]
+fn coordinate_type(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<1>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    wrap!(get_coordinate_type(wkb))
+}
+
 #[polars_expr(output_type_func=output_type_coordinates)]
 fn coordinates(inputs: &[Series], kwargs: args::GetCoordinatesKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    wrap!(get_coordinates(wkb, kwargs.output_dimension))?
+    wrap!(get_coordinates(wkb, &kwargs))?
         .with_name(wkb.name().clone())
         .strict_cast(&D::List(D::List(D::Float64.into()).into()))
 }
@@ -355,7 +406,7 @@ fn to_geojson(inputs: &[Series], kwargs: args::ToGeoJsonKwargs) -> PolarsResult<
 pub fn to_python_dict(
     py: Python,
     capsule: &Bound<'_, PyAny>,
-) -> Result<Vec<Option<PyObject>>, PyPolarsErr> {
+) -> Result<Vec<Option<Py<PyAny>>>, PyPolarsErr> {
     let pyseries = PySeries::from_arrow_c_stream(&py.get_type::<pyo3::types::PyNone>(), capsule)?;
     let series = pyseries.series.read();
     let wkb = validate_wkb(&series)?;
@@ -906,10 +957,10 @@ fn build_area(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Binary)]
-pub fn make_valid(inputs: &[Series]) -> PolarsResult<Series> {
+pub fn make_valid(inputs: &[Series], kwargs: args::MakeValidKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    wrap!(make_valid(wkb))
+    wrap!(make_valid(wkb, &kwargs))
 }
 
 #[polars_expr(output_type=Binary)]
@@ -995,6 +1046,14 @@ pub fn minimum_rotated_rectangle(inputs: &[Series]) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
     wrap!(minimum_rotated_rectangle(wkb))
+}
+
+#[polars_expr(output_type=Binary)]
+pub fn maximum_inscribed_circle(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let wkb = validate_wkb(&inputs[0])?;
+    extract!(tolerance, inputs[1], D::Float64, f64);
+    wrap!(maximum_inscribed_circle(wkb, tolerance))
 }
 
 #[polars_expr(output_type=Binary)]

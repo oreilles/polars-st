@@ -7,6 +7,7 @@ import polars as pl
 from polars.api import register_series_namespace
 
 from polars_st.casting import st
+from polars_st.geometry import CoordinateType
 from polars_st.parsing import (
     circularstring,
     from_ewkt,
@@ -256,13 +257,18 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def dimensions(self) -> pl.Series:
-        """See [`GeoExprNameSpace.dimensions`][polars_st.GeoExprNameSpace.dimensions]."""
+    def dimension(self) -> pl.Series:
+        """See [`GeoExprNameSpace.dimension`][polars_st.GeoExprNameSpace.dimension]."""
         ...
 
     @dispatch
     def coordinate_dimension(self) -> pl.Series:
         """See [`GeoExprNameSpace.coordinate_dimension`][polars_st.GeoExprNameSpace.coordinate_dimension]."""  # noqa: E501
+        ...
+
+    @dispatch
+    def coordinate_type(self) -> pl.Series:
+        """See [`GeoExprNameSpace.coordinate_type`][polars_st.GeoExprNameSpace.coordinate_type]."""
         ...
 
     @dispatch
@@ -311,7 +317,7 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Series:
+    def coordinates(self, output_dimension: CoordinateType | None = None) -> pl.Series:
         """See [`GeoExprNameSpace.coordinates`][polars_st.GeoExprNameSpace.coordinates]."""
         ...
 
@@ -761,7 +767,11 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
-    def make_valid(self) -> GeoSeries:
+    def make_valid(
+        self,
+        method: Literal["linework", "structure"] = "linework",
+        keep_collapsed: bool = True,
+    ) -> GeoSeries:
         """See [`GeoExprNameSpace.make_valid`][polars_st.GeoExprNameSpace.make_valid]."""
         ...
 
@@ -817,6 +827,11 @@ class GeoSeriesNameSpace:
     @dispatch
     def minimum_rotated_rectangle(self) -> GeoSeries:
         """See [`GeoExprNameSpace.minimum_rotated_rectangle`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle]."""  # noqa: E501
+        ...
+
+    @dispatch
+    def maximum_inscribed_circle(self, tolerance: IntoNumericExpr) -> GeoSeries:
+        """See [`GeoExprNameSpace.maximum_inscribed_circle`][polars_st.GeoExprNameSpace.maximum_inscribed_circle]."""  # noqa: E501
         ...
 
     @dispatch

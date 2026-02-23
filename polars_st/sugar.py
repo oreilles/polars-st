@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     import polars as pl
 
-    from polars_st.geometry import GeometryType
+    from polars_st.geometry import CoordinateType, GeometryType
     from polars_st.typing import (
         IntoExprColumn,
         IntoIntegerExpr,
@@ -34,6 +34,7 @@ __all__ = [
     "concave_hull",
     "convex_hull",
     "coordinate_dimension",
+    "coordinate_type",
     "coordinates",
     "count_coordinates",
     "count_geometries",
@@ -43,7 +44,7 @@ __all__ = [
     "coverage_union_all",
     "delaunay_triangles",
     "difference_all",
-    "dimensions",
+    "dimension",
     "envelope",
     "exterior_ring",
     "extract_unique_points",
@@ -70,6 +71,7 @@ __all__ = [
     "line_merge",
     "m",
     "make_valid",
+    "maximum_inscribed_circle",
     "minimum_clearance",
     "minimum_rotated_rectangle",
     "multi",
@@ -115,14 +117,19 @@ def geometry_type(*columns: str) -> pl.Expr:
     return geom(*columns).st.geometry_type()
 
 
-def dimensions(*columns: str) -> pl.Expr:
-    """Syntactic sugar for <code>st.geom(columns).st.[dimensions()][polars_st.GeoExprNameSpace.dimensions]</code>."""  # noqa: E501
-    return geom(*columns).st.dimensions()
+def dimension(*columns: str) -> pl.Expr:
+    """Syntactic sugar for <code>st.geom(columns).st.[dimension()][polars_st.GeoExprNameSpace.dimension]</code>."""  # noqa: E501
+    return geom(*columns).st.dimension()
 
 
 def coordinate_dimension(*columns: str) -> pl.Expr:
     """Syntactic sugar for <code>st.geom(columns).st.[coordinate_dimension()][polars_st.GeoExprNameSpace.coordinate_dimension]</code>."""  # noqa: E501
     return geom(*columns).st.coordinate_dimension()
+
+
+def coordinate_type(*columns: str) -> pl.Expr:
+    """Syntactic sugar for <code>st.geom(columns).st.[coordinate_type()][polars_st.GeoExprNameSpace.coordinate_type]</code>."""  # noqa: E501
+    return geom(*columns).st.coordinate_type()
 
 
 def area(*columns: str) -> pl.Expr:
@@ -170,7 +177,7 @@ def count_coordinates(*columns: str) -> pl.Expr:
     return geom(*columns).st.count_coordinates()
 
 
-def coordinates(*columns: str, output_dimension: Literal[2, 3] | None = None) -> pl.Expr:
+def coordinates(*columns: str, output_dimension: CoordinateType | None = None) -> pl.Expr:
     """Syntactic sugar for <code>st.geom(columns).st.[coordinates(...)][polars_st.GeoExprNameSpace.coordinates]</code>."""  # noqa: E501
     return geom(*columns).st.coordinates(output_dimension)
 
@@ -442,9 +449,13 @@ def build_area(*columns: str) -> GeoExpr:
     return geom(*columns).st.build_area()
 
 
-def make_valid(*columns: str) -> GeoExpr:
+def make_valid(
+    *columns: str,
+    method: Literal["linework", "structure"] = "linework",
+    keep_collapsed: bool = True,
+) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[make_valid()][polars_st.GeoExprNameSpace.make_valid]</code>."""  # noqa: E501
-    return geom(*columns).st.make_valid()
+    return geom(*columns).st.make_valid(method, keep_collapsed)
 
 
 def normalize(*columns: str) -> GeoExpr:
@@ -499,6 +510,11 @@ def flip_coordinates(*columns: str) -> GeoExpr:
 def minimum_rotated_rectangle(*columns: str) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[minimum_rotated_rectangle()][polars_st.GeoExprNameSpace.minimum_rotated_rectangle]</code>."""  # noqa: E501
     return geom(*columns).st.minimum_rotated_rectangle()
+
+
+def maximum_inscribed_circle(*columns: str, tolerance: IntoNumericExpr) -> GeoExpr:
+    """Syntactic sugar for <code>st.geom(columns).st.[maximum_inscribed_circle(...)][polars_st.GeoExprNameSpace.maximum_inscribed_circle]</code>."""  # noqa: E501
+    return geom(*columns).st.maximum_inscribed_circle(tolerance)
 
 
 def affine_transform(*columns: str, matrix: IntoExprColumn | Sequence[float]) -> GeoExpr:

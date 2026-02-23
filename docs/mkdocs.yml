@@ -20,6 +20,7 @@ nav:
     - GeoDataFrame: api-reference/geodataframe.md
     - GeoLazyFrame: api-reference/geolazyframe.md
     - Typing: api-reference/typing.md
+    - Enums: api-reference/enums.md
 
 theme:
   name: material

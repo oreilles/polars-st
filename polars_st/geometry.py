@@ -4,7 +4,14 @@ from typing import Literal, TypeAlias, get_args
 
 import polars as pl
 
-__all__ = ["GeometryType", "PolarsGeometryType"]
+__all__ = [
+    "CoordinateType",
+    "DimensionType",
+    "GeometryType",
+    "PolarsCoordinateType",
+    "PolarsDimensionType",
+    "PolarsGeometryType",
+]
 
 GeometryType: TypeAlias = Literal[
     "Unknown",
@@ -27,4 +34,19 @@ GeometryType: TypeAlias = Literal[
     "Triangle",
 ]
 
+DimensionType: TypeAlias = Literal[
+    "Point",
+    "Curve",
+    "Surface",
+]
+
+CoordinateType: TypeAlias = Literal[
+    "XY",
+    "XYZ",
+    "XYZM",
+    "XYM",
+]
+
 PolarsGeometryType = pl.Enum(get_args(GeometryType))
+PolarsDimensionType = pl.Enum(get_args(DimensionType))
+PolarsCoordinateType = pl.Enum(get_args(CoordinateType))

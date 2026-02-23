@@ -14,15 +14,15 @@ crate-type = ["cdylib"]
 [dependencies]
 crs-definitions = "0.3"
 geo-index = "0.3.1"
-geos = { git = "https://github.com/Oreilles/rust-geos", branch = "3.14", features = ["static", "v3_14_0"]}
+geos = { version = "11.1.1", features = ["static", "v3_14_0"]}
 num_enum = "0.7.3"
-polars = "0.51.0"
-polars-arrow = "0.51.0"
-polars-python = "0.51.0"
-proj4rs = { version = "0.1.5", features = ["crs-definitions"] }
+polars = "0.52.0"   
+polars-arrow = "0.52.0"
+polars-python = "0.52.0"
+proj4rs = { version = "0.1.10", features = ["crs-definitions"] }
 proj4wkt = "0.1.1"
-pyo3 = { version = "0.25", features = ["abi3-py39"] }
-pyo3-polars = { version = "0.24.0", features = ["derive", "dtype-array", "dtype-struct", "dtype-categorical"] }
+pyo3 = { version = "*", features = ["abi3-py310"] }
+pyo3-polars = { version = "*", features = ["derive", "dtype-array", "dtype-struct", "dtype-categorical"] }
 rayon = "1.10.0"
 scroll = "0.12.0"
 serde = { version = "1.0.219", features = ["derive"] }

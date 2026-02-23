@@ -37,12 +37,13 @@ hide:
 | `__geo_interface__` | Return a Python [`dict`][] representation of a `GeometryCollection` or `FeatureCollection`. | [`Series`][polars_st.GeoSeriesNameSpace.__geo_interface__], [`DataFrame`][polars_st.GeoDataFrameNameSpace.__geo_interface__] |
 | **General operations** | | |
 | `geometry_type` | Return the type of each geometry. | [`root`][polars_st.geometry_type], [`Expr`][polars_st.GeoExprNameSpace.geometry_type], [`Series`][polars_st.GeoSeriesNameSpace.geometry_type] |
-| `dimensions` | Return the inherent dimensionality of each geometry.. | [`root`][polars_st.dimensions], [`Expr`][polars_st.GeoExprNameSpace.dimensions], [`Series`][polars_st.GeoSeriesNameSpace.dimensions] |
-| `coordinate_dimension` | Return the coordinate dimension of each geometry.. | [`root`][polars_st.coordinate_dimension], [`Expr`][polars_st.GeoExprNameSpace.coordinate_dimension], [`Series`][polars_st.GeoSeriesNameSpace.coordinate_dimension] |
+| `dimension` | Return the inherent dimensionality of each geometry. | [`root`][polars_st.dimension], [`Expr`][polars_st.GeoExprNameSpace.dimension], [`Series`][polars_st.GeoSeriesNameSpace.dimension] |
+| `coordinate_dimension` | Return the coordinate dimension of each geometry. | [`root`][polars_st.coordinate_dimension], [`Expr`][polars_st.GeoExprNameSpace.coordinate_dimension], [`Series`][polars_st.GeoSeriesNameSpace.coordinate_dimension] |
+| `coordinate_type` | Return the coordinate type of each geometry. | [`root`][polars_st.coordinate_type], [`Expr`][polars_st.GeoExprNameSpace.coordinate_type], [`Series`][polars_st.GeoSeriesNameSpace.coordinate_type] |
 | `area` | Return the area of each geometry. | [`root`][polars_st.area], [`Expr`][polars_st.GeoExprNameSpace.area], [`Series`][polars_st.GeoSeriesNameSpace.area] |
 | `bounds` | Return the bounds of each geometry. | [`root`][polars_st.bounds], [`Expr`][polars_st.GeoExprNameSpace.bounds], [`Series`][polars_st.GeoSeriesNameSpace.bounds] |
 | `length` | Return the length of each geometry. | [`root`][polars_st.length], [`Expr`][polars_st.GeoExprNameSpace.length], [`Series`][polars_st.GeoSeriesNameSpace.length] |
-| `minimum_clearance` | Return the minimum clearance of each geometry.. | [`root`][polars_st.minimum_clearance], [`Expr`][polars_st.GeoExprNameSpace.minimum_clearance], [`Series`][polars_st.GeoSeriesNameSpace.minimum_clearance] |
+| `minimum_clearance` | Return the minimum clearance of each geometry. | [`root`][polars_st.minimum_clearance], [`Expr`][polars_st.GeoExprNameSpace.minimum_clearance], [`Series`][polars_st.GeoSeriesNameSpace.minimum_clearance] |
 | `x` | Return the `x` value of Point geometries. | [`root`][polars_st.x], [`Expr`][polars_st.GeoExprNameSpace.x], [`Series`][polars_st.GeoSeriesNameSpace.x] |
 | `y` | Return the `y` value of Point geometries. | [`root`][polars_st.y], [`Expr`][polars_st.GeoExprNameSpace.y], [`Series`][polars_st.GeoSeriesNameSpace.y] |
 | `z` | Return the `z` value of Point geometries. | [`root`][polars_st.z], [`Expr`][polars_st.GeoExprNameSpace.z], [`Series`][polars_st.GeoSeriesNameSpace.z] |
@@ -127,6 +128,7 @@ hide:
 | `force_3d` | Force the dimensionality of a geometry to 3D. | [`root`][polars_st.force_3d], [`Expr`][polars_st.GeoExprNameSpace.force_3d], [`Series`][polars_st.GeoSeriesNameSpace.force_3d] |
 | `flip_coordinates` | Flip the x and y coordinates of each geometry. | [`root`][polars_st.flip_coordinates], [`Expr`][polars_st.GeoExprNameSpace.flip_coordinates], [`Series`][polars_st.GeoSeriesNameSpace.flip_coordinates] |
 | `minimum_rotated_rectangle` | | [`root`][polars_st.minimum_rotated_rectangle], [`Expr`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle], [`Series`][polars_st.GeoSeriesNameSpace.minimum_rotated_rectangle] | |
+| `maximum_inscribed_circle` | Returns the maximum inscribed circle of a polygonal geometry | [`root`][polars_st.maximum_inscribed_circle], [`Expr`][polars_st.GeoExprNameSpace.maximum_inscribed_circle], [`Series`][polars_st.GeoSeriesNameSpace.maximum_inscribed_circle] | |
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |
 | `shortest_line` | Return the shortest line between each geometry and other. | [`Expr`][polars_st.GeoExprNameSpace.shortest_line], [`Series`][polars_st.GeoSeriesNameSpace.shortest_line] |
 | `sjoin` | Perform a spatial join operation with another DataFrame. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.sjoin], [`LazyFrame`][polars_st.GeoLazyFrameNameSpace.sjoin] |

@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use crate::{
     args::{
-        BufferKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs, OffsetCurveKwargs,
-        SetPrecisionKwargs, SjoinPredicate, ToGeoJsonKwargs, ToWkbKwargs, ToWktKwargs,
-        VoronoiKwargs,
+        BufferKwargs, ConcaveHullKwargs, DelaunayTrianlesKwargs, GetCoordinatesKwargs,
+        MakeValidKwargs, OffsetCurveKwargs, SetPrecisionKwargs, SjoinPredicate, ToGeoJsonKwargs,
+        ToWkbKwargs, ToWktKwargs, VoronoiKwargs,
     },
     arity::{
         broadcast_try_binary_elementwise_values, broadcast_try_ternary_elementwise_values,
@@ -14,9 +14,10 @@ use crate::{
 };
 use geo_index::rtree::{sort::STRSort, RTree, RTreeBuilder, RTreeIndex};
 use geos::{
-    BufferParams, CoordSeq, Error as GError, GResult, GeoJSONWriter, Geom, Geometry,
+    BufferParams, ConstGeometry, CoordSeq, CoordType, Error as GError, GResult, GeoJSONWriter,
+    Geom, Geometry,
     GeometryTypes::{self, *},
-    PreparedGeometry, WKBWriter, WKTWriter,
+    MakeValidParams, PreparedGeometry, WKBWriter, WKTWriter,
 };
 use polars::prelude::arity::{broadcast_try_binary_elementwise, try_unary_elementwise};
 use polars::prelude::*;
@@ -30,6 +31,8 @@ use pyo3::{
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub trait GeometryUtils {
+    fn children(&self) -> GResult<impl Iterator<Item = GResult<ConstGeometry<'_>>>>;
+
     fn to_ewkb(&self) -> GResult<Vec<u8>>;
 
     fn cast(&self, into: GeometryTypes) -> GResult<Geometry>;
@@ -51,6 +54,10 @@ pub trait GeometryUtils {
 }
 
 impl<T: Geom> GeometryUtils for T {
+    fn children(&self) -> GResult<impl Iterator<Item = GResult<ConstGeometry<'_>>>> {
+        Ok((0..self.get_num_geometries()?).map(|i| self.get_geometry_n(i)))
+    }
+
     fn to_ewkb(&self) -> GResult<Vec<u8>> {
         let mut writer = WKBWriter::new()?;
         writer.set_include_SRID(true);
@@ -64,8 +71,9 @@ impl<T: Geom> GeometryUtils for T {
             (from, to) if from == to => Ok(Geom::clone(self)?),
             (t, GeometryCollection) => {
                 if t.is_collection() {
-                    let geoms = (0..self.get_num_geometries()?)
-                        .map(|n| self.get_geometry_n(n)?.clone())
+                    let geoms = self
+                        .children()?
+                        .map(|g| g?.clone())
                         .collect::<GResult<_>>()?;
                     Geometry::create_geometry_collection(geoms)
                 } else {
@@ -81,34 +89,32 @@ impl<T: Geom> GeometryUtils for T {
             }
             (LineString | CircularString, MultiPoint) => {
                 let coords = self.get_coord_seq()?;
-                let has_z = self.has_z()?;
-                let has_m = self.has_m()?;
-                let dimensions = 2 + usize::from(has_z) + usize::from(has_m);
-                let buffer = coords.as_buffer(Some(dimensions))?;
+                let coord_type = self.get_coordinate_type()?;
+                let dimensions = u32::from(coord_type) as usize;
+                let buffer = coords.as_buffer(Some(coord_type))?;
                 buffer
                     .chunks_exact(dimensions)
                     .map(|coord| {
-                        let seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
+                        let seq = CoordSeq::new_from_buffer(coord, 1, coord_type)?;
                         Geometry::create_point(seq)
                     })
                     .collect::<GResult<_>>()
                     .and_then(Geometry::create_multipoint)
             }
             (MultiPoint, LineString | CircularString) => {
-                let has_z = self.has_z()?;
-                let has_m = self.has_m()?;
+                let coord_type = self.get_coordinate_type()?;
+                let dimensions = u32::from(coord_type) as usize;
                 let collection_size = self.get_num_geometries()?;
-                let dimensions = 2 + usize::from(has_z) + usize::from(has_m);
                 let mut coords = Vec::with_capacity(dimensions * collection_size);
                 for n in 0..collection_size {
                     let point = self.get_geometry_n(n)?;
                     if !point.is_empty()? {
-                        let mut seq = point.get_coord_seq()?.as_buffer(Some(dimensions))?;
+                        let mut seq = point.get_coord_seq()?.as_buffer(Some(coord_type))?;
                         coords.append(&mut seq);
                     }
                 }
                 let coords_size = coords.len() / dimensions;
-                let coords = CoordSeq::new_from_buffer(&coords, coords_size, has_z, has_m)?;
+                let coords = CoordSeq::new_from_buffer(&coords, coords_size, coord_type)?;
                 match into {
                     LineString => Geometry::create_line_string(coords),
                     CircularString => Geometry::create_circular_string(coords),
@@ -135,9 +141,9 @@ impl<T: Geom> GeometryUtils for T {
                 }
             }
             (MultiLineString, Polygon) => {
-                let mut rings = (0..self.get_num_geometries()?).map(|n| {
-                    Geometry::create_linear_ring(self.get_geometry_n(n)?.get_coord_seq()?)
-                });
+                let mut rings = self
+                    .children()?
+                    .map(|g| g?.get_coord_seq()?.create_linear_ring());
                 match self.get_num_geometries()? {
                     0 => Geometry::create_empty_polygon(),
                     1 => Geometry::create_polygon(rings.next().unwrap()?, vec![]),
@@ -149,8 +155,9 @@ impl<T: Geom> GeometryUtils for T {
                 }
             }
             (MultiPolygon, MultiSurface) => {
-                let geoms = (0..self.get_num_geometries()?)
-                    .map(|n| self.get_geometry_n(n)?.clone())
+                let geoms = self
+                    .children()?
+                    .map(|g| g?.clone())
                     .collect::<GResult<_>>()?;
                 Geometry::create_multisurface(geoms)
             }
@@ -184,7 +191,7 @@ impl<T: Geom> GeometryUtils for T {
         m31: f64, m32: f64, m33: f64,
         tx:  f64, ty:  f64, tz:  f64,
     ) -> GResult<Geometry> {
-        let dims: u32 = self.get_coordinate_dimension()?.into();
+        let dims: i32 = self.get_coordinate_dimension()?.into();
         if dims < 3 {
             self.transform_xy(|x, y| {
                 let new_x = x * m11 + y * m12 + tx;
@@ -300,21 +307,10 @@ pub fn rectangle(bounds: &ArrayChunked, srid: &Int32Chunked) -> GResult<BinaryCh
     })
 }
 
-fn get_coordinate_type(dimension: usize) -> GResult<(bool, bool)> {
-    match dimension {
-        2 => Ok((false, false)),
-        3 => Ok((true, false)),
-        4 => Ok((true, true)),
-        _ => Err(GError::GenericError(
-            "invalid coordinate size: must be 2, 3 or 4.".into(),
-        )),
-    }
-}
-
 fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
     let coords = a.as_any().downcast_ref::<LargeListArray>().unwrap();
     if coords.len() - coords.null_count() == 0 {
-        return CoordSeq::new(0, geos::CoordDimensions::TwoD);
+        return CoordSeq::new(0, CoordType::XY);
     }
     let offsets = coords.offsets();
     let lengths: Vec<usize> = offsets.lengths().collect();
@@ -324,7 +320,7 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
         return Err(GError::GenericError(msg));
     }
     let dimension = lengths[0];
-    let (has_z, has_m) = get_coordinate_type(dimension)?;
+    let coord_type = CoordType::try_from(dimension as u32)?;
     let start = (*offsets.first()).try_into().unwrap();
     let values = &coords
         .values()
@@ -333,16 +329,16 @@ fn get_coordinate_seq_from_array(a: Box<dyn Array>) -> GResult<CoordSeq> {
         .unwrap()
         .as_slice()
         .unwrap()[start..(start + coords.len() * dimension)];
-    CoordSeq::new_from_buffer(values, values.len() / dimension, has_z, has_m)
+    CoordSeq::new_from_buffer(values, values.len() / dimension, coord_type)
 }
 
 pub fn point(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(coords, srid, |coord, srid| {
         let coord = coord.as_any().downcast_ref::<Float64Array>().unwrap();
         let dimension = coord.len();
-        let (has_z, has_m) = get_coordinate_type(dimension)?;
+        let coord_type = CoordType::try_from(dimension as u32)?;
         let coord = coord.as_slice().unwrap();
-        let coord_seq = CoordSeq::new_from_buffer(coord, 1, has_z, has_m)?;
+        let coord_seq = CoordSeq::new_from_buffer(coord, 1, coord_type)?;
         let mut geom = Geometry::create_point(coord_seq)?;
         geom.set_srid(srid);
         geom.to_ewkb()
@@ -352,13 +348,12 @@ pub fn point(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked
 pub fn multipoint(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunked> {
     broadcast_try_binary_elementwise_values(coords, srid, |coords, srid| {
         let coord_seq = get_coordinate_seq_from_array(coords)?;
-        let dims: u32 = coord_seq.dimensions()?.into();
-        let has_z = dims > 2;
-        let has_m = dims > 3;
-        let coords = coord_seq.as_buffer(Some(dims as usize))?;
+        let dims: i32 = coord_seq.dimensions()?.into();
+        let coord_type = CoordType::try_from(dims as u32)?;
+        let coords = coord_seq.as_buffer(Some(coord_type))?;
         let mut geom = coords
             .chunks_exact(dims as usize)
-            .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, has_z, has_m))
+            .map(|chunk| CoordSeq::new_from_buffer(chunk, 1, coord_type))
             .map(|seq| Geometry::create_point(seq?))
             .collect::<GResult<_>>()
             .and_then(Geometry::create_multipoint)?;
@@ -389,7 +384,7 @@ pub fn multilinestring(coords: &ListChunked, srid: &Int32Chunked) -> GResult<Bin
     fn get_line(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
         Geometry::create_line_string(match array {
             Some(array) => get_coordinate_seq_from_array(array),
-            None => CoordSeq::new(0, geos::CoordDimensions::TwoD),
+            None => CoordSeq::new(0, geos::CoordType::XY),
         }?)
     }
 
@@ -406,7 +401,7 @@ pub fn polygon(coords: &ListChunked, srid: &Int32Chunked) -> GResult<BinaryChunk
     fn get_ring(array: Option<Box<dyn Array>>) -> GResult<Geometry> {
         Geometry::create_linear_ring(match array {
             Some(array) => get_coordinate_seq_from_array(array),
-            None => CoordSeq::new(0, geos::CoordDimensions::TwoD),
+            None => CoordSeq::new(0, geos::CoordType::XY),
         }?)
     }
 
@@ -429,20 +424,31 @@ pub fn get_type_id(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
     })
 }
 
-pub fn get_num_dimensions(wkb: &BinaryChunked) -> GResult<Int32Chunked> {
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? == GeometryCollection && geom.is_empty()? {
-            Ok(-1)
-        } else {
-            Ok(geom.get_num_dimensions()?)
+pub fn get_dimension(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
+    try_unary_elementwise(wkb, |wkb| {
+        if let Some(wkb) = wkb {
+            let geom = Geometry::new_from_wkb(wkb)?;
+            if geom.geometry_type()? == GeometryCollection && geom.is_empty()? {
+                return Ok(None);
+            } else {
+                return Ok(Some(geom.get_dimension()? as u8));
+            }
         }
+        Ok(None)
     })
 }
 
-pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
+pub fn get_coordinate_dimension(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
-        WKBHeader::try_from(wkb).map(|header| 2 + u32::from(header.has_z) + u32::from(header.has_m))
+        WKBHeader::try_from(wkb).map(|header| 2 + u8::from(header.has_z) + u8::from(header.has_m))
+    })
+}
+
+pub fn get_coordinate_type(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        let header = WKBHeader::try_from(wkb)?;
+        let coord_type = CoordType::try_from((header.has_z, header.has_m))?;
+        Ok(coord_type as u8)
     })
 }
 
@@ -461,10 +467,10 @@ pub fn set_srid(wkb: &BinaryChunked, srid: &Int32Chunked) -> GResult<BinaryChunk
 pub fn get_x(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? == Point && !geom.is_empty()? {
-            geom.get_x()
-        } else {
+        if geom.geometry_type()? == Point && geom.is_empty()? {
             Ok(f64::NAN)
+        } else {
+            geom.get_x()
         }
     })
 }
@@ -472,10 +478,10 @@ pub fn get_x(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
 pub fn get_y(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? == Point && !geom.is_empty()? {
-            geom.get_y()
-        } else {
+        if geom.geometry_type()? == Point && geom.is_empty()? {
             Ok(f64::NAN)
+        } else {
+            geom.get_y()
         }
     })
 }
@@ -483,10 +489,10 @@ pub fn get_y(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
 pub fn get_z(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? == Point && !geom.is_empty()? {
-            geom.get_z()
-        } else {
+        if geom.geometry_type()? == Point && geom.is_empty()? {
             Ok(f64::NAN)
+        } else {
+            geom.get_z()
         }
     })
 }
@@ -494,36 +500,24 @@ pub fn get_z(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
 pub fn get_m(wkb: &BinaryChunked) -> GResult<Float64Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? == Point && !geom.is_empty()? {
-            geom.get_m()
-        } else {
+        if geom.geometry_type()? == Point && geom.is_empty()? {
             Ok(f64::NAN)
+        } else {
+            geom.get_m()
         }
     })
 }
 
 pub fn get_exterior_ring(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    try_unary_elementwise(wkb, |wkb| {
-        if let Some(wkb) = wkb {
-            let geom = Geometry::new_from_wkb(wkb)?;
-            if geom.geometry_type()? == Polygon {
-                return Ok(Some(geom.get_exterior_ring()?.to_ewkb()?));
-            }
-        }
-        Ok(None)
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        Geometry::new_from_wkb(wkb)?.get_exterior_ring()?.to_ewkb()
     })
 }
 
 pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    // TODO: use try_apply_nonnull_values_generic once pola-rs/polars#22233 is merged
     let dt = DataType::List(Box::new(DataType::Binary));
-    let adt = dt.to_arrow(CompatLevel::newest());
     try_unary_elementwise_values_with_dtype(wkb, dt, |wkb| {
         let geom = Geometry::new_from_wkb(wkb)?;
-        if geom.geometry_type()? != Polygon {
-            let rings = BinaryViewArray::new_empty(adt.clone());
-            return Ok(Box::new(rings) as Box<dyn Array>);
-        }
         let num_rings = geom.get_num_interior_rings()?;
         let rings = BinaryViewArray::try_arr_from_iter((0..num_rings).map(|n| {
             let ring = geom.get_interior_ring_n(n)?;
@@ -535,21 +529,17 @@ pub fn get_interior_rings(wkb: &BinaryChunked) -> GResult<ListChunked> {
 
 pub fn get_num_points(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        match geom.geometry_type()? {
-            LineString | LinearRing => Ok(geom.get_num_points()? as u32),
-            _ => Ok(0),
-        }
+        Geometry::new_from_wkb(wkb)?
+            .get_num_points()
+            .map(|n| n as u32)
     })
 }
 
 pub fn get_num_interior_rings(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        match geom.geometry_type()? {
-            Polygon => Ok(geom.get_num_interior_rings()? as u32),
-            _ => Ok(0),
-        }
+        Geometry::new_from_wkb(wkb)?
+            .get_num_interior_rings()
+            .map(|n| n as u32)
     })
 }
 
@@ -571,11 +561,11 @@ pub fn get_num_coordinates(wkb: &BinaryChunked) -> GResult<UInt32Chunked> {
 
 pub fn get_coordinates(
     wkb_array: &BinaryChunked,
-    dimension: Option<usize>,
+    params: &GetCoordinatesKwargs,
 ) -> GResult<ListChunked> {
     fn get_coords_sequence<T>(
         geom: &T,
-        dimension: usize,
+        dimension: CoordType,
         builder: &mut ListPrimitiveChunkedBuilder<Float64Type>,
     ) -> GResult<()>
     where
@@ -585,7 +575,7 @@ pub fn get_coordinates(
             _ if geom.is_empty()? => Ok(()),
             Point | LineString | LinearRing | CircularString => {
                 let coord_seq = geom.get_coord_seq()?.as_buffer(Some(dimension))?;
-                for coord in coord_seq.chunks_exact(dimension) {
+                for coord in coord_seq.chunks_exact(u32::from(dimension) as usize) {
                     builder.append_slice(coord);
                 }
                 Ok(())
@@ -595,7 +585,7 @@ pub fn get_coordinates(
                     .get_exterior_ring()?
                     .get_coord_seq()?
                     .as_buffer(Some(dimension))?;
-                for coord in coord_seq.chunks_exact(dimension) {
+                for coord in coord_seq.chunks_exact(u32::from(dimension) as usize) {
                     builder.append_slice(coord);
                 }
                 (0..geom.get_num_interior_rings()?).try_for_each(|n| {
@@ -610,29 +600,29 @@ pub fn get_coordinates(
             }
         }
     }
-    fn get_coordinates(wkb: &[u8], dimension: Option<usize>) -> GResult<Series> {
+    fn get_coordinates(wkb: &[u8], coord_type: Option<CoordType>) -> GResult<Series> {
         let geom = Geometry::new_from_wkb(wkb)?;
         if geom.is_empty()? {
             return Ok(Series::new_null("".into(), 0));
         }
-        let geom_dimension: u32 = geom.get_coordinate_dimension()?.into();
-        let geom_dimension = geom_dimension as usize;
-        let output_dimension = dimension.unwrap_or(geom_dimension);
+        let coord_type = coord_type.unwrap_or(geom.get_coordinate_type()?);
+        let coord_dimension = u32::from(coord_type) as usize;
         let component_count = wkb.len() / 8; // rough estimate
-        let coordinates_count = component_count / geom_dimension;
+        let coordinates_count = component_count / coord_dimension;
         let mut builder = ListPrimitiveChunkedBuilder::<Float64Type>::new(
             "".into(),
             coordinates_count,
-            coordinates_count * output_dimension,
+            coordinates_count * coord_dimension,
             DataType::Float64,
         );
-        get_coords_sequence(&geom, output_dimension, &mut builder)?;
+        get_coords_sequence(&geom, coord_type, &mut builder)?;
         Ok(builder.finish().into_series())
     }
 
+    let coord_type = params.output_dimension.map(Into::into);
     wkb_array
         .iter()
-        .map(|wkb| wkb.map(|wkb| get_coordinates(wkb, dimension)).transpose())
+        .map(|wkb| wkb.map(|wkb| get_coordinates(wkb, coord_type)).transpose())
         .collect()
 }
 
@@ -687,15 +677,13 @@ pub fn get_geometry_n(wkb: &BinaryChunked, index: &UInt32Chunked) -> GResult<Bin
 }
 
 pub fn get_parts(wkb: &BinaryChunked) -> GResult<ListChunked> {
-    // TODO: use try_apply_nonnull_values_generic once pola-rs/polars#22233 is merged
     let dt = DataType::List(Box::new(DataType::Binary));
     try_unary_elementwise_values_with_dtype(wkb, dt, |wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        let num_geom = geom.get_num_geometries()?;
-        let parts = BinaryViewArray::try_arr_from_iter((0..num_geom).map(|n| {
-            let part = geom.get_geometry_n(n)?;
-            part.to_ewkb()
-        }))?;
+        let parts = BinaryViewArray::try_arr_from_iter(
+            Geometry::new_from_wkb(wkb)?
+                .children()?
+                .map(|g| g?.to_ewkb()),
+        )?;
         Ok(Box::new(parts) as Box<dyn Array>)
     })
 }
@@ -768,8 +756,8 @@ pub fn to_geojson(wkb: &BinaryChunked, params: &ToGeoJsonKwargs) -> GResult<Stri
     })
 }
 
-pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyObject>>> {
-    fn dict<'py, C>(py: Python<'py>, g: &str, v: C) -> PyObject
+pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<Py<PyAny>>>> {
+    fn dict<'py, C>(py: Python<'py>, g: &str, v: C) -> Py<PyAny>
     where
         C: IntoPyObject<'py>,
     {
@@ -782,10 +770,10 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
         if geom.is_empty()? {
             return Ok(vec![]);
         }
-        let dims: u32 = geom.get_coordinate_dimension()?.into();
-        let buffer = geom.get_coord_seq()?.as_buffer(Some(dims as usize))?;
+        let dims = geom.get_coordinate_type()?;
+        let buffer = geom.get_coord_seq()?.as_buffer(Some(dims))?;
         let coords = buffer
-            .chunks_exact(dims as usize)
+            .chunks_exact(u32::from(dims) as usize)
             .map(<[f64]>::to_vec)
             .collect();
         Ok(coords)
@@ -830,7 +818,7 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
         }
         Ok(coordinates)
     }
-    fn geometrycollection<T: Geom>(py: Python<'_>, collection: &T) -> GResult<PyObject> {
+    fn geometrycollection<T: Geom>(py: Python<'_>, collection: &T) -> GResult<Py<PyAny>> {
         let geometries = PyList::empty(py);
         for n in 0..collection.get_num_geometries()? {
             let geometry = collection.get_geometry_n(n)?;
@@ -841,7 +829,7 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<PyO
         dict.set_item("geometries", geometries).unwrap();
         Ok(dict.into())
     }
-    fn geom_to_dict<T: Geom>(py: Python<'_>, geom: &T) -> GResult<PyObject> {
+    fn geom_to_dict<T: Geom>(py: Python<'_>, geom: &T) -> GResult<Py<PyAny>> {
         match geom.geometry_type()? {
             Point => Ok(dict(py, "Point", point(geom)?)),
             LineString => Ok(dict(py, "LineString", linestring(geom)?)),
@@ -986,21 +974,17 @@ pub fn is_ccw(wkb: &BinaryChunked) -> GResult<BooleanChunked> {
         let geom = Geometry::new_from_wkb(wkb)?;
         match geom.geometry_type()? {
             Point | LinearRing | LineString | CircularString => geom.get_coord_seq()?.is_ccw(),
+            MultiPoint | MultiLineString | MultiCurve => geom
+                .children()?
+                .map(|g| g?.get_coord_seq()?.is_ccw())
+                .try_fold(true, |acc, res| Ok(acc & res?)),
             _ => Ok(false),
         }
     })
 }
 
 pub fn is_closed(wkb: &BinaryChunked) -> GResult<BooleanChunked> {
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        match geom.geometry_type()? {
-            LinearRing | LineString | CircularString | MultiLineString | MultiCurve => {
-                geom.is_closed()
-            }
-            _ => Ok(false),
-        }
-    })
+    wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.is_closed())
 }
 
 pub fn is_empty(wkb: &BinaryChunked) -> GResult<BooleanChunked> {
@@ -1344,14 +1328,7 @@ pub fn collect(wkb: &BinaryChunked, into: Option<WKBGeometryType>) -> GResult<Bi
 }
 
 pub fn boundary(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    wkb.try_apply_nonnull_values_generic(|wkb| {
-        let geom = Geometry::new_from_wkb(wkb)?;
-        match geom.geometry_type()? {
-            GeometryCollection => Geometry::create_empty_collection(GeometryCollection),
-            _ => geom.boundary(),
-        }?
-        .to_ewkb()
-    })
+    wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.boundary()?.to_ewkb())
 }
 
 pub fn buffer(
@@ -1398,7 +1375,7 @@ pub fn get_center(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
         }
         let x = f64::midpoint(geom.get_x_min()?, geom.get_x_max()?);
         let y = f64::midpoint(geom.get_y_min()?, geom.get_y_max()?);
-        Geometry::create_point(CoordSeq::new_from_buffer(&[x, y], 1, false, false)?)?.to_ewkb()
+        Geometry::create_point(CoordSeq::new_from_buffer(&[x, y], 1, CoordType::XY)?)?.to_ewkb()
     })
 }
 
@@ -1462,8 +1439,13 @@ pub fn build_area(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
     wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.build_area()?.to_ewkb())
 }
 
-pub fn make_valid(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
-    wkb.try_apply_nonnull_values_generic(|wkb| Geometry::new_from_wkb(wkb)?.make_valid()?.to_ewkb())
+pub fn make_valid(wkb: &BinaryChunked, params: &MakeValidKwargs) -> GResult<BinaryChunked> {
+    let make_valid_params: MakeValidParams = params.try_into()?;
+    wkb.try_apply_nonnull_values_generic(|wkb| {
+        Geometry::new_from_wkb(wkb)?
+            .make_valid_with_params(&make_valid_params)?
+            .to_ewkb()
+    })
 }
 
 pub fn normalize(wkb: &BinaryChunked) -> GResult<BinaryChunked> {
@@ -1555,6 +1537,17 @@ pub fn minimum_rotated_rectangle(wkb: &BinaryChunked) -> GResult<BinaryChunked> 
     wkb.try_apply_nonnull_values_generic(|wkb| {
         Geometry::new_from_wkb(wkb)?
             .minimum_rotated_rectangle()?
+            .to_ewkb()
+    })
+}
+
+pub fn maximum_inscribed_circle(
+    wkb: &BinaryChunked,
+    tolerance: &Float64Chunked,
+) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(wkb, tolerance, |wkb, tolerance| {
+        Geometry::new_from_wkb(wkb)?
+            .maximum_inscribed_circle(tolerance)?
             .to_ewkb()
     })
 }

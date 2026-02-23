@@ -1,3 +1,4 @@
+use geos::CoordType;
 use serde::{Deserialize, Serialize};
 
 use crate::wkb::WKBGeometryType;
@@ -186,9 +187,29 @@ pub struct SjoinKwargs {
     pub predicate: SjoinPredicate,
 }
 
+#[derive(Deserialize, Clone, Copy)]
+pub enum OutputCoordType {
+    XY,
+    XYZ,
+    XYZM,
+    XYM,
+}
+
+impl From<OutputCoordType> for CoordType {
+    #[inline]
+    fn from(val: OutputCoordType) -> Self {
+        match val {
+            OutputCoordType::XY => Self::XY,
+            OutputCoordType::XYZ => Self::XYZ,
+            OutputCoordType::XYZM => Self::XYZM,
+            OutputCoordType::XYM => Self::XYM,
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct GetCoordinatesKwargs {
-    pub output_dimension: Option<usize>,
+    pub output_dimension: Option<OutputCoordType>,
 }
 
 #[derive(Deserialize)]
@@ -226,4 +247,39 @@ pub struct TransformKwargs {
 #[derive(Deserialize)]
 pub struct CollectKwargs {
     pub into: Option<WKBGeometryType>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MakeValidMethod {
+    Linework,
+    Structure,
+}
+
+impl From<MakeValidMethod> for geos::MakeValidMethod {
+    #[inline]
+    fn from(val: MakeValidMethod) -> Self {
+        match val {
+            MakeValidMethod::Linework => Self::Linework,
+            MakeValidMethod::Structure => Self::Structure,
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct MakeValidKwargs {
+    method: MakeValidMethod,
+    keep_collapsed: bool,
+}
+
+impl TryInto<geos::MakeValidParams> for &MakeValidKwargs {
+    type Error = geos::Error;
+
+    #[inline]
+    fn try_into(self) -> Result<geos::MakeValidParams, Self::Error> {
+        geos::MakeValidParams::builder()
+            .keep_collapsed(self.keep_collapsed)
+            .method(self.method.into())
+            .build()
+    }
 }

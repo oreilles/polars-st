@@ -8,8 +8,9 @@ The following functions can be used that way:
         show_root_toc_entry: false
         members:
             - geometry_type
-            - dimensions
+            - dimension
             - coordinate_dimension
+            - coordinate_type
             - area
             - bounds
             - length
@@ -76,6 +77,7 @@ The following functions can be used that way:
             - force_3d
             - flip_coordinates
             - minimum_rotated_rectangle
+            - maximum_inscribed_circle
             - affine_transform
             - translate
             - rotate

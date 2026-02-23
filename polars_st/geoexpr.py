@@ -12,7 +12,13 @@ from polars.api import register_expr_namespace
 from polars.plugins import register_plugin_function
 
 from polars_st import _lib
-from polars_st.geometry import GeometryType, PolarsGeometryType
+from polars_st.geometry import (
+    CoordinateType,
+    GeometryType,
+    PolarsCoordinateType,
+    PolarsDimensionType,
+    PolarsGeometryType,
+)
 from polars_st.utils.internal import is_empty_method
 
 if TYPE_CHECKING:
@@ -33,7 +39,7 @@ __all__ = [
 ]
 
 
-def register_plugin(is_aggregation: bool = False):  # noqa: ANN202
+def register_plugin(is_aggregation: bool = False, cast=None):  # noqa: ANN202
     def decorator(func):  # noqa: ANN001, ANN202
         assert is_empty_method(func)  # noqa: S101
 
@@ -47,7 +53,7 @@ def register_plugin(is_aggregation: bool = False):  # noqa: ANN202
         def wrapper(self: GeoExprNameSpace, *args: P.args, **kwargs: P.kwargs):  # noqa: ANN202
             bound = sig.bind(self._expr, *args, **kwargs)
             bound.apply_defaults()
-            return register_plugin_function(
+            result = register_plugin_function(
                 plugin_path=Path(__file__).parent,
                 function_name=func_name,
                 args=[self._expr, *[bound.arguments[k] for k in expr_args]],
@@ -55,6 +61,7 @@ def register_plugin(is_aggregation: bool = False):  # noqa: ANN202
                 is_elementwise=not is_aggregation,
                 returns_scalar=is_aggregation,
             )
+            return result.cast(cast) if cast is not None else result
 
         return wrapper
 
@@ -77,8 +84,9 @@ class GeoExprNameSpace:
     def __init__(self, expr: pl.Expr) -> None:
         self._expr = cast("GeoExpr", expr)
 
+    @register_plugin(cast=PolarsGeometryType)
     def geometry_type(self) -> pl.Expr:
-        """Return the type of each geometry.
+        """Return the type of each geometry as [`PolarsGeometryType`][polars_st.PolarsGeometryType].
 
         Examples:
             >>> gdf = st.GeoDataFrame([
@@ -98,17 +106,10 @@ class GeoExprNameSpace:
             │ Polygon    │
             └────────────┘
         """
-        return register_plugin_function(
-            plugin_path=Path(__file__).parent,
-            function_name="geometry_type",
-            args=[self._expr],
-            is_elementwise=True,
-        ).map_batches(lambda s: s.cast(PolarsGeometryType), PolarsGeometryType)
-        # Needed because pola-rs/polars#22125, pola-rs/pyo3-polars#131
-        # Cannot use cast directly, see comments in pola-rs/polars#6106
+        ...
 
-    @register_plugin()
-    def dimensions(self) -> pl.Expr:
+    @register_plugin(cast=PolarsDimensionType)
+    def dimension(self) -> pl.Expr:
         """Return the inherent dimensionality of each geometry.
 
         The inherent dimension is 0 for points, 1 for linestrings and linearrings,
@@ -121,16 +122,16 @@ class GeoExprNameSpace:
             ...     "LINESTRING(0 0, 1 2)",
             ...     "POLYGON((0 0, 1 1, 1 0, 0 0))"
             ... ])
-            >>> gdf.select(st.geom().st.dimensions())
+            >>> gdf.select(st.geom().st.dimension())
             shape: (3, 1)
             ┌──────────┐
             │ geometry │
             │ ---      │
-            │ i32      │
+            │ enum     │
             ╞══════════╡
-            │ 0        │
-            │ 1        │
-            │ 2        │
+            │ Point    │
+            │ Curve    │
+            │ Surface  │
             └──────────┘
         """
         ...
@@ -138,6 +139,32 @@ class GeoExprNameSpace:
     @register_plugin()
     def coordinate_dimension(self) -> pl.Expr:
         """Return the coordinate dimension (2, 3 or 4) of each geometry."""
+        ...
+
+    @register_plugin(cast=PolarsCoordinateType)
+    def coordinate_type(self) -> pl.Expr:
+        """Return the coordinate type of each geometry as [`PolarsCoordinateType`][polars_st.PolarsCoordinateType].
+
+        Examples:
+            >>> gdf = st.GeoDataFrame([
+            ...     "POINT(1 2)",
+            ...     "POINT(1 2 3)",
+            ...     "POINT M(1 2 3)",
+            ...     "POINT(1 2 3 4)",
+            ... ])
+            >>> gdf.select(st.geom().st.coordinate_type())
+            shape: (4, 1)
+            ┌──────────┐
+            │ geometry │
+            │ ---      │
+            │ enum     │
+            ╞══════════╡
+            │ XY       │
+            │ XYZ      │
+            │ XYM      │
+            │ XYZM     │
+            └──────────┘
+        """  # noqa: E501
         ...
 
     @register_plugin()
@@ -186,8 +213,21 @@ class GeoExprNameSpace:
         ...
 
     @register_plugin()
-    def coordinates(self, output_dimension: Literal[2, 3] | None = None) -> pl.Expr:
-        """Return the coordinates of each geometry."""
+    def coordinates(self, output_dimension: CoordinateType | None = None) -> pl.Expr:
+        """Return the coordinates of each geometry.
+
+        Examples:
+            >>> gdf = st.GeoDataFrame(["POINT(1 2 3)"])
+            >>> gdf.select(st.geom().st.coordinates())
+            shape: (1, 1)
+            ┌───────────────────┐
+            │ geometry          │
+            │ ---               │
+            │ list[list[f64]]   │
+            ╞═══════════════════╡
+            │ [[1.0, 2.0, 3.0]] │
+            └───────────────────┘
+        """
         ...
 
     @register_plugin()
@@ -679,7 +719,11 @@ class GeoExprNameSpace:
     def build_area(self) -> GeoExpr: ...
 
     @register_plugin()
-    def make_valid(self) -> GeoExpr: ...
+    def make_valid(
+        self,
+        method: Literal["linework", "structure"] = "linework",
+        keep_collapsed: bool = True,
+    ) -> GeoExpr: ...
 
     @register_plugin()
     def normalize(self) -> GeoExpr: ...
@@ -728,6 +772,11 @@ class GeoExprNameSpace:
 
     @register_plugin()
     def minimum_rotated_rectangle(self) -> GeoExpr: ...
+
+    @register_plugin()
+    def maximum_inscribed_circle(self, tolerance: IntoNumericExpr) -> GeoExpr:
+        """Returns the maximum inscribed circle of a polygonal geometry."""
+        ...
 
     @register_plugin()
     def snap(
