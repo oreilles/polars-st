@@ -428,9 +428,7 @@ pub fn get_dimension(wkb: &BinaryChunked) -> GResult<UInt8Chunked> {
     try_unary_elementwise(wkb, |wkb| {
         if let Some(wkb) = wkb {
             let geom = Geometry::new_from_wkb(wkb)?;
-            if geom.geometry_type()? == GeometryCollection && geom.is_empty()? {
-                return Ok(None);
-            } else {
+            if !(geom.geometry_type()? == GeometryCollection && geom.is_empty()?) {
                 return Ok(Some(geom.get_dimension()? as u8));
             }
         }

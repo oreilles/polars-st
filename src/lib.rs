@@ -6,6 +6,7 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(clippy::needless_pass_by_value)]
 // TODO: Actually fix those
+#![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_possible_truncation)]
 
