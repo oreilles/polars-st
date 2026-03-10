@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-def register_plugin(is_aggregation: bool = False, cast=None):  # noqa: ANN202
+def register_plugin(is_aggregation: bool = False, cast: pl.DataType | None = None):  # noqa: ANN202
     def decorator(func):  # noqa: ANN001, ANN202
         assert is_empty_method(func)  # noqa: S101
 
