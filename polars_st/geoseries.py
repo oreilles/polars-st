@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
-    from altair.vegalite.v5.schema._config import MarkConfigKwds
+    from altair.vegalite.v6.schema._config import MarkConfigKwds
     from lonboard import Map
     from lonboard.types.layer import (
         PathLayerKwargs,
@@ -486,7 +486,8 @@ class GeoSeriesNameSpace:
     ) -> gpd.GeoSeries:
         """Convert this pl.Series to a geopandas GeoSeries."""
         return (
-            self._series.to_frame()
+            self._series
+            .to_frame()
             .pipe(st)
             .to_geopandas(
                 geometry_name=self._series.name,
@@ -1020,7 +1021,8 @@ class GeoSeriesNameSpace:
         map_kwargs: MapKwargs | None = None,
     ) -> Map:
         return (
-            self._series.to_frame()
+            self._series
+            .to_frame()
             .pipe(st)
             .explore(
                 self._series.name,

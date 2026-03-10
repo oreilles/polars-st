@@ -112,7 +112,8 @@ class GeoLazyFrameNameSpace:
             raise ValueError(msg)
 
         sjoin_index = (
-            pl.concat(
+            pl
+            .concat(
                 [
                     self._lf.select(_sjoin_geom_left=left_expr),
                     other.select(_sjoin_geom_right=right_expr),
@@ -135,7 +136,8 @@ class GeoLazyFrameNameSpace:
         )
 
         return (
-            sjoin_index.join(
+            sjoin_index
+            .join(
                 self._lf.with_row_index("_sjoin_index_left"),
                 on="_sjoin_index_left",
                 how="full",

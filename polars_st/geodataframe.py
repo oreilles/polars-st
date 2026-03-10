@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
-    from altair.vegalite.v5.schema._config import MarkConfigKwds
+    from altair.vegalite.v6.schema._config import MarkConfigKwds
     from lonboard import Map
     from lonboard.types.layer import (
         PathLayerKwargs,
@@ -220,7 +220,8 @@ class GeoDataFrameNameSpace:
             raise TypeError(msg)
 
         return (
-            self._df.lazy()
+            self._df
+            .lazy()
             .pipe(st)
             .sjoin(
                 other=other.lazy(),
@@ -529,7 +530,8 @@ class GeoDataFrameNameSpace:
         """
         geometries = self._df.select(geom(geometry_name).st.to_geojson()).to_series()
         return (
-            self._df.select(
+            self._df
+            .select(
                 type=pl.lit("Feature"),
                 geometry=geometries.str.json_decode(),
                 properties=pl.struct(cs.exclude(geom(geometry_name)))
@@ -612,12 +614,13 @@ class GeoDataFrameNameSpace:
 
             >>> import altair as alt
             >>> df = st.GeoDataFrame({
-            ... "color": ["red","yellow", "blue"],
-            ... "geometry": [
-            ...     "POLYGON((0 0, 0 2, 2 2, 2 0, 0 0))",
-            ...     "POLYGON((0 0, 1 2, 2 0, 0 0))",
-            ...     "POINT(2 1)"
-            ... ]})
+            ...     "color": ["red","yellow", "blue"],
+            ...     "geometry": [
+            ...         "POLYGON((0 0, 0 2, 2 2, 2 0, 0 0))",
+            ...         "POLYGON((0 0, 1 2, 2 0, 0 0))",
+            ...         "POINT(2 1)"
+            ...     ]
+            ... })
             >>> plot = (
             ...     df.st.plot(blend="difference")
             ...     .encode(fill=alt.Color("color:N", scale=None))
@@ -628,7 +631,8 @@ class GeoDataFrameNameSpace:
         import altair as alt
 
         return (
-            self._df.with_columns(type=pl.lit("Feature"), geometry=geom(geometry_name).st.to_dict())
+            self._df
+            .with_columns(type=pl.lit("Feature"), geometry=geom(geometry_name).st.to_dict())
             .drop([geometry_name] if geometry_name != "geometry" else [])
             .pipe(alt.Chart)
             .mark_geoshape(**kwargs)
@@ -647,7 +651,8 @@ class GeoDataFrameNameSpace:
         from lonboard import viz
 
         table = (
-            self._df.with_columns(geometry=geometry_name)
+            self._df
+            .with_columns(geometry=geometry_name)
             .drop([geometry_name] if geometry_name != "geometry" else [])
             .pipe(lambda gdf: gdf.to_arrow())
         )

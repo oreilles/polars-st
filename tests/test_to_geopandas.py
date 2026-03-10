@@ -1,5 +1,6 @@
 import geopandas as gpd
 import pytest
+import shapely
 
 import polars_st as st
 
@@ -15,9 +16,9 @@ def test_to_geopandas_valid_conversion():
     geopandas_gdf = gdf.st.to_geopandas()
 
     assert isinstance(geopandas_gdf, gpd.GeoDataFrame)
-    assert list(geopandas_gdf.columns) == ["geometry", "name"]
-    assert list(geopandas_gdf.geometry.to_wkt()) == geometry
     assert list(geopandas_gdf["name"]) == name
+    assert list(geopandas_gdf.columns) == ["geometry", "name"]
+    assert list(shapely.to_wkt(list(geopandas_gdf.geometry))) == geometry
     assert geopandas_gdf.crs == "EPSG:4326"
 
 
