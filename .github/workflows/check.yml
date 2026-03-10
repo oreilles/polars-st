@@ -32,8 +32,9 @@ jobs:
         run: uv run pyright .
 
       - name: Run MkDocs build
-        run: uv run mkdocs build -f docs/mkdocs.yml
-
+        run: uv run mkdocs build --strict -f docs/mkdocs.yml
+        env:
+          NO_MKDOCS_2_WARNING: 1
 
   rust-test:
     runs-on: ubuntu-latest
