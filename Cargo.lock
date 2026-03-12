@@ -581,12 +581,6 @@ dependencies = [
 
 [[package]]
 name = "crs-definitions"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36aeb03b9e8d31aa9e8796d6d78957647761e96ee53935520cdda23cd19aa98b"
-
-[[package]]
-name = "crs-definitions"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5229c5b63bdc8e24d60e5c4b6115fbb4d11a8978661b4ecc57d6068ddb073983"
@@ -1854,9 +1848,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.21.3"
+version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "openssl-probe"
@@ -2483,7 +2477,7 @@ dependencies = [
 name = "polars-st"
 version = "0.6.1"
 dependencies = [
- "crs-definitions 0.3.1",
+ "crs-definitions",
  "geo-index",
  "geos",
  "num_enum",
@@ -2676,7 +2670,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9a8e6a70c71f11595fa32f9128ebe56f1d986ad380db858799640a1039a0e2"
 dependencies = [
  "console_log",
- "crs-definitions 0.4.0",
+ "crs-definitions",
  "js-sys",
  "thiserror 2.0.18",
  "wasm-bindgen",
