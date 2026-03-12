@@ -1,5 +1,6 @@
 # ruff: noqa: E501
 
+import math
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -435,8 +436,10 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
 
 
 def test_sjoin_dwithin_point_fast_path():
-    """sjoin dwithin must match when the right geometry is a Point (#66)."""
+    """Sjoin dwithin must match when the right geometry is a Point (#66)."""
     left = st.GeoDataFrame(["POLYGON ((0 0, 90 0, 90 90, 0 90, 0 0))"])
     right = st.GeoDataFrame(["POINT (-5 -5)"])
-    result = left.st.sjoin(right, predicate="dwithin", distance=10.0)
+    result = left.st.sjoin(right, predicate="dwithin", distance=math.hypot(5, 5))
     assert len(result) == 1
+    result = left.st.sjoin(right, predicate="dwithin", distance=math.hypot(5, 5) - 0.1)
+    assert len(result) == 0
