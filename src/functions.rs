@@ -1960,7 +1960,7 @@ impl SIndex {
             if right_geom.geometry_type()? == Point {
                 let coords = right_geom.get_coord_seq()?.as_buffer(None)?;
                 let (x, y) = (coords[0], coords[1]);
-                for hit in self.tree.neighbors(x, y, None, Some(distance)) {
+                for hit in self.tree.neighbors(x, y, None, Some(distance * distance)) {
                     let (left_index, _) = &self.data[hit as usize];
                     left_indicies.push(*left_index as _);
                     right_indicies.push(right_index as _);

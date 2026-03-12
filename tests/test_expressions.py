@@ -432,3 +432,11 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         result = frame.select(func())
 
     assert result.schema == pl.Schema([("geometry", func.dtype)])
+
+
+def test_sjoin_dwithin_point_fast_path():
+    """sjoin dwithin must match when the right geometry is a Point (#66)."""
+    left = st.GeoDataFrame(["POLYGON ((0 0, 90 0, 90 90, 0 90, 0 0))"])
+    right = st.GeoDataFrame(["POINT (-5 -5)"])
+    result = left.st.sjoin(right, predicate="dwithin", distance=10.0)
+    assert len(result) == 1
