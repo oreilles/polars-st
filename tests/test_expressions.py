@@ -432,3 +432,14 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         result = frame.select(func())
 
     assert result.schema == pl.Schema([("geometry", func.dtype)])
+
+
+def test_to_shapely_array():
+    """to_shapely_array returns a numpy array of Shapely objects."""
+    import shapely
+
+    series = st.GeoSeries(["POINT (1 2)", "POINT (3 4)"])
+    result = series.st.to_shapely_array()
+    assert isinstance(result, np.ndarray)
+    assert len(result) == 2
+    assert result[0].equals(shapely.Point(1, 2))

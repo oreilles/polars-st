@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
     import altair as alt
     import geopandas as gpd
+    import numpy as np
     from altair.vegalite.v6.schema._config import MarkConfigKwds
     from lonboard import Map
     from lonboard.types.layer import (
@@ -462,6 +463,18 @@ class GeoSeriesNameSpace:
     def to_shapely(self) -> pl.Series:
         """See [`GeoExprNameSpace.to_shapely`][polars_st.GeoExprNameSpace.to_shapely]."""
         ...
+
+    def to_shapely_array(self) -> np.ndarray:
+        """Return geometries as a numpy array of Shapely objects.
+
+        Unlike [`to_shapely`][polars_st.GeoSeriesNameSpace.to_shapely] which returns
+        a `pl.Series` with `Object` dtype, this method returns the underlying numpy
+        array directly from `shapely.from_wkb`, avoiding the overhead of boxing each
+        geometry as a Python object in Polars.
+        """
+        import shapely
+
+        return shapely.from_wkb(self._series.to_numpy())
 
     @dispatch
     def to_dict(self) -> pl.Series:
