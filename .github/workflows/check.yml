@@ -11,22 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  python-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with: { activate-environment: "true" }
-      - name: Install dependencies
-        run: uv sync --dev --no-install-project
-      - name: Run MkDocs build
-        run: mkdocs build --strict -f docs/mkdocs.yml
-        env:
-          PYTHONPATH: .
-          NO_MKDOCS_2_WARNING: 1
-
   python-check:
     runs-on: ubuntu-latest
     steps:
@@ -49,17 +33,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
       - name: Setup uv
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
         run: uv sync --dev --no-install-project
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
       - name: Build project
         run: maturin develop --uv
       - name: Run tests
         run: pytest
+
+  python-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with: { activate-environment: "true" }
+      - name: Install dependencies
+        run: uv sync --dev --no-install-project
+      - name: Run MkDocs build
+        run: mkdocs build --strict -f docs/mkdocs.yml
+        env:
+          PYTHONPATH: .
+          NO_MKDOCS_2_WARNING: 1
 
   rust-check:
     runs-on: ubuntu-latest
