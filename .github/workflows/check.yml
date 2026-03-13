@@ -23,7 +23,9 @@ jobs:
         run: uv sync --dev --no-install-project
       - name: Run MkDocs build
         run: mkdocs build --strict -f docs/mkdocs.yml
-        env: { NO_MKDOCS_2_WARNING: 1 }
+        env:
+          PYTHONPATH: .
+          NO_MKDOCS_2_WARNING: 1
 
   python-check:
     runs-on: ubuntu-latest
