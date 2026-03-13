@@ -1,0 +1,100 @@
+name: Build
+
+on:
+  push:
+    branches: ['*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+          - runner: ubuntu-latest
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --zig --release --out dist
+          manylinux: auto
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v6
+        with:
+          name: wheels-linux-${{ matrix.platform.target }}
+          path: dist
+
+  macos:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: macos-15-intel
+            target: x86_64
+          - runner: macos-latest
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v6
+        with:
+          name: wheels-macos-${{ matrix.platform.target }}
+          path: dist
+
+  windows:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: windows-latest
+            target: x64
+          - runner: windows-11-arm
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v6
+        with:
+          name: wheels-windows-${{ matrix.platform.target }}
+          path: dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v6
+        with:
+          name: wheels-sdist
+          path: dist
