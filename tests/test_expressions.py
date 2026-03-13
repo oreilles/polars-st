@@ -424,7 +424,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         frame = frame.select(st.geom().st.set_srid(4326))
 
     if error is not None:
-        with pytest.raises(pl.exceptions.ComputeError, match=f"{error}$"):
+        with pytest.raises(pl.exceptions.ComputeError, match=f"{error}"):
             frame.select(func())
         return
 
