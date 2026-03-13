@@ -109,8 +109,8 @@ jobs:
       - uses: actions/download-artifact@v8
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}
         with:
           command: upload
           args: --non-interactive --skip-existing wheels-*/*
+        env:
+          MATURIN_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}

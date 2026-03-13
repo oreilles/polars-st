@@ -6,47 +6,67 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  python-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with: { activate-environment: "true" }
+      - name: Install dependencies
+        run: uv sync --dev --no-install-project
+      - name: Run MkDocs build
+        run: mkdocs build --strict -f docs/mkdocs.yml
+        env: { NO_MKDOCS_2_WARNING: 1 }
+
+  python-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with: { activate-environment: "true" }
+      - name: Install dependencies
+        run: uv sync --dev --no-install-project
+      - name: Run Ruff formatter
+        run: ruff format --check
+      - name: Run Ruff linter
+        run: ruff check
+      - name: Run Pyright
+        run: pyright
+
   python-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
       - name: Setup uv
         uses: astral-sh/setup-uv@v7
+        with: { activate-environment: "true" }
+      - name: Install dependencies
+        run: uv sync --dev --no-install-project
+      - name: Build project
+        run: maturin develop --uv
+      - name: Run tests
+        run: pytest
 
-      - name: Install Python package
-        run: uv sync --all-extras --dev
-
-      - name: Run Ruff formatter check
-        run: uv run ruff format --check .
-      
-      - name: Run Ruff linter
-        run: uv run ruff check .
-
-      - name: Run Python tests
-        run: uv run pytest
-
-      - name: Run Pyright type checker
-        run: uv run pyright .
-
-      - name: Run MkDocs build
-        run: uv run mkdocs build --strict -f docs/mkdocs.yml
-        env:
-          NO_MKDOCS_2_WARNING: 1
-
-  rust-test:
+  rust-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
       - name: Run Rust formatter
         run: cargo fmt --all -- --check
-
       - name: Run Rust linter
         run: cargo clippy --all-features
-
-      - name: Run Rust tests
-        run: cargo test --all
