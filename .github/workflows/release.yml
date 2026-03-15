@@ -7,7 +7,7 @@ name: Release
 
 on:
   push:
-    tags: ['*']
+    tags: ["*"]
   workflow_dispatch:
 
 permissions:
@@ -20,19 +20,19 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             target: x86_64
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             target: aarch64
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --zig --release --out dist
           manylinux: auto
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
@@ -45,18 +45,18 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: macos-15-intel
+          - runner: macos-26-intel
             target: x86_64
-          - runner: macos-latest
+          - runner: macos-26
             target: aarch64
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
@@ -70,20 +70,22 @@ jobs:
         platform:
           - runner: windows-latest
             target: x64
+          - runner: windows-11-arm
+            target: aarch64
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
-      
+
   sdist:
     runs-on: ubuntu-latest
     steps:

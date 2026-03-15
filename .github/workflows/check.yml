@@ -20,13 +20,13 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
-        run: uv sync --dev --no-install-project
+        run: uv sync --no-install-project
       - name: Run Ruff formatter
         run: ruff format --check
       - name: Run Ruff linter
         run: ruff check
       - name: Run Pyright
-        run: pyright
+        run: pyright --warnings
 
   python-test:
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
-        run: uv sync --dev --no-install-project
+        run: uv sync --no-install-project
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
       - name: Build project
@@ -54,7 +54,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
-        run: uv sync --dev --no-install-project
+        run: uv sync --no-install-project
       - name: Run MkDocs build
         run: mkdocs build --strict -f docs/mkdocs.yml
         env:
