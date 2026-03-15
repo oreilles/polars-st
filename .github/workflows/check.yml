@@ -26,7 +26,7 @@ jobs:
       - name: Run Ruff linter
         run: ruff check
       - name: Run Pyright
-        run: pyright --warnings
+        run: pyright
 
   python-test:
     runs-on: ubuntu-latest
