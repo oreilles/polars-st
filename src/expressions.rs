@@ -190,7 +190,7 @@ macro_rules! create_geometry {
             let inputs = validate_inputs_length::<2>(inputs)?;
             let coords = &inputs[0];
             let coords = coords
-                .cast(&$cast_type)
+                .strict_cast(&$cast_type)
                 .map_err(|_| polars_err!(InvalidOperation: "invalid coordinates dtype for {}: {}", stringify!($name), coords.dtype()))?;
             let coords = coords.list().unwrap();
             extract!(srid, inputs[1], D::Int32, i32);
