@@ -6,6 +6,7 @@ docs/site/
 target/
 dist/
 *.so
+*.dSYM/
 .venv/
 .idea
 .vscode
