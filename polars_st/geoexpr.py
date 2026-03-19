@@ -334,6 +334,19 @@ class GeoExprNameSpace:
 
         Args:
             srid: The srid code of the new CRS
+
+        Examples:
+            >>> gdf = st.GeoDataFrame(["SRID=4326;POINT(0 0)"])
+            >>> gdf = gdf.select(st.geom().st.to_srid(4301))
+            >>> gdf.st.to_wkt()
+            shape: (1, 1)
+            ┌─────────────────────────────┐
+            │ geometry                    │
+            │ ---                         │
+            │ str                         │
+            ╞═════════════════════════════╡
+            │ POINT (-0.004557 -0.006154) │
+            └─────────────────────────────┘
         """
         ...
 
