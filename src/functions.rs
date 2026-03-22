@@ -1921,22 +1921,10 @@ impl SIndex {
             )
     }
 
-    fn sjoin(&self, other: &BinaryChunked, predicate: SjoinPredicate) -> SindexQueryResult {
-        use SjoinPredicate::*;
-        let predicate: fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> = match predicate {
-            IntersectsBbox => |_, _| Ok(true),
-            Intersects => |a, b| a.intersects(b),
-            Within => |a, b| a.within(b),
-            Contains => |a, b| a.contains(b),
-            Overlaps => |a, b| a.overlaps(b),
-            Crosses => |a, b| a.crosses(b),
-            Touches => |a, b| a.touches(b),
-            Covers => |a, b| a.covers(b),
-            CoveredBy => |a, b| a.covered_by(b),
-            ContainsProperly => |a, b| a.contains_properly(b),
-            Dwithin(_) => unreachable!(),
-        };
-
+    fn sjoin<F>(&self, other: &BinaryChunked, predicate: F) -> SindexQueryResult
+    where
+        F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
+    {
         Self::query(other, |right_index, right_geom| {
             let mut left_indicies = vec![];
             let mut right_indicies = vec![];
@@ -1990,15 +1978,20 @@ pub fn sjoin(
     right: &BinaryChunked,
     predicate: SjoinPredicate,
 ) -> SindexQueryResult {
-    SIndex::try_new(left)?.sjoin(right, predicate)
-}
-
-pub fn sjoin_dwithin(
-    left: &BinaryChunked,
-    right: &BinaryChunked,
-    distance: f64,
-) -> SindexQueryResult {
-    SIndex::try_new(left)?.sjoin_dwithin(right, distance)
+    let index = SIndex::try_new(left)?;
+    match predicate {
+        SjoinPredicate::IntersectsBbox => index.sjoin(right, |_, _| Ok(true)),
+        SjoinPredicate::Intersects => index.sjoin(right, |a, b| a.intersects(b)),
+        SjoinPredicate::Within => index.sjoin(right, |a, b| a.within(b)),
+        SjoinPredicate::Contains => index.sjoin(right, |a, b| a.contains(b)),
+        SjoinPredicate::Overlaps => index.sjoin(right, |a, b| a.overlaps(b)),
+        SjoinPredicate::Crosses => index.sjoin(right, |a, b| a.crosses(b)),
+        SjoinPredicate::Touches => index.sjoin(right, |a, b| a.touches(b)),
+        SjoinPredicate::Covers => index.sjoin(right, |a, b| a.covers(b)),
+        SjoinPredicate::CoveredBy => index.sjoin(right, |a, b| a.covered_by(b)),
+        SjoinPredicate::ContainsProperly => index.sjoin(right, |a, b| a.contains_properly(b)),
+        SjoinPredicate::Dwithin(distance) => index.sjoin_dwithin(right, distance),
+    }
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {

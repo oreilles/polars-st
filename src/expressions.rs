@@ -1182,21 +1182,17 @@ pub fn shortest_line(inputs: &[Series]) -> PolarsResult<Series> {
 
 #[polars_expr(output_type_func=output_type_sjoin)]
 pub fn sjoin(inputs: &[Series], kwargs: args::SjoinKwargs) -> PolarsResult<Series> {
-    use args::SjoinPredicate::Dwithin;
     let inputs = validate_inputs_length::<2>(inputs)?;
     let left = validate_wkb(&inputs[0])?;
     let right = validate_wkb(&inputs[1])?;
-    match kwargs.predicate {
-        Dwithin(distance) => functions::sjoin_dwithin(left, right, distance),
-        predicate => functions::sjoin(left, right, predicate),
-    }
-    .map(|(left, right)| {
-        let left = Series::from_vec("left_index".into(), left);
-        let right = Series::from_vec("right_index".into(), right);
-        StructChunked::from_series("".into(), left.len(), [left, right].iter())
-    })
-    .map_err(to_compute_err)?
-    .map(IntoSeries::into_series)
+    functions::sjoin(left, right, kwargs.predicate)
+        .map(|(left, right)| {
+            let left = Series::from_vec("left_index".into(), left);
+            let right = Series::from_vec("right_index".into(), right);
+            StructChunked::from_series("".into(), left.len(), [left, right].iter())
+        })
+        .map_err(to_compute_err)?
+        .map(IntoSeries::into_series)
 }
 
 #[polars_expr(output_type=Binary)]
