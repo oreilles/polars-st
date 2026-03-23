@@ -77,6 +77,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
             "circularstring",
             "multilinestring",
             "polygon",
+            "rectangle",
         ]
         | None = None,
         schema_overrides: SchemaDict | None = None,
@@ -122,6 +123,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
             "circularstring",
             "multilinestring",
             "polygon",
+            "rectangle",
         ]
         | None = None,
         schema_overrides: SchemaDict | None = None,

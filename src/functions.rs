@@ -1926,35 +1926,36 @@ impl SIndex {
         F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
     {
         Self::query(other, |right_index, right_geom| {
-            let mut left_indicies = vec![];
-            let mut right_indicies = vec![];
+            let mut left_indices = vec![];
+            let mut right_indices = vec![];
             let right_geom_prepared = right_geom.to_prepared_geom()?;
             let extent = right_geom.get_extent()?;
             for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
                 let (left_index, left_geom) = &self.data[hit as usize];
                 if predicate(&right_geom_prepared, left_geom)? {
-                    left_indicies.push(*left_index as _);
-                    right_indicies.push(right_index as _);
+                    left_indices.push(*left_index as _);
+                    right_indices.push(right_index as _);
                 }
             }
-            Ok((left_indicies, right_indicies))
+            Ok((left_indices, right_indices))
         })
     }
 
     fn sjoin_dwithin(&self, other: &BinaryChunked, distance: f64) -> SindexQueryResult {
         Self::query(other, |right_index, right_geom| {
-            let mut left_indicies = vec![];
-            let mut right_indicies = vec![];
+            let mut left_indices = vec![];
+            let mut right_indices = vec![];
             if right_geom.geometry_type()? == Point {
-                let coords = right_geom.get_coord_seq()?.as_buffer(None)?;
-                let (x, y) = (coords[0], coords[1]);
+                let x = right_geom.get_x()?;
+                let y = right_geom.get_y()?;
                 for hit in self.tree.neighbors(x, y, None, Some(distance * distance)) {
                     let (left_index, _) = &self.data[hit as usize];
-                    left_indicies.push(*left_index as _);
-                    right_indicies.push(right_index as _);
+                    left_indices.push(*left_index as _);
+                    right_indices.push(right_index as _);
                 }
-                return Ok((left_indicies, right_indicies));
+                return Ok((left_indices, right_indices));
             }
+
             let right_geom_prepared = right_geom.to_prepared_geom()?;
             let extent = right_geom.get_extent()?;
             let xmin = extent[0] - distance;
@@ -1964,11 +1965,11 @@ impl SIndex {
             for hit in self.tree.search(xmin, ymin, xmax, ymax) {
                 let (left_index, left_geom) = &self.data[hit as usize];
                 if right_geom_prepared.dwithin(left_geom, distance)? {
-                    left_indicies.push(*left_index as _);
-                    right_indicies.push(right_index as _);
+                    left_indices.push(*left_index as _);
+                    right_indices.push(right_index as _);
                 }
             }
-            Ok((left_indicies, right_indicies))
+            Ok((left_indices, right_indices))
         })
     }
 }

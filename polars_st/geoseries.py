@@ -18,6 +18,7 @@ from polars_st.parsing import (
     multipoint,
     point,
     polygon,
+    rectangle,
 )
 from polars_st.utils.internal import is_empty_method
 
@@ -90,6 +91,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             "circularstring",
             "multilinestring",
             "polygon",
+            "rectangle",
         ]
         | None = None,
     ) -> GeoSeries:
@@ -153,6 +155,8 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
                 result = pl.select(multilinestring(s)).to_series()
             case "polygon":
                 result = pl.select(polygon(s)).to_series()
+            case "rectangle":
+                result = pl.select(rectangle(s)).to_series()
         return cast("GeoSeries", result)
 
     def __init__(
