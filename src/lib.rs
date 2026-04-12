@@ -9,6 +9,7 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::redundant_closure_for_method_calls)]
 
 use pyo3::prelude::*;
 use pyo3_polars::PolarsAllocator;
