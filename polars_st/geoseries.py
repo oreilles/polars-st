@@ -179,6 +179,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             "circularstring",
             "multilinestring",
             "polygon",
+            "rectangle",
         ]
         | None = None,
     ) -> None:
