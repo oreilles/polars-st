@@ -1948,10 +1948,15 @@ impl SIndex {
             if right_geom.geometry_type()? == Point {
                 let x = right_geom.get_x()?;
                 let y = right_geom.get_y()?;
+                let right_geom_prepared = right_geom.to_prepared_geom()?;
                 for hit in self.tree.neighbors(x, y, None, Some(distance * distance)) {
-                    let (left_index, _) = &self.data[hit as usize];
-                    left_indices.push(*left_index as _);
-                    right_indices.push(right_index as _);
+                    let (left_index, left_geom) = &self.data[hit as usize];
+                    if left_geom.geometry_type()? == Point
+                        || right_geom_prepared.dwithin(left_geom, distance)?
+                    {
+                        left_indices.push(*left_index as _);
+                        right_indices.push(right_index as _);
+                    }
                 }
                 return Ok((left_indices, right_indices));
             }
