@@ -450,10 +450,13 @@ def test_sjoin_dwithin_point_fast_path():
     result = right.st.sjoin(left, predicate="dwithin", distance=math.hypot(5, 5) - 0.1)
     assert len(result) == 0
 
+
 def test_sjoin_dwithin_one_point_one_not():
-    x = st.GeoDataFrame(['POINT (155719066 205491417)'])
-    y = st.GeoDataFrame(['POLYGON ((155716344.87878543 205492936.71299925, 155719224.59470508 205493723.593793, 155719440.83437797 205492891.7208944, 155718128.48325974 205492549.01458675, 155718291.78149548 205491748.72499204, 155718446.8775367 205490948.43069667, 155718603.46488604 205490136.644121, 155718082.25270897 205489999.75038928, 155717862.28476587 205490985.76510447, 155716642.39474916 205491625.23491108, 155716344.87878543 205492936.71299925))'])
-    assert x.st.sjoin(y, predicate = "dwithin", distance = 600).height == 0
-    assert y.st.sjoin(x, predicate = "dwithin", distance = 600).height == 0
-    assert x.st.sjoin(y, predicate = "dwithin", distance = 700).height == 1
-    assert y.st.sjoin(x, predicate = "dwithin", distance = 700).height == 1
+    x = st.GeoDataFrame(["POINT (155719066 205491417)"])
+    y = st.GeoDataFrame([
+        "POLYGON ((155716344.87878543 205492936.71299925, 155719224.59470508 205493723.593793, 155719440.83437797 205492891.7208944, 155718128.48325974 205492549.01458675, 155718291.78149548 205491748.72499204, 155718446.8775367 205490948.43069667, 155718603.46488604 205490136.644121, 155718082.25270897 205489999.75038928, 155717862.28476587 205490985.76510447, 155716642.39474916 205491625.23491108, 155716344.87878543 205492936.71299925))"
+    ])
+    assert x.st.sjoin(y, predicate="dwithin", distance=600).height == 0
+    assert y.st.sjoin(x, predicate="dwithin", distance=600).height == 0
+    assert x.st.sjoin(y, predicate="dwithin", distance=700).height == 1
+    assert y.st.sjoin(x, predicate="dwithin", distance=700).height == 1
