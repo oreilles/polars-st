@@ -720,7 +720,7 @@ fn difference(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResu
 fn difference_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
+    let it = wkb.iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
         Some(g) => try_reduce(it.flatten(), |a, b| a.difference_prec(&b, g)),
         None => try_reduce(it.flatten(), |a, b| a.difference(&b)),
@@ -746,7 +746,7 @@ fn intersection(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsRe
 fn intersection_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
+    let it = wkb.iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
         Some(g) => try_reduce(it.flatten(), |a, b| a.intersection_prec(&b, g)),
         None => try_reduce(it.flatten(), |a, b| a.intersection(&b)),
@@ -778,7 +778,7 @@ fn symmetric_difference_all(
 ) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;
-    let it = wkb.into_iter().flatten().map(Geometry::new_from_wkb);
+    let it = wkb.iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
         Some(g) => try_reduce(it.flatten(), |a, b| a.sym_difference_prec(&b, g)),
         None => try_reduce(it.flatten(), |a, b| a.sym_difference(&b)),
@@ -821,7 +821,7 @@ fn union(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResult<Se
 fn union_all(inputs: &[Series], kwargs: args::SetOperationKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let geom = validate_wkb(&inputs[0])?;
-    let it = geom.into_iter().flatten().map(Geometry::new_from_wkb);
+    let it = geom.iter().flatten().map(Geometry::new_from_wkb);
     match kwargs.grid_size {
         Some(g) => try_reduce(it.flatten(), |a, b| a.union_prec(&b, g)),
         None => try_reduce(it.flatten(), |a, b| a.union(&b)),
