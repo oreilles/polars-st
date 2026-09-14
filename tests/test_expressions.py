@@ -364,7 +364,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         error = "IllegalArgumentException: Operation not supported by GeometryCollection"
 
     if func.call in {Geo.count_points, Geo.get_point} and geom_type != "LineString":
-        error = "IllegalArgumentException: Argument is not a SimpleCurve"
+        error = "IllegalArgumentException: Argument is not a Curve \\(LineString, CircularString, or CompoundCurve\\)"
 
     if func.call == Geo.is_closed and geom_type not in {
         "LineString",
@@ -424,7 +424,7 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         frame = frame.select(st.geom().st.set_srid(4326))
 
     if error is not None:
-        with pytest.raises(pl.exceptions.ComputeError, match=f"{error}"):
+        with pytest.raises(pl.exceptions.ComputeError, match=error):
             frame.select(func())
         return
 

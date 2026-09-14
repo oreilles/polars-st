@@ -754,6 +754,7 @@ pub fn to_geojson(wkb: &BinaryChunked, params: &ToGeoJsonKwargs) -> GResult<Stri
     })
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<Py<PyAny>>>> {
     fn dict<'py, C>(py: Python<'py>, g: &str, v: C) -> Py<PyAny>
     where
@@ -762,6 +763,15 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<Py<
         let dict = PyDict::new(py);
         dict.set_item("type", g).unwrap();
         dict.set_item("coordinates", v).unwrap();
+        dict.into()
+    }
+    fn geometries_dict<'py, C>(py: Python<'py>, g: &str, v: C) -> Py<PyAny>
+    where
+        C: IntoPyObject<'py>,
+    {
+        let dict = PyDict::new(py);
+        dict.set_item("type", g).unwrap();
+        dict.set_item("geometries", v).unwrap();
         dict.into()
     }
     fn coord_seq<T: Geom>(geom: &T) -> GResult<Vec<Vec<f64>>> {
@@ -816,29 +826,55 @@ pub fn to_python_dict(wkb: &BinaryChunked, py: Python) -> GResult<Vec<Option<Py<
         }
         Ok(coordinates)
     }
-    fn geometrycollection<T: Geom>(py: Python<'_>, collection: &T) -> GResult<Py<PyAny>> {
+    fn geometry_sequence<T: Geom>(
+        py: Python<'_>,
+        type_name: &str,
+        collection: &T,
+    ) -> GResult<Py<PyAny>> {
         let geometries = PyList::empty(py);
         for n in 0..collection.get_num_geometries()? {
             let geometry = collection.get_geometry_n(n)?;
             geometries.append(geom_to_dict(py, &geometry)?).unwrap();
         }
-        let dict = PyDict::new(py);
-        dict.set_item("type", "GeometryCollection").unwrap();
-        dict.set_item("geometries", geometries).unwrap();
-        Ok(dict.into())
+        Ok(geometries_dict(py, type_name, geometries))
+    }
+    fn compoundcurve<T: Geom>(py: Python<'_>, collection: &T) -> GResult<Py<PyAny>> {
+        let curves = PyList::empty(py);
+        for n in 0..collection.get_num_curves()? {
+            let curve = collection.get_curve_n(n)?;
+            curves.append(geom_to_dict(py, &curve)?).unwrap();
+        }
+        Ok(geometries_dict(py, "CompoundCurve", curves))
+    }
+    fn curvepolygon<T: Geom>(py: Python<'_>, polygon: &T) -> GResult<Py<PyAny>> {
+        let geometries = PyList::empty(py);
+        if !polygon.is_empty()? {
+            geometries
+                .append(geom_to_dict(py, &polygon.get_exterior_ring()?)?)
+                .unwrap();
+            for n in 0..polygon.get_num_interior_rings()? {
+                geometries
+                    .append(geom_to_dict(py, &polygon.get_interior_ring_n(n)?)?)
+                    .unwrap();
+            }
+        }
+        Ok(geometries_dict(py, "CurvePolygon", geometries))
     }
     fn geom_to_dict<T: Geom>(py: Python<'_>, geom: &T) -> GResult<Py<PyAny>> {
-        match geom.geometry_type()? {
-            Point => Ok(dict(py, "Point", point(geom)?)),
-            LineString => Ok(dict(py, "LineString", linestring(geom)?)),
-            Polygon => Ok(dict(py, "Polygon", polygon(geom)?)),
-            MultiPoint => Ok(dict(py, "MultiPoint", multipoint(geom)?)),
-            MultiLineString => Ok(dict(py, "MultiLineString", multilinestring(geom)?)),
-            MultiPolygon => Ok(dict(py, "MultiPolygon", multipolygon(geom)?)),
-            GeometryCollection => geometrycollection(py, geom),
-            t => Err(GError::GenericError(format!(
-                "Unsupported geometry type: {t:?}"
-            ))),
+        let geometry_type = geom.geometry_type()?;
+        let type_name = format!("{geometry_type:?}");
+        match geometry_type {
+            Point => Ok(dict(py, &type_name, point(geom)?)),
+            LineString | CircularString | LinearRing => Ok(dict(py, &type_name, linestring(geom)?)),
+            Polygon => Ok(dict(py, &type_name, polygon(geom)?)),
+            MultiPoint => Ok(dict(py, &type_name, multipoint(geom)?)),
+            MultiLineString => Ok(dict(py, &type_name, multilinestring(geom)?)),
+            MultiPolygon => Ok(dict(py, &type_name, multipolygon(geom)?)),
+            CompoundCurve => compoundcurve(py, geom),
+            CurvePolygon => curvepolygon(py, geom),
+            MultiCurve | MultiSurface | GeometryCollection => {
+                geometry_sequence(py, &type_name, geom)
+            }
         }
     }
     let to = |wkb| geom_to_dict(py, &Geometry::new_from_wkb(wkb)?);
