@@ -849,6 +849,11 @@ class GeoSeriesNameSpace:
         ...
 
     @dispatch
+    def split(self, edge: IntoGeoExprColumn) -> GeoSeries:
+        """See [`GeoExprNameSpace.split`][polars_st.GeoExprNameSpace.split]."""
+        ...
+
+    @dispatch
     def shortest_line(self, other: IntoGeoExprColumn) -> GeoSeries:
         """See [`GeoExprNameSpace.shortest_line`][polars_st.GeoExprNameSpace.shortest_line]."""
         ...

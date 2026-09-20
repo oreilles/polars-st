@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 [dependencies]
 crs-definitions = { git = "https://github.com/oreilles/crs-definitions", branch = "main" }
 geo-index = "0.3.4"
-geos = { version = "11.1.2", features = ["static", "v3_15_0"]}
+geos = { version = "11.2.2", features = ["static", "v3_15_0"]}
 num_enum = "0.7.3"
 polars = "0.55.2 "   
 polars-arrow = "0.55.2 "

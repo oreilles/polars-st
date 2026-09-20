@@ -1895,6 +1895,14 @@ pub fn snap(
     })
 }
 
+pub fn split(a: &BinaryChunked, b: &BinaryChunked) -> GResult<BinaryChunked> {
+    broadcast_try_binary_elementwise_values(a, b, |a, b| {
+        let a = Geometry::new_from_wkb(a)?;
+        let b = Geometry::new_from_wkb(b)?;
+        Geometry::split(&a, &b)?.to_ewkb()
+    })
+}
+
 pub fn voronoi_polygons(wkb: &BinaryChunked, params: &VoronoiKwargs) -> GResult<BinaryChunked> {
     let extend_to = params
         .extend_to

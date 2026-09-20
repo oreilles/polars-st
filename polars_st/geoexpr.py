@@ -799,6 +799,11 @@ class GeoExprNameSpace:
     ) -> GeoExpr: ...
 
     @register_plugin()
+    def split(self, edge: IntoGeoExprColumn) -> GeoExpr:
+        """Split a geometry by another one."""
+        ...
+
+    @register_plugin()
     def shortest_line(self, other: IntoGeoExprColumn) -> GeoExpr:
         """Return the shortest line between each geometry and other."""
         ...

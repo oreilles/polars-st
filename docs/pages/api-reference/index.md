@@ -130,6 +130,7 @@ hide:
 | `minimum_rotated_rectangle` | | [`root`][polars_st.minimum_rotated_rectangle], [`Expr`][polars_st.GeoExprNameSpace.minimum_rotated_rectangle], [`Series`][polars_st.GeoSeriesNameSpace.minimum_rotated_rectangle] | |
 | `maximum_inscribed_circle` | Returns the maximum inscribed circle of a polygonal geometry | [`root`][polars_st.maximum_inscribed_circle], [`Expr`][polars_st.GeoExprNameSpace.maximum_inscribed_circle], [`Series`][polars_st.GeoSeriesNameSpace.maximum_inscribed_circle] | |
 | `snap` | | [`Expr`][polars_st.GeoExprNameSpace.snap], [`Series`][polars_st.GeoSeriesNameSpace.snap] |
+| `split` | | [`Expr`][polars_st.GeoExprNameSpace.split], [`Series`][polars_st.GeoSeriesNameSpace.split] |
 | `shortest_line` | Return the shortest line between each geometry and other. | [`Expr`][polars_st.GeoExprNameSpace.shortest_line], [`Series`][polars_st.GeoSeriesNameSpace.shortest_line] |
 | `sjoin` | Perform a spatial join operation with another DataFrame. | [`DataFrame`][polars_st.GeoDataFrameNameSpace.sjoin], [`LazyFrame`][polars_st.GeoLazyFrameNameSpace.sjoin] |
 | **Affine transforms** | | |

@@ -1035,6 +1035,14 @@ pub fn snap(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type=Binary)]
+pub fn split(inputs: &[Series]) -> PolarsResult<Series> {
+    let inputs = validate_inputs_length::<2>(inputs)?;
+    let left = validate_wkb(&inputs[0])?;
+    let right = validate_wkb(&inputs[1])?;
+    wrap!(split(left, right))
+}
+
+#[polars_expr(output_type=Binary)]
 pub fn voronoi_polygons(inputs: &[Series], kwargs: args::VoronoiKwargs) -> PolarsResult<Series> {
     let inputs = validate_inputs_length::<1>(inputs)?;
     let wkb = validate_wkb(&inputs[0])?;

@@ -210,6 +210,7 @@ functions = [
     Function(Geo.shortest_line, pl.Binary(), {"other": dummy_point}),
     Function(Geo.count_coordinates, pl.UInt32()),
     Function(Geo.coordinates, pl.List(pl.List(pl.Float64))),
+    Function(Geo.split, pl.Binary(), {"edge": dummy_line}),
 ]
 
 
@@ -399,6 +400,12 @@ def test_functions_all_types_frame(frame: pl.DataFrame, func: Function):  # noqa
         error = "IllegalArgumentException: LinearIterator only supports lineal geometry components"
         if func.args["normalized"] and geom_type in {"Point", "MultiPoint"} and not geom_empty:
             error = "IllegalArgumentException: LinearLocation::getCoordinate only works with LineString geometries"
+
+    if func.call == Geo.split and (
+        geom_type in {"Point", "MultiPoint"}
+        or (geom_type == "GeometryCollection" and not geom_empty)
+    ):
+        error = "Input geometry must be linear or polygonal."
 
     if func.call == Geo.coverage_union and geom_type not in {
         "MultiPoint",
