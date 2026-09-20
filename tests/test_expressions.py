@@ -460,3 +460,18 @@ def test_sjoin_dwithin_one_point_one_not():
     assert y.st.sjoin(x, predicate="dwithin", distance=600).height == 0
     assert x.st.sjoin(y, predicate="dwithin", distance=700).height == 1
     assert y.st.sjoin(x, predicate="dwithin", distance=700).height == 1
+
+
+def test_sjoin_streaming_engine():
+    """Sjoin must give the same result on the streaming engine as on the in-memory one (#70)."""
+    points = [f"POINT ({i} 0)" for i in range(1000)]
+    left = st.GeoLazyFrame({"id": range(1000), "geometry": points})
+    right = st.GeoLazyFrame({"id": range(10), "geometry": points[::100]})
+    query = left.st.sjoin(right, predicate="dwithin", distance=0.5)
+    expected = [(100 * i, i) for i in range(10)]
+
+    in_memory = query.collect(engine="in-memory")
+    assert in_memory.select("id", "id_right").sort("id").rows() == expected
+
+    streaming = query.collect(engine="streaming")
+    assert streaming.select("id", "id_right").sort("id").rows() == expected
