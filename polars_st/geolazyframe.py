@@ -126,7 +126,8 @@ class GeoLazyFrameNameSpace:
                     function_name="sjoin",
                     args=["_sjoin_geom_left", "_sjoin_geom_right"],
                     kwargs={"predicate": {"type": predicate, "param": distance}},
-                    is_elementwise=True,
+                    is_elementwise=False,
+                    changes_length=True,
                 ),
             )
             .select(
