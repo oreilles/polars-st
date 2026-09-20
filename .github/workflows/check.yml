@@ -20,7 +20,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
-        run: uv sync --no-install-project
+        run: uv sync --all-extras --no-install-project
       - name: Run Ruff formatter
         run: ruff format --check
       - name: Run Ruff linter
@@ -37,7 +37,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with: { activate-environment: "true" }
       - name: Install dependencies
-        run: uv sync --no-install-project
+        run: uv sync --all-extras --no-install-project
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
       - name: Build project

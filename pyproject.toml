@@ -14,17 +14,24 @@ requires-python = ">=3.10"
 dynamic = ["version", "license"]
 dependencies = [
     "polars>=1.38.1",
-    "pyarrow>=23.0.1",
     "pyogrio>=0.12.1",
+]
+
+[project.optional-dependencies]
+pyarrow = [
+    "pyarrow>=25.0.1",
+]
+plot = [
+    "altair>=6.0.0",
+    "lonboard>=0.13.0",
+]
+geopandas = [
+    "geopandas>=1.1.3",
 ]
 
 [dependency-groups]
 dev = [
-    "altair>=6.0.0",
-    "geodatasets>=2026.1.0",
-    "geopandas>=1.1.3",
     "ipykernel>=7.2.0",
-    "lonboard>=0.13.0",
     "maturin>=1.12.6",
     "mkdocs-material>=9.7.4",
     "mkdocs>=1.6.1,<2.0",
