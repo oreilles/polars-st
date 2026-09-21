@@ -260,9 +260,13 @@ def test_functions_empty_frame_agg(frame: pl.DataFrame, func: Function):
     # Should file a bug report in polars for that (cannot concatenate empty list of arrays)
     if func.call == Geo.bounds:
         return
+    # Skip since List(Object) is not supported
+    if func.call in {Geo.to_dict, Geo.to_shapely}:
+        return
     result = frame.group_by(0).agg(func()).drop("literal")
     assert result.schema == pl.Schema([("geometry", pl.List(func.dtype))])
-    assert len(result) == 0
+    assert len(result) == 1
+    assert result.get_column("geometry").list.len().item() == 0
 
 
 @pytest.mark.parametrize("frame", [none_frame])
@@ -288,7 +292,8 @@ def test_functions_empty_list_frame(frame: pl.DataFrame, func: Function):
         return
     result = frame.select(st.geom().list.eval(func.call(st.element().st, **func.args)))
     assert result.schema == pl.Schema([("geometry", pl.List(func.dtype))])
-    assert len(result) == 0
+    assert len(result) == 1
+    assert result.get_column("geometry").list.len().item() == 0
 
 
 @pytest.mark.parametrize("frame", [none_frame.group_by(0).agg(st.geom())])
@@ -482,3 +487,12 @@ def test_sjoin_streaming_engine():
 
     streaming = query.collect(engine="streaming")
     assert streaming.select("id", "id_right").sort("id").rows() == expected
+
+
+def test_sjoin_no_deprecation_warning():
+    """Sjoin must not rely on the deprecated unequal-height `how="horizontal"` concat."""
+    left = st.GeoDataFrame(["POINT (0 0)", "POINT (1 0)"])
+    right = st.GeoDataFrame(["POINT (0 0)"])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=".*horizontal.*", category=DeprecationWarning)
+        assert left.st.sjoin(right).height == 1

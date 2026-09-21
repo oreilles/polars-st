@@ -118,7 +118,7 @@ class GeoLazyFrameNameSpace:
                     self._lf.select(_sjoin_geom_left=left_expr),
                     other.select(_sjoin_geom_right=right_expr),
                 ],
-                how="horizontal",
+                how="horizontal_extend",
             )
             .select(
                 register_plugin_function(
