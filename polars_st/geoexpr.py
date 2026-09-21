@@ -61,7 +61,7 @@ def register_plugin(is_aggregation: bool = False, cast: pl.DataType | None = Non
                 is_elementwise=not is_aggregation,
                 returns_scalar=is_aggregation,
             )
-            return result.cast(cast) if cast is not None else result
+            return result.cat.to(cast) if cast is not None else result
 
         return wrapper
 
