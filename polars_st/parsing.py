@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "circularstring",
-    "circularstring",
     "from_ewkt",
     "from_geojson",
     "from_shapely",

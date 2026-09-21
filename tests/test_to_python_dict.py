@@ -151,7 +151,7 @@ def test_to_dict_multicurve_empty():
 
 def test_to_dict_multisurface():
     gs = st.GeoSeries([
-        "MULTISURFACE (CURVEPOLYGON (CIRCULARSTRING (0 0, 1 1, 2 0, 1 -1, 0 0)), ((10 10, 11 10, 11 11, 10 11, 10 10)))"  # noqa: E501
+        "MULTISURFACE (CURVEPOLYGON (CIRCULARSTRING (0 0, 1 1, 2 0, 1 -1, 0 0)), ((10 10, 11 10, 11 11, 10 11, 10 10)))",  # noqa: E501
     ])
     assert gs.st.to_dict().item() == {
         "type": "MultiSurface",

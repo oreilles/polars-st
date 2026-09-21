@@ -468,7 +468,7 @@ class GeoDataFrameNameSpace:
         """
         if geometry_name is not None:
             geometry_types = self._df.select(
-                geom(geometry_name).st.geometry_type().unique().drop_nulls()
+                geom(geometry_name).st.geometry_type().unique().drop_nulls(),
             )
             geometry_type = geometry_types.item() if len(geometry_types) == 1 else "Unknown"
 

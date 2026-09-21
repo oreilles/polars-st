@@ -14,7 +14,7 @@ Polars ST provides spatial operations on [Polars](https://github.com/pola-rs/pol
 ...         "POLYGON((0 0, 0 4, 4 2, 0 0))",
 ...         "POLYGON((4 0, 4 4, 0 2, 4 0))",
 ...         "POLYGON((0 0, 2 2, 2 0, 0 0))",
-...     ]
+...     ],
 ... })
 >>> gdf = gdf.group_by("category").agg(st.intersection_all()).with_columns(area=st.area())
 >>> gdf.with_columns(st.to_wkt())

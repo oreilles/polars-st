@@ -74,10 +74,10 @@ lint.ignore = [
     "PIE790", # Unnecessary `...` literal
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
     "PLR0913", # Too many arguments in function definition
-    "ISC001",  # Single line implicit string concatenation (unexpected behavior)
-    "COM812",  # Missing trailing comma (unexpected behavior)
     "D1", # Missing docstring in public module
     "PLC0415", # `import` should be at the top-level of a file
+    "PLR0917", # Too many positional arguments
+    "CPY001", # Missing copyright notice at top of file
 ]
 
 [tool.ruff.format]
