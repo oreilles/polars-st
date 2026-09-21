@@ -30,14 +30,14 @@ shapely = ["shapely>=2.1.2"]
 
 [dependency-groups]
 dev = [
-    "ipykernel>=7.2.0",
-    "maturin>=1.12.6",
-    "mkdocs-material>=9.7.4",
+    "ipykernel>=7.3.0",
+    "maturin>=1.13.1",
+    "mkdocs-material>=9.7.7",
     "mkdocs>=1.6.1,<2.0",
-    "mkdocstrings-python>=2.0.3",
-    "pyright>=1.1.408",
-    "pytest>=9.0.2",
-    "ruff>=0.15.5",
+    "mkdocstrings-python>=2.0.8",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.16.8",
 ]
 
 [project.urls]
