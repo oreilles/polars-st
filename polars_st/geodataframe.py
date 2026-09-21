@@ -530,6 +530,9 @@ class GeoDataFrameNameSpace:
             {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[0.0,0.0]},"properties":{"name":"Alice"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}]}
             <BLANKLINE>
         """
+        if self._df.select(geom(geometry_name).st.geometry_type()).drop_nulls().n_unique() > 1:
+            msg = "`write_geojson` requires all geometry types to be identical."
+            raise ValueError(msg)
         geometries = self._df.select(geom(geometry_name).st.to_geojson()).to_series()
         return (
             self._df
@@ -583,6 +586,9 @@ class GeoDataFrameNameSpace:
             {"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":{"name":"Bob"}}
             <BLANKLINE>
         """
+        if self._df.select(geom(geometry_name).st.geometry_type()).drop_nulls().n_unique() > 1:
+            msg = "`write_ndgeojson` requires all geometry types to be identical."
+            raise ValueError(msg)
         geometries = self._df.select(geom(geometry_name).st.to_geojson()).to_series()
         return self._df.select(
             type=pl.lit("Feature"),
