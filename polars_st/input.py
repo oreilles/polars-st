@@ -137,20 +137,14 @@ def read_file(
         return_fids=return_fids,
     )
 
-    import pyarrow as pa
-
     geometry_name = metadata["geometry_name"] or "wkb_geometry"
+    df = cast("pl.DataFrame", pl.from_arrow(table))
     if geometry_name in table.column_names:
-        geometry_index = table.schema.get_field_index(geometry_name)
-        table = table.cast(table.schema.set(geometry_index, pa.field(geometry_name, pa.binary())))
-        res = cast("pl.DataFrame", pl.from_arrow(table))
         if (crs := metadata["crs"]) and (srid := get_crs_srid_or_warn(crs)):
-            res = res.with_columns(geom(geometry_name).st.set_srid(srid))
+            df = df.with_columns(geom(geometry_name).st.set_srid(srid))
         if not metadata["geometry_name"]:
-            res = res.rename({"wkb_geometry": "geometry"})
-    else:
-        res = cast("pl.DataFrame", pl.from_arrow(table))
-    return st(res)._df  # noqa: SLF001
+            df = df.rename({"wkb_geometry": "geometry"})
+    return cast("GeoDataFrame", df)
 
 
 @overload
@@ -209,14 +203,14 @@ def from_geopandas(
             nan_to_null=nan_to_null,
             include_index=include_index,
         )
-        res = cast("pl.Series", res)
+        res = cast("GeoSeries", res)
         if (crs := data.crs) and (srid := get_crs_srid_or_warn(str(crs))):
             res = st(res).set_srid(srid)
-        return st(res)._series  # noqa: SLF001
+        return res
 
     res = cast("pl.DataFrame", res).with_columns(
         geom(str(col)).st.set_srid(srid)
         for col in data.dtypes.index[data.dtypes == "geometry"]
         if (crs := data[col].crs) and (srid := get_crs_srid_or_warn(str(crs)))
     )
-    return st(res)._df  # noqa: SLF001
+    return cast("GeoDataFrame", res)

@@ -18,16 +18,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pyarrow = [
-    "pyarrow>=25.0.1",
-]
 plot = [
     "altair>=6.0.0",
     "lonboard>=0.13.0",
 ]
 geopandas = [
-    "geopandas>=1.1.3",
+    "geopandas>=1.1.0",
+    "pyarrow>=10.0.0",
 ]
+shapely = ["shapely>=2.1.2"]
 
 [dependency-groups]
 dev = [
@@ -39,7 +38,6 @@ dev = [
     "pyright>=1.1.408",
     "pytest>=9.0.2",
     "ruff>=0.15.5",
-    "shapely>=2.1.2",
 ]
 
 [project.urls]
