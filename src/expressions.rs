@@ -130,13 +130,23 @@ fn validate_inputs_length<const M: usize>(inputs: &[Series]) -> PolarsResult<&[S
 }
 
 fn validate_wkb(s: &Series) -> PolarsResult<&BinaryChunked> {
-    s.binary()
-        .map_err(|_| polars_err!(InvalidOperation: "invalid dtype for geoseries `{}`: expected `binary`, got `{}`", s.dtype(), s.name()))
+    match s.dtype() {
+        D::Binary => unsafe {
+            Ok(&*(s.as_ref() as *const dyn SeriesTrait as *const BinaryChunked))
+        },
+        D::Extension(et, dt) if et.name() == "geoarrow.wkb" && **dt == D::Binary => unsafe {
+            let ext = &*(s.as_ref() as *const dyn SeriesTrait as *const ExtensionChunked);
+            Ok(&*(ext.storage().as_ref() as *const dyn SeriesTrait as *const BinaryChunked))
+        },
+        _ => Err(
+            polars_err!(InvalidOperation: "invalid dtype for geoseries `{}`: expected `ext[geoarrow.wkb]`, got `{}`", s.name(), s.dtype()),
+        ),
+    }
 }
 
 macro_rules! extract {
     ($out:ident, $s:expr, $dt:expr, $f:ident) => {
-        let type_err = |_| polars_err!(InvalidOperation:"invalid dtype for series `{}`: `{}`", $s.dtype(), $s.name());
+        let type_err = |_| polars_err!(InvalidOperation:"invalid dtype for series `{}`: `{}`", $s.name(), $s.dtype());
         let tmp = $s.strict_cast(&$dt).map_err(type_err)?;
         let $out = tmp.$f().unwrap();
     };

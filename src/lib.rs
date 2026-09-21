@@ -16,7 +16,6 @@ use pyo3_polars::PolarsAllocator;
 
 mod args;
 mod arity;
-mod arrow;
 mod crs;
 mod expressions;
 mod functions;

@@ -102,7 +102,10 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
             return cast("GeoSeries", s.cast(pl.Binary))
         if geometry_format is None:
             match s.dtype:
-                case pl.Binary:
+                case pl.BaseExtension():
+                    if s.dtype.ext_name() == "geoarrow.wkb" and s.dtype.ext_storage() == pl.Binary:
+                        geometry_format = "wkb"
+                case pl.Binary():
                     geometry_format = "wkb"
                 case pl.String:
                     first_value: str | None = s[cast("int", s.is_not_null().arg_max())]
@@ -114,17 +117,17 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
                         geometry_format = "ewkt"
                     else:
                         geometry_format = "wkt"
-                case pl.Object:
+                case pl.Object():
                     geometry_format = "shapely"
-                case pl.List | pl.Array:
+                case pl.List() | pl.Array():
                     inner = s.dtype.inner
                     if inner.is_numeric():
                         geometry_format = "point"
-                    elif inner in (pl.List, pl.Array):
+                    elif isinstance(inner, (pl.List, pl.Array)):
                         inner = inner.inner
                         if inner.is_numeric():
                             geometry_format = "linestring"
-                        elif inner in (pl.List, pl.Array):
+                        elif isinstance(inner, (pl.List, pl.Array)):
                             inner = inner.inner
                             if inner.is_numeric():
                                 geometry_format = "polygon"
