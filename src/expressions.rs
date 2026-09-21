@@ -130,13 +130,15 @@ fn validate_inputs_length<const M: usize>(inputs: &[Series]) -> PolarsResult<&[S
 }
 
 fn validate_wkb(s: &Series) -> PolarsResult<&BinaryChunked> {
+    unsafe fn get_unchecked<T>(s: &Series) -> &T {
+        &*std::ptr::from_ref::<dyn SeriesTrait>(s.as_ref()).cast::<T>()
+    }
+
     match s.dtype() {
-        D::Binary => unsafe {
-            Ok(&*(s.as_ref() as *const dyn SeriesTrait as *const BinaryChunked))
-        },
+        D::Binary => unsafe { Ok(get_unchecked(s)) },
         D::Extension(et, dt) if et.name() == "geoarrow.wkb" && **dt == D::Binary => unsafe {
-            let ext = &*(s.as_ref() as *const dyn SeriesTrait as *const ExtensionChunked);
-            Ok(&*(ext.storage().as_ref() as *const dyn SeriesTrait as *const BinaryChunked))
+            let ext = get_unchecked::<ExtensionChunked>(s);
+            Ok(get_unchecked(ext.storage()))
         },
         _ => Err(
             polars_err!(InvalidOperation: "invalid dtype for geoseries `{}`: expected `ext[geoarrow.wkb]`, got `{}`", s.name(), s.dtype()),
