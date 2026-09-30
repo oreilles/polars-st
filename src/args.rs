@@ -180,6 +180,7 @@ pub enum SjoinPredicate {
     CoveredBy,
     ContainsProperly,
     Dwithin(f64),
+    RelatePattern(String),
 }
 
 #[derive(Deserialize)]

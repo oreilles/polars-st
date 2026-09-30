@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import wraps
 from inspect import signature
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, ParamSpec, cast
+from typing import TYPE_CHECKING, ParamSpec, cast
 
 import polars as pl
 from polars._utils.parse import parse_into_expression
@@ -25,10 +25,17 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from polars_st.typing import (
+        ByteOrder,
+        CapStyle,
         IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
         IntoNumericExpr,
+        JoinStyle,
+        MakeValidMethod,
+        OutputDimension,
+        PrecisionMode,
+        TransformOrigin,
     )
 
     P = ParamSpec("P")
@@ -284,7 +291,7 @@ class GeoExprNameSpace:
     def set_precision(
         self,
         grid_size: IntoNumericExpr,
-        mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
+        mode: PrecisionMode = "valid_output",
     ) -> GeoExpr:
         """Set the precision of each geometry to a certain grid size."""
         ...
@@ -357,7 +364,7 @@ class GeoExprNameSpace:
         self,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> pl.Expr:
         """Serialize each geometry as WKT (Well-Known Text).
@@ -380,7 +387,7 @@ class GeoExprNameSpace:
         self,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> pl.Expr:
         """Serialize each geometry as EWKT (Extended Well-Known Text).
@@ -401,8 +408,8 @@ class GeoExprNameSpace:
     @register_plugin()
     def to_wkb(
         self,
-        output_dimension: Literal[2, 3, 4] = 3,
-        byte_order: Literal[0, 1] | None = None,
+        output_dimension: OutputDimension = 3,
+        byte_order: ByteOrder | None = None,
         include_srid: bool = False,
     ) -> pl.Expr:
         """Serialize each geometry as WKB (Well-Known Binary).
@@ -673,8 +680,8 @@ class GeoExprNameSpace:
         self,
         distance: IntoNumericExpr,
         quad_segs: int = 8,
-        cap_style: Literal["round", "square", "flat"] = "round",
-        join_style: Literal["round", "mitre", "bevel"] = "round",
+        cap_style: CapStyle = "round",
+        join_style: JoinStyle = "round",
         mitre_limit: float = 5.0,
         single_sided: bool = False,
     ) -> GeoExpr:
@@ -686,7 +693,7 @@ class GeoExprNameSpace:
         self,
         distance: IntoNumericExpr,
         quad_segs: int = 8,
-        join_style: Literal["round", "mitre", "bevel"] = "round",
+        join_style: JoinStyle = "round",
         mitre_limit: float = 5.0,
     ) -> GeoExpr:
         """Return a line at a given distance of each geometry."""
@@ -734,7 +741,7 @@ class GeoExprNameSpace:
     @register_plugin()
     def make_valid(
         self,
-        method: Literal["linework", "structure"] = "linework",
+        method: MakeValidMethod = "linework",
         keep_collapsed: bool = True,
     ) -> GeoExpr: ...
 
@@ -852,7 +859,7 @@ class GeoExprNameSpace:
     def rotate(
         self,
         angle: IntoNumericExpr,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoExpr: ...
 
     def scale(
@@ -860,7 +867,7 @@ class GeoExprNameSpace:
         x: IntoNumericExpr = 1.0,
         y: IntoNumericExpr = 1.0,
         z: IntoNumericExpr = 1.0,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,
@@ -875,7 +882,7 @@ class GeoExprNameSpace:
         x: IntoNumericExpr = 0.0,
         y: IntoNumericExpr = 0.0,
         z: IntoNumericExpr = 0.0,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoExpr:
         return register_plugin_function(
             plugin_path=Path(__file__).parent,

@@ -12,20 +12,11 @@ description = "Spatial extension for Polars DataFrames"
 readme = "README.md"
 requires-python = ">=3.10"
 dynamic = ["version", "license"]
-dependencies = [
-    "polars>=1.42.1",
-    "pyogrio>=0.12.1",
-]
+dependencies = ["polars>=1.42.1", "pyogrio>=0.12.1"]
 
 [project.optional-dependencies]
-plot = [
-    "altair>=6.0.0",
-    "lonboard>=0.13.0",
-]
-geopandas = [
-    "geopandas>=1.1.0",
-    "pyarrow>=10.0.0",
-]
+plot = ["altair>=6.0.0", "lonboard>=0.13.0"]
+geopandas = ["geopandas>=1.1.0", "pyarrow>=10.0.0"]
 shapely = ["shapely>=2.1.2"]
 
 [dependency-groups]
@@ -46,7 +37,11 @@ Documentation = "https://oreilles.github.io/polars-st/"
 Issues = "https://github.com/Oreilles/polars-st/issues"
 
 [tool.uv]
-cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "**/*.rs" },
+]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
@@ -64,20 +59,21 @@ exclude = [
 ]
 
 [tool.ruff]
-target-version="py310"
+target-version = "py310"
 line-length = 100
 lint.pydocstyle.convention = "google"
 lint.select = ["ALL"]
 lint.fixable = ["ALL"]
 lint.ignore = [
-    "FBT", # Boolean traps
-    "PIE790", # Unnecessary `...` literal
-    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
-    "PLR0913", # Too many arguments in function definition
-    "D1", # Missing docstring in public module
+    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
+    "COM812",  # Missing trailing comma (unexpected behavior)
+    "CPY001",  # Missing copyright notice at top of file
+    "D1",      # Missing docstring in public module
+    "FBT",     # Boolean traps
+    "PIE790",  # Unnecessary `...` literal
     "PLC0415", # `import` should be at the top-level of a file
+    "PLR0913", # Too many arguments in function definition
     "PLR0917", # Too many positional arguments
-    "CPY001", # Missing copyright notice at top of file
 ]
 
 [tool.ruff.format]
@@ -86,5 +82,5 @@ preview = true
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "S101", # Assert
-    "ANN", # Type annotations
+    "ANN",  # Type annotations
 ]

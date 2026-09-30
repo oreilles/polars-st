@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from polars_st.selectors import geom
 
@@ -9,14 +9,20 @@ if TYPE_CHECKING:
 
     import polars as pl
 
+    from polars_st.geoexpr import GeoExpr
     from polars_st.geometry import CoordinateType, GeometryType
     from polars_st.typing import (
+        ByteOrder,
+        CapStyle,
         IntoExprColumn,
         IntoIntegerExpr,
         IntoNumericExpr,
+        JoinStyle,
+        MakeValidMethod,
+        OutputDimension,
+        PrecisionMode,
+        TransformOrigin,
     )
-
-    from .geoexpr import GeoExpr
 
 
 __all__ = [
@@ -235,7 +241,7 @@ def precision(*columns: str) -> pl.Expr:
 def set_precision(
     *columns: str,
     grid_size: IntoNumericExpr,
-    mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
+    mode: PrecisionMode = "valid_output",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[set_precision(...)][polars_st.GeoExprNameSpace.set_precision]</code>."""  # noqa: E501
     return geom(*columns).st.set_precision(grid_size, mode)
@@ -260,7 +266,7 @@ def to_wkt(
     *columns: str,
     rounding_precision: int | None = 6,
     trim: bool = True,
-    output_dimension: Literal[2, 3, 4] = 3,
+    output_dimension: OutputDimension = 3,
     old_3d: bool = False,
 ) -> pl.Expr:
     """Syntactic sugar for <code>st.geom(columns).st.[to_wkt(...)][polars_st.GeoExprNameSpace.to_wkt]</code>."""  # noqa: E501
@@ -271,7 +277,7 @@ def to_ewkt(
     *columns: str,
     rounding_precision: int | None = 6,
     trim: bool = True,
-    output_dimension: Literal[2, 3, 4] = 3,
+    output_dimension: OutputDimension = 3,
     old_3d: bool = False,
 ) -> pl.Expr:
     """Syntactic sugar for <code>st.geom(columns).st.[to_ewkt(...)][polars_st.GeoExprNameSpace.to_ewkt]</code>."""  # noqa: E501
@@ -280,8 +286,8 @@ def to_ewkt(
 
 def to_wkb(
     *columns: str,
-    output_dimension: Literal[2, 3, 4] = 3,
-    byte_order: Literal[0, 1] | None = None,
+    output_dimension: OutputDimension = 3,
+    byte_order: ByteOrder | None = None,
     include_srid: bool = False,
 ) -> pl.Expr:
     """Syntactic sugar for <code>st.geom(columns).st.[to_wkb(...)][polars_st.GeoExprNameSpace.to_wkb]</code>."""  # noqa: E501
@@ -377,8 +383,8 @@ def buffer(
     *columns: str,
     distance: IntoNumericExpr,
     quad_segs: int = 8,
-    cap_style: Literal["round", "square", "flat"] = "round",
-    join_style: Literal["round", "mitre", "bevel"] = "round",
+    cap_style: CapStyle = "round",
+    join_style: JoinStyle = "round",
     mitre_limit: float = 5.0,
     single_sided: bool = False,
 ) -> GeoExpr:
@@ -397,7 +403,7 @@ def offset_curve(
     *columns: str,
     distance: IntoNumericExpr,
     quad_segs: int = 8,
-    join_style: Literal["round", "mitre", "bevel"] = "round",
+    join_style: JoinStyle = "round",
     mitre_limit: float = 5.0,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[offset_curve(...)][polars_st.GeoExprNameSpace.offset_curve]</code>."""  # noqa: E501
@@ -451,7 +457,7 @@ def build_area(*columns: str) -> GeoExpr:
 
 def make_valid(
     *columns: str,
-    method: Literal["linework", "structure"] = "linework",
+    method: MakeValidMethod = "linework",
     keep_collapsed: bool = True,
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[make_valid()][polars_st.GeoExprNameSpace.make_valid]</code>."""  # noqa: E501
@@ -535,7 +541,7 @@ def translate(
 def rotate(
     *columns: str,
     angle: IntoNumericExpr,
-    origin: Literal["center", "centroid"] | Sequence[float] = "center",
+    origin: TransformOrigin | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[rotate(...)][polars_st.GeoExprNameSpace.rotate]</code>."""  # noqa: E501
     return geom(*columns).st.rotate(angle, origin)
@@ -546,7 +552,7 @@ def scale(
     x: IntoNumericExpr = 1.0,
     y: IntoNumericExpr = 1.0,
     z: IntoNumericExpr = 1.0,
-    origin: Literal["center", "centroid"] | Sequence[float] = "center",
+    origin: TransformOrigin | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[scale(...)][polars_st.GeoExprNameSpace.scale]</code>."""  # noqa: E501
     return geom(*columns).st.scale(x, y, z, origin)
@@ -557,7 +563,7 @@ def skew(
     x: IntoNumericExpr = 0.0,
     y: IntoNumericExpr = 0.0,
     z: IntoNumericExpr = 0.0,
-    origin: Literal["center", "centroid"] | Sequence[float] = "center",
+    origin: TransformOrigin | Sequence[float] = "center",
 ) -> GeoExpr:
     """Syntactic sugar for <code>st.geom(columns).st.[skew(...)][polars_st.GeoExprNameSpace.skew]</code>."""  # noqa: E501
     return geom(*columns).st.skew(x, y, z, origin)

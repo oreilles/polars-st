@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Literal, ParamSpec, cast
+from typing import TYPE_CHECKING, Any, ParamSpec, cast
 
 import polars as pl
 from polars.api import register_series_namespace
@@ -35,16 +35,23 @@ if TYPE_CHECKING:
         ScatterplotLayerKwargs,
     )
     from lonboard.types.map import MapKwargs
-    from polars._typing import PolarsDataType
+    from polars._typing import ArrayLike, PolarsDataType
     from typing_extensions import Unpack
 
     from polars_st.geometry import CoordinateType, GeometryType
     from polars_st.typing import (
-        ArrayLike,
+        ByteOrder,
+        CapStyle,
+        GeometryFormat,
         IntoExprColumn,
         IntoGeoExprColumn,
         IntoIntegerExpr,
         IntoNumericExpr,
+        JoinStyle,
+        MakeValidMethod,
+        OutputDimension,
+        PrecisionMode,
+        TransformOrigin,
     )
 
     P = ParamSpec("P")
@@ -79,21 +86,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
-        geometry_format: Literal[
-            "wkb",
-            "wkt",
-            "ewkt",
-            "geojson",
-            "shapely",
-            "point",
-            "multipoint",
-            "linestring",
-            "circularstring",
-            "multilinestring",
-            "polygon",
-            "rectangle",
-        ]
-        | None = None,
+        geometry_format: GeometryFormat | None = None,
     ) -> GeoSeries:
         s = pl.Series(name, values, dtype, strict=strict, nan_to_null=nan_to_null)
         if s.name == "" and not (isinstance(name, str) and name == ""):
@@ -170,21 +163,7 @@ class GeoSeries(pl.Series, metaclass=GeoSeriesMeta):
         *,
         strict: bool = True,
         nan_to_null: bool = False,
-        geometry_format: Literal[
-            "wkb",
-            "wkt",
-            "ewkt",
-            "geojson",
-            "shapely",
-            "point",
-            "multipoint",
-            "linestring",
-            "circularstring",
-            "multilinestring",
-            "polygon",
-            "rectangle",
-        ]
-        | None = None,
+        geometry_format: GeometryFormat | None = None,
     ) -> None:
         """Create a new GeoSeries.
 
@@ -382,7 +361,7 @@ class GeoSeriesNameSpace:
     def set_precision(
         self,
         grid_size: IntoNumericExpr,
-        mode: Literal["valid_output", "no_topo", "keep_collapsed"] = "valid_output",
+        mode: PrecisionMode = "valid_output",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.set_precision`][polars_st.GeoExprNameSpace.set_precision]."""
         ...
@@ -434,7 +413,7 @@ class GeoSeriesNameSpace:
         self,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> pl.Series:
         """See [`GeoExprNameSpace.to_wkt`][polars_st.GeoExprNameSpace.to_wkt]."""
@@ -445,7 +424,7 @@ class GeoSeriesNameSpace:
         self,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> pl.Series:
         """See [`GeoExprNameSpace.to_ewkt`][polars_st.GeoExprNameSpace.to_ewkt]."""
@@ -454,8 +433,8 @@ class GeoSeriesNameSpace:
     @dispatch
     def to_wkb(
         self,
-        output_dimension: Literal[2, 3, 4] = 3,
-        byte_order: Literal[0, 1] | None = None,
+        output_dimension: OutputDimension = 3,
+        byte_order: ByteOrder | None = None,
         include_srid: bool = False,
     ) -> pl.Series:
         """See [`GeoExprNameSpace.to_wkb`][polars_st.GeoExprNameSpace.to_wkb]."""
@@ -710,8 +689,8 @@ class GeoSeriesNameSpace:
         self,
         distance: IntoNumericExpr,
         quad_segs: int = 8,
-        cap_style: Literal["round", "square", "flat"] = "round",
-        join_style: Literal["round", "mitre", "bevel"] = "round",
+        cap_style: CapStyle = "round",
+        join_style: JoinStyle = "round",
         mitre_limit: float = 5.0,
         single_sided: bool = False,
     ) -> GeoSeries:
@@ -723,7 +702,7 @@ class GeoSeriesNameSpace:
         self,
         distance: IntoNumericExpr,
         quad_segs: int = 8,
-        join_style: Literal["round", "mitre", "bevel"] = "round",
+        join_style: JoinStyle = "round",
         mitre_limit: float = 5.0,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.offset_curve`][polars_st.GeoExprNameSpace.offset_curve]."""
@@ -777,7 +756,7 @@ class GeoSeriesNameSpace:
     @dispatch
     def make_valid(
         self,
-        method: Literal["linework", "structure"] = "linework",
+        method: MakeValidMethod = "linework",
         keep_collapsed: bool = True,
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.make_valid`][polars_st.GeoExprNameSpace.make_valid]."""
@@ -882,7 +861,7 @@ class GeoSeriesNameSpace:
     def rotate(
         self,
         angle: IntoNumericExpr,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.rotate`][polars_st.GeoExprNameSpace.rotate]."""
         ...
@@ -893,7 +872,7 @@ class GeoSeriesNameSpace:
         x: IntoNumericExpr = 1.0,
         y: IntoNumericExpr = 1.0,
         z: IntoNumericExpr = 1.0,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.scale`][polars_st.GeoExprNameSpace.scale]."""
         ...
@@ -904,7 +883,7 @@ class GeoSeriesNameSpace:
         x: IntoNumericExpr = 0.0,
         y: IntoNumericExpr = 0.0,
         z: IntoNumericExpr = 0.0,
-        origin: Literal["center", "centroid"] | Sequence[float] = "center",
+        origin: TransformOrigin | Sequence[float] = "center",
     ) -> GeoSeries:
         """See [`GeoExprNameSpace.skew`][polars_st.GeoExprNameSpace.skew]."""
         ...

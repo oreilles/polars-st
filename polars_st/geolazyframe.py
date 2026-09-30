@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 
 import polars as pl
 from polars import Expr, LazyFrame
@@ -22,6 +22,8 @@ if TYPE_CHECKING:
         SchemaDefinition,
         SchemaDict,
     )
+
+    from polars_st.typing import SjoinPredicate
 
 
 __all__ = [
@@ -67,20 +69,9 @@ class GeoLazyFrameNameSpace:
         other: LazyFrame,
         on: str | Expr = "geometry",
         how: JoinStrategy = "inner",
-        predicate: Literal[
-            "intersects_bbox",
-            "intersects",
-            "within",
-            "dwithin",
-            "contains",
-            "overlaps",
-            "crosses",
-            "touches",
-            "covers",
-            "covered_by",
-            "contains_properly",
-        ] = "intersects",
+        predicate: SjoinPredicate = "intersects",
         distance: float | None = None,
+        pattern: str | None = None,
         *,
         left_on: str | Expr | None = None,
         right_on: str | Expr | None = None,
@@ -100,6 +91,17 @@ class GeoLazyFrameNameSpace:
         if how == "cross":
             msg = """Use of `how="cross" not supported on sjoin.`"""
             raise ValueError(msg)
+
+        if predicate == "dwithin":
+            param = distance
+            if param is None:
+                msg = """distance must be set for predicate `dwithin`"""
+                raise ValueError(msg)
+        elif predicate == "relate_pattern":
+            param = pattern
+            if param is None:
+                msg = """pattern must be set for predicate `relate_pattern`"""
+                raise ValueError(msg)
 
         left_expr = left_on or on
         right_expr = right_on or on

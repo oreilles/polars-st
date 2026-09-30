@@ -1965,60 +1965,80 @@ impl SIndex {
             )
     }
 
+    // `self` is the indexed (tree-built) side and `other` is the queried side. The predicate is
+    // called as `predicate(other, indexed)`, so callers must build the index from whichever side
+    // should end up on the right of the predicate (e.g. `a.contains(b)` requires indexing `b`).
     fn sjoin<F>(&self, other: &BinaryChunked, predicate: F) -> SindexQueryResult
     where
         F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
     {
-        Self::query(other, |right_index, right_geom| {
-            let mut left_indices = vec![];
-            let mut right_indices = vec![];
-            let right_geom_prepared = right_geom.to_prepared_geom()?;
-            let extent = right_geom.get_extent()?;
+        Self::query(other, |other_index, other_geom| {
+            let mut indexed_indices = vec![];
+            let mut other_indices = vec![];
+            let other_geom_prepared = other_geom.to_prepared_geom()?;
+            let extent = other_geom.get_extent()?;
             for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
-                let (left_index, left_geom) = &self.data[hit as usize];
-                if predicate(&right_geom_prepared, left_geom)? {
-                    left_indices.push(*left_index as _);
-                    right_indices.push(right_index as _);
+                let (indexed_index, indexed_geom) = &self.data[hit as usize];
+                if predicate(&other_geom_prepared, indexed_geom)? {
+                    indexed_indices.push(*indexed_index as _);
+                    other_indices.push(other_index as _);
                 }
             }
-            Ok((left_indices, right_indices))
+            Ok((indexed_indices, other_indices))
+        })
+    }
+
+    fn sjoin_relate_pattern(&self, other: &BinaryChunked, pattern: String) -> SindexQueryResult {
+        Self::query(other, |other_index, other_geom| {
+            let mut indexed_indices = vec![];
+            let mut other_indices = vec![];
+            let other_geom_prepared = other_geom.to_prepared_geom()?;
+            let extent = other_geom.get_extent()?;
+            for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
+                let (indexed_index, indexed_geom) = &self.data[hit as usize];
+                if (other_geom_prepared.relate_pattern(indexed_geom, &pattern))? {
+                    indexed_indices.push(*indexed_index as _);
+                    other_indices.push(other_index as _);
+                }
+            }
+            Ok((indexed_indices, other_indices))
         })
     }
 
     fn sjoin_dwithin(&self, other: &BinaryChunked, distance: f64) -> SindexQueryResult {
-        Self::query(other, |right_index, right_geom| {
-            let mut left_indices = vec![];
-            let mut right_indices = vec![];
-            if right_geom.geometry_type()? == Point {
-                let x = right_geom.get_x()?;
-                let y = right_geom.get_y()?;
-                let right_geom_prepared = right_geom.to_prepared_geom()?;
+        Self::query(other, |other_index, other_geom| {
+            let mut indexed_indices = vec![];
+            let mut other_indices = vec![];
+            if other_geom.geometry_type()? == Point {
+                let x = other_geom.get_x()?;
+                let y = other_geom.get_y()?;
+                let other_geom_prepared = other_geom.to_prepared_geom()?;
                 for hit in self.tree.neighbors(x, y, None, Some(distance * distance)) {
-                    let (left_index, left_geom) = &self.data[hit as usize];
-                    if left_geom.geometry_type()? == Point
-                        || right_geom_prepared.dwithin(left_geom, distance)?
+                    let (indexed_index, indexed_geom) = &self.data[hit as usize];
+                    if indexed_geom.geometry_type()? == Point
+                        || other_geom_prepared.dwithin(indexed_geom, distance)?
                     {
-                        left_indices.push(*left_index as _);
-                        right_indices.push(right_index as _);
+                        indexed_indices.push(*indexed_index as _);
+                        other_indices.push(other_index as _);
                     }
                 }
-                return Ok((left_indices, right_indices));
+                return Ok((indexed_indices, other_indices));
             }
 
-            let right_geom_prepared = right_geom.to_prepared_geom()?;
-            let extent = right_geom.get_extent()?;
+            let other_geom_prepared = other_geom.to_prepared_geom()?;
+            let extent = other_geom.get_extent()?;
             let xmin = extent[0] - distance;
             let ymin = extent[1] - distance;
             let xmax = extent[2] + distance;
             let ymax = extent[3] + distance;
             for hit in self.tree.search(xmin, ymin, xmax, ymax) {
-                let (left_index, left_geom) = &self.data[hit as usize];
-                if right_geom_prepared.dwithin(left_geom, distance)? {
-                    left_indices.push(*left_index as _);
-                    right_indices.push(right_index as _);
+                let (indexed_index, indexed_geom) = &self.data[hit as usize];
+                if other_geom_prepared.dwithin(indexed_geom, distance)? {
+                    indexed_indices.push(*indexed_index as _);
+                    other_indices.push(other_index as _);
                 }
             }
-            Ok((left_indices, right_indices))
+            Ok((indexed_indices, other_indices))
         })
     }
 }
@@ -2028,20 +2048,24 @@ pub fn sjoin(
     right: &BinaryChunked,
     predicate: SjoinPredicate,
 ) -> SindexQueryResult {
-    let index = SIndex::try_new(left)?;
-    match predicate {
-        SjoinPredicate::IntersectsBbox => index.sjoin(right, |_, _| Ok(true)),
-        SjoinPredicate::Intersects => index.sjoin(right, |a, b| a.intersects(b)),
-        SjoinPredicate::Within => index.sjoin(right, |a, b| a.within(b)),
-        SjoinPredicate::Contains => index.sjoin(right, |a, b| a.contains(b)),
-        SjoinPredicate::Overlaps => index.sjoin(right, |a, b| a.overlaps(b)),
-        SjoinPredicate::Crosses => index.sjoin(right, |a, b| a.crosses(b)),
-        SjoinPredicate::Touches => index.sjoin(right, |a, b| a.touches(b)),
-        SjoinPredicate::Covers => index.sjoin(right, |a, b| a.covers(b)),
-        SjoinPredicate::CoveredBy => index.sjoin(right, |a, b| a.covered_by(b)),
-        SjoinPredicate::ContainsProperly => index.sjoin(right, |a, b| a.contains_properly(b)),
-        SjoinPredicate::Dwithin(distance) => index.sjoin_dwithin(right, distance),
-    }
+    // Build the index on `right` and query with `left`, so that the predicate closures below
+    // naturally evaluate as `left.predicate(right)` (index.sjoin's first arg is the queried side).
+    let index = SIndex::try_new(right)?;
+    let (right_indices, left_indices) = match predicate {
+        SjoinPredicate::IntersectsBbox => index.sjoin(left, |_, _| Ok(true)),
+        SjoinPredicate::Intersects => index.sjoin(left, |r, l| r.intersects(l)),
+        SjoinPredicate::Within => index.sjoin(left, |r, l| r.within(l)),
+        SjoinPredicate::Contains => index.sjoin(left, |r, l| r.contains(l)),
+        SjoinPredicate::Overlaps => index.sjoin(left, |r, l| r.overlaps(l)),
+        SjoinPredicate::Crosses => index.sjoin(left, |r, l| r.crosses(l)),
+        SjoinPredicate::Touches => index.sjoin(left, |r, l| r.touches(l)),
+        SjoinPredicate::Covers => index.sjoin(left, |r, l| r.covers(l)),
+        SjoinPredicate::CoveredBy => index.sjoin(left, |r, l| r.covered_by(l)),
+        SjoinPredicate::ContainsProperly => index.sjoin(left, |r, l| r.contains_properly(l)),
+        SjoinPredicate::Dwithin(distance) => index.sjoin_dwithin(left, distance),
+        SjoinPredicate::RelatePattern(pattern) => index.sjoin_relate_pattern(left, pattern),
+    }?;
+    Ok((left_indices, right_indices))
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {

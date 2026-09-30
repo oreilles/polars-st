@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import IO, TYPE_CHECKING, Any, Literal, cast, overload
+from typing import IO, TYPE_CHECKING, Any, cast, overload
 
 import polars as pl
 import polars.selectors as cs
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     )
     from typing_extensions import Unpack
 
+    from polars_st.typing import ByteOrder, GeometryFormat, OutputDimension, SjoinPredicate
+
 __all__ = [
     "GeoDataFrame",
     "GeoDataFrameNameSpace",
@@ -65,24 +67,10 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
         schema: SchemaDefinition | None = None,
         *,
         geometry_name: str = "geometry",
-        geometry_format: Literal[
-            "wkb",
-            "wkt",
-            "ewkt",
-            "geojson",
-            "shapely",
-            "point",
-            "multipoint",
-            "linestring",
-            "circularstring",
-            "multilinestring",
-            "polygon",
-            "rectangle",
-        ]
-        | None = None,
+        geometry_format: GeometryFormat | None = None,
         schema_overrides: SchemaDict | None = None,
         strict: bool = True,
-        orient: Literal["col", "row"] | None = None,
+        orient: Orientation | None = None,
         infer_schema_length: int | None = N_INFER_DEFAULT,
         nan_to_null: bool = False,
     ) -> GeoDataFrame:
@@ -111,21 +99,7 @@ class GeoDataFrame(DataFrame, metaclass=GeoDataFrameMeta):
         schema: SchemaDefinition | None = None,
         *,
         geometry_name: str = "geometry",
-        geometry_format: Literal[
-            "wkb",
-            "wkt",
-            "ewkt",
-            "geojson",
-            "shapely",
-            "point",
-            "multipoint",
-            "linestring",
-            "circularstring",
-            "multilinestring",
-            "polygon",
-            "rectangle",
-        ]
-        | None = None,
+        geometry_format: GeometryFormat | None = None,
         schema_overrides: SchemaDict | None = None,
         strict: bool = True,
         orient: Orientation | None = None,
@@ -195,20 +169,9 @@ class GeoDataFrameNameSpace:
         other: DataFrame,
         on: str | Expr = "geometry",
         how: JoinStrategy = "inner",
-        predicate: Literal[
-            "intersects_bbox",
-            "intersects",
-            "within",
-            "dwithin",
-            "contains",
-            "overlaps",
-            "crosses",
-            "touches",
-            "covers",
-            "covered_by",
-            "contains_properly",
-        ] = "intersects",
+        predicate: SjoinPredicate = "intersects",
         distance: float | None = None,
+        pattern: str | None = None,
         *,
         left_on: str | Expr | None = None,
         right_on: str | Expr | None = None,
@@ -233,6 +196,7 @@ class GeoDataFrameNameSpace:
                 how=how,
                 predicate=predicate,
                 distance=distance,
+                pattern=pattern,
                 suffix=suffix,
                 validate=validate,
                 coalesce=coalesce,
@@ -246,7 +210,7 @@ class GeoDataFrameNameSpace:
         *geometry_columns: str,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> DataFrame:
         """Serialize the DataFrame geometry column as WKT.
@@ -267,7 +231,7 @@ class GeoDataFrameNameSpace:
         *geometry_columns: str,
         rounding_precision: int | None = 6,
         trim: bool = True,
-        output_dimension: Literal[2, 3, 4] = 3,
+        output_dimension: OutputDimension = 3,
         old_3d: bool = False,
     ) -> DataFrame:
         """Serialize the DataFrame geometry column as EWKT.
@@ -286,8 +250,8 @@ class GeoDataFrameNameSpace:
     def to_wkb(
         self,
         *geometry_columns: str,
-        output_dimension: Literal[2, 3, 4] = 3,
-        byte_order: Literal[0, 1] | None = None,
+        output_dimension: OutputDimension = 3,
+        byte_order: ByteOrder | None = None,
         include_srid: bool = False,
     ) -> DataFrame:
         """Serialize the DataFrame geometry column as WKB.

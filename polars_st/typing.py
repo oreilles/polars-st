@@ -1,32 +1,48 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeAlias, Union
+from typing import Literal, TypeAlias
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+import polars as pl
 
-    import numpy as np
-    import pandas as pd
-    import polars as pl
-    import pyarrow as pa
-    from polars._typing import (
-        ArrowArrayExportable,
-        ArrowStreamExportable,
-    )
+IntoExprColumn: TypeAlias = pl.Expr | pl.Series | str
+IntoGeoExprColumn: TypeAlias = IntoExprColumn
+IntoIntegerExpr: TypeAlias = IntoExprColumn | int
+IntoNumericExpr: TypeAlias = IntoExprColumn | int | float
 
-    ArrayLike = Union[  # noqa: UP007
-        Sequence[Any],
-        pl.Series,
-        pa.Array,
-        pa.ChunkedArray,
-        np.ndarray[Any, Any],
-        pd.Series,
-        pd.DatetimeIndex,
-        ArrowArrayExportable,
-        ArrowStreamExportable,
-    ]
+GeometryFormat: TypeAlias = Literal[
+    "wkb",
+    "wkt",
+    "ewkt",
+    "geojson",
+    "shapely",
+    "point",
+    "multipoint",
+    "linestring",
+    "circularstring",
+    "multilinestring",
+    "polygon",
+    "rectangle",
+]
 
-    IntoExprColumn: TypeAlias = pl.Expr | pl.Series | str
-    IntoGeoExprColumn: TypeAlias = IntoExprColumn
-    IntoIntegerExpr: TypeAlias = IntoExprColumn | int
-    IntoNumericExpr: TypeAlias = IntoExprColumn | int | float
+SjoinPredicate: TypeAlias = Literal[
+    "intersects_bbox",
+    "intersects",
+    "within",
+    "dwithin",
+    "contains",
+    "overlaps",
+    "crosses",
+    "touches",
+    "covers",
+    "covered_by",
+    "contains_properly",
+    "relate_pattern",
+]
+
+CapStyle: TypeAlias = Literal["round", "square", "flat"]
+JoinStyle: TypeAlias = Literal["round", "mitre", "bevel"]
+TransformOrigin: TypeAlias = Literal["center", "centroid"]
+OutputDimension: TypeAlias = Literal[2, 3, 4]
+ByteOrder: TypeAlias = Literal[0, 1]
+MakeValidMethod: TypeAlias = Literal["linework", "structure"]
+PrecisionMode: TypeAlias = Literal["valid_output", "no_topo", "keep_collapsed"]
