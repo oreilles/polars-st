@@ -12,7 +12,7 @@ description = "Spatial extension for Polars DataFrames"
 readme = "README.md"
 requires-python = ">=3.10"
 dynamic = ["version", "license"]
-dependencies = ["polars>=1.42.1", "pyogrio>=0.12.1"]
+dependencies = ["polars>=1.44.0", "pyogrio>=0.12.1"]
 
 [project.optional-dependencies]
 plot = ["altair>=6.0.0", "lonboard>=0.13.0"]
