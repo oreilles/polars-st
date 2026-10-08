@@ -63,7 +63,8 @@ __all__ = [
 ]
 
 
-class GeoSeriesMeta(type):
+# Polars 2 gives pl.Series its own metaclass, so derive from it (`type` on Polars 1).
+class GeoSeriesMeta(type(pl.Series)):
     def __instancecheck__(cls, instance: Any) -> bool:
         # The GeoSeries constructor doesn't return an instance of GeoSeries but an
         # instance of pl.DataFrame. This design decision is made because Polars doesn't
