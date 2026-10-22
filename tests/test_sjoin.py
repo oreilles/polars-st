@@ -187,3 +187,40 @@ def test_sjoin_predicate(
     result = left.st.sjoin(right, predicate=predicate, how="inner", **kwargs)
 
     assert len(result) == (1 if expected else 0)
+
+
+# Points against detailed polygons: the polygons are the larger geometries and, repeated, the
+# points reuse each of them many times, so `sjoin` prepares the right side when they are on the
+# right, and the left side when they are on the left. Both must give the pairs the element-wise
+# predicate gives on every pair.
+points = [
+    "POINT (1 1)",  # inside the first polygon
+    "POINT (0 2)",  # on its boundary
+    "POINT (5 5)",  # inside its hole
+    "POINT (12 1)",  # inside the second part of the multipolygon
+    "POINT (20 20)",  # in nothing
+]
+polygons = [
+    "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (4 4, 6 4, 6 6, 4 6, 4 4))",
+    "MULTIPOLYGON (((11 0, 13 0, 13 2, 11 2, 11 0)), ((20 0, 22 0, 22 2, 20 2, 20 0)))",
+]
+
+
+@pytest.mark.parametrize("predicate", ["intersects", "within", "contains", "covers", "covered_by"])
+@pytest.mark.parametrize("points_on_left", [True, False])
+def test_sjoin_matches_elementwise_predicate(
+    predicate: SjoinPredicate, points_on_left: bool
+) -> None:
+    repeated = points * 1000
+    pts = st.GeoDataFrame({"p": range(len(repeated)), "geometry": repeated})
+    polys = st.GeoDataFrame({"z": range(len(polygons)), "geometry": polygons}).with_columns(
+        st.geom().st.segmentize(0.1)
+    )
+    left, right = (pts, polys) if points_on_left else (polys, pts)
+
+    joined = left.st.sjoin(right, predicate=predicate, how="inner")
+    expected = left.join(right, how="cross").filter(
+        getattr(st.geom("geometry").st, predicate)(st.geom("geometry_right"))
+    )
+
+    assert sorted(joined.select("p", "z").rows()) == sorted(expected.select("p", "z").rows())
