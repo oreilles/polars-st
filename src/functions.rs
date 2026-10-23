@@ -1939,76 +1939,35 @@ impl SIndex {
         Ok(Self { data, tree })
     }
 
-    fn query<F>(other: &BinaryChunked, cb: F) -> SindexQueryResult
-    where
-        F: Fn(usize, Geometry) -> SindexQueryResult + Sync,
-    {
-        (0..other.len())
-            .into_par_iter()
-            .map(|index| {
-                let Some(wkb) = (unsafe { other.get_unchecked(index) }) else {
-                    return Ok((vec![], vec![]));
-                };
-                let geom = Geometry::new_from_wkb(wkb)?;
-                if geom.is_empty()? {
-                    return Ok((vec![], vec![]));
-                }
-                cb(index, geom)
-            })
-            .try_reduce(
-                || (vec![], vec![]),
-                |mut acc, mut next| {
-                    acc.0.append(&mut next.0);
-                    acc.1.append(&mut next.1);
-                    Ok(acc)
-                },
-            )
-    }
-
-    // `self` is the indexed (tree-built) side and `other` is the queried side. The predicate is
-    // called as `predicate(other, indexed)`, so callers must build the index from whichever side
-    // should end up on the right of the predicate (e.g. `a.contains(b)` requires indexing `b`).
-    fn sjoin<F>(&self, other: &BinaryChunked, predicate: F) -> SindexQueryResult
-    where
-        F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
-    {
-        Self::query(other, |other_index, other_geom| {
-            let mut indexed_indices = vec![];
-            let mut other_indices = vec![];
-            let other_geom_prepared = other_geom.to_prepared_geom()?;
-            let extent = other_geom.get_extent()?;
-            for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
-                let (indexed_index, indexed_geom) = &self.data[hit as usize];
-                if predicate(&other_geom_prepared, indexed_geom)? {
-                    indexed_indices.push(*indexed_index as _);
-                    other_indices.push(other_index as _);
-                }
-            }
-            Ok((indexed_indices, other_indices))
-        })
-    }
-
-    // Same as `sjoin`, but prepares the indexed geometries instead of the queried ones: the
-    // predicate is called as `predicate(indexed, other)`. Worth it when the indexed side holds the
-    // complex geometries (many points against detailed polygons): each of them is then prepared
-    // once, instead of every queried geometry being tested against them unprepared.
+    // Every (indexed, other) pair for which `evaluate(predicate, prepared, unprepared)` holds. The
+    // prepared geometry is the queried one or, with `prepare_indexed`, the indexed one: the caller
+    // then passes the transposed predicate, so the pairs mean the same in both cases.
     //
     // GEOS builds a prepared geometry's indexes lazily, in `mutable` fields and without a lock, so
-    // a prepared geometry must not be used by two threads at once: each rayon job keeps its own
-    // cache, filled with the indexed geometries its queries actually hit.
-    fn sjoin_prepared_index<F>(&self, other: &BinaryChunked, predicate: F) -> SindexQueryResult
-    where
-        F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
-    {
-        // `map_init` starts a new cache for every job rayon splits the range into: keep the jobs
-        // large (a few per thread) so each indexed geometry is prepared a few times, not per row.
-        let min_len = other.len().div_ceil(prepared_index_jobs()).max(1);
+    // a prepared indexed geometry must not be used by two threads at once: each rayon job keeps its
+    // own cache, filled with the indexed geometries its queries hit. Jobs are kept few (a few per
+    // thread), so each indexed geometry is prepared a few times, not once per queried row.
+    fn join(
+        &self,
+        other: &BinaryChunked,
+        predicate: &SjoinPredicate,
+        prepare_indexed: bool,
+    ) -> SindexQueryResult {
+        let pad = match predicate {
+            SjoinPredicate::Dwithin(distance) => *distance,
+            _ => 0.0,
+        };
+        let min_len = if prepare_indexed {
+            other.len().div_ceil(prepared_index_jobs()).max(1)
+        } else {
+            1
+        };
         (0..other.len())
             .into_par_iter()
             .with_min_len(min_len)
             .map_init(
                 HashMap::<u32, PreparedGeometry<'_>>::new,
-                |prepared, other_index| {
+                |cache, other_index| {
                     let mut indexed_indices = vec![];
                     let mut other_indices = vec![];
                     let Some(wkb) = (unsafe { other.get_unchecked(other_index) }) else {
@@ -2018,14 +1977,29 @@ impl SIndex {
                     if other_geom.is_empty()? {
                         return Ok((indexed_indices, other_indices));
                     }
-                    let extent = other_geom.get_extent()?;
-                    for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
+                    let other_prepared = if prepare_indexed {
+                        None
+                    } else {
+                        Some(other_geom.to_prepared_geom()?)
+                    };
+                    let e = other_geom.get_extent()?;
+                    let hits = self
+                        .tree
+                        .search(e[0] - pad, e[1] - pad, e[2] + pad, e[3] + pad);
+                    for hit in hits {
                         let (indexed_index, indexed_geom) = &self.data[hit as usize];
-                        let indexed_prepared = match prepared.entry(hit) {
-                            Entry::Occupied(entry) => entry.into_mut(),
-                            Entry::Vacant(entry) => entry.insert(indexed_geom.to_prepared_geom()?),
+                        let matched = if let Some(other_prepared) = &other_prepared {
+                            evaluate(predicate, other_prepared, indexed_geom)?
+                        } else {
+                            let prepared = match cache.entry(hit) {
+                                Entry::Occupied(slot) => slot.into_mut(),
+                                Entry::Vacant(slot) => {
+                                    slot.insert(indexed_geom.to_prepared_geom()?)
+                                }
+                            };
+                            evaluate(predicate, prepared, &other_geom)?
                         };
-                        if predicate(indexed_prepared, &other_geom)? {
+                        if matched {
                             indexed_indices.push(*indexed_index as _);
                             other_indices.push(other_index as _);
                         }
@@ -2042,63 +2016,31 @@ impl SIndex {
                 },
             )
     }
+}
 
-    fn sjoin_relate_pattern(&self, other: &BinaryChunked, pattern: String) -> SindexQueryResult {
-        Self::query(other, |other_index, other_geom| {
-            let mut indexed_indices = vec![];
-            let mut other_indices = vec![];
-            let other_geom_prepared = other_geom.to_prepared_geom()?;
-            let extent = other_geom.get_extent()?;
-            for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
-                let (indexed_index, indexed_geom) = &self.data[hit as usize];
-                if (other_geom_prepared.relate_pattern(indexed_geom, &pattern))? {
-                    indexed_indices.push(*indexed_index as _);
-                    other_indices.push(other_index as _);
-                }
-            }
-            Ok((indexed_indices, other_indices))
-        })
-    }
-
-    fn sjoin_dwithin(&self, other: &BinaryChunked, distance: f64) -> SindexQueryResult {
-        Self::query(other, |other_index, other_geom| {
-            let mut indexed_indices = vec![];
-            let mut other_indices = vec![];
-            if other_geom.geometry_type()? == Point {
-                let x = other_geom.get_x()?;
-                let y = other_geom.get_y()?;
-                let other_geom_prepared = other_geom.to_prepared_geom()?;
-                for hit in self.tree.neighbors(x, y, None, Some(distance * distance)) {
-                    let (indexed_index, indexed_geom) = &self.data[hit as usize];
-                    if indexed_geom.geometry_type()? == Point
-                        || other_geom_prepared.dwithin(indexed_geom, distance)?
-                    {
-                        indexed_indices.push(*indexed_index as _);
-                        other_indices.push(other_index as _);
-                    }
-                }
-                return Ok((indexed_indices, other_indices));
-            }
-
-            let other_geom_prepared = other_geom.to_prepared_geom()?;
-            let extent = other_geom.get_extent()?;
-            let xmin = extent[0] - distance;
-            let ymin = extent[1] - distance;
-            let xmax = extent[2] + distance;
-            let ymax = extent[3] + distance;
-            for hit in self.tree.search(xmin, ymin, xmax, ymax) {
-                let (indexed_index, indexed_geom) = &self.data[hit as usize];
-                if other_geom_prepared.dwithin(indexed_geom, distance)? {
-                    indexed_indices.push(*indexed_index as _);
-                    other_indices.push(other_index as _);
-                }
-            }
-            Ok((indexed_indices, other_indices))
-        })
+/// `prepared <predicate> other`, with GEOS' prepared implementation of each predicate.
+fn evaluate(
+    predicate: &SjoinPredicate,
+    prepared: &PreparedGeometry<'_>,
+    other: &Geometry,
+) -> GResult<bool> {
+    match predicate {
+        SjoinPredicate::IntersectsBbox => Ok(true),
+        SjoinPredicate::Intersects => prepared.intersects(other),
+        SjoinPredicate::Within => prepared.within(other),
+        SjoinPredicate::Contains => prepared.contains(other),
+        SjoinPredicate::Overlaps => prepared.overlaps(other),
+        SjoinPredicate::Crosses => prepared.crosses(other),
+        SjoinPredicate::Touches => prepared.touches(other),
+        SjoinPredicate::Covers => prepared.covers(other),
+        SjoinPredicate::CoveredBy => prepared.covered_by(other),
+        SjoinPredicate::ContainsProperly => prepared.contains_properly(other),
+        SjoinPredicate::Dwithin(distance) => prepared.dwithin(other, *distance),
+        SjoinPredicate::RelatePattern(pattern) => prepared.relate_pattern(other, pattern),
     }
 }
 
-/// How many jobs `SIndex::sjoin_prepared_index` splits its queries into, each with its own cache.
+/// How many jobs `SIndex::join` splits its queries into when it prepares the indexed side.
 fn prepared_index_jobs() -> usize {
     4 * rayon::current_num_threads()
 }
@@ -2127,55 +2069,22 @@ pub fn sjoin(
     right: &BinaryChunked,
     predicate: SjoinPredicate,
 ) -> SindexQueryResult {
-    let swap = left.len() < right.len();
-    let (left, right, predicate) = if swap {
-        (right, left, predicate.transposed())
-    } else {
-        (left, right, predicate)
-    };
     let index = SIndex::try_new(right)?;
     // GEOS can only prepare one side of a predicate. Prepare the right side when its geometries
     // are the larger ones (WKB grows with the number of coordinates, so the mean value size is a
     // cheap proxy for what a test against an unprepared geometry costs) and when each of them is
-    // reused enough to pay for being prepared once per job. Below, `r` is the prepared right
-    // geometry and `l` the left one, and each predicate is written so it still means
-    // `left.predicate(right)`.
-    let prepare_right = larger_on_average(right, left)
+    // reused enough to pay for being prepared once per job. The predicate is then transposed, so
+    // `right <transposed> left` still means `left <predicate> right`.
+    let prepare_right = !matches!(predicate, SjoinPredicate::IntersectsBbox)
+        && larger_on_average(right, left)
         && non_null_len(left) >= prepared_index_jobs().saturating_mul(non_null_len(right));
-    let (right_indices, left_indices) = match predicate {
-        SjoinPredicate::Intersects if prepare_right => {
-            index.sjoin_prepared_index(left, |r, l| r.intersects(l))
-        }
-        SjoinPredicate::Within if prepare_right => {
-            index.sjoin_prepared_index(left, |r, l| r.contains(l))
-        }
-        SjoinPredicate::Contains if prepare_right => {
-            index.sjoin_prepared_index(left, |r, l| r.within(l))
-        }
-        SjoinPredicate::Covers if prepare_right => {
-            index.sjoin_prepared_index(left, |r, l| r.covered_by(l))
-        }
-        SjoinPredicate::CoveredBy if prepare_right => {
-            index.sjoin_prepared_index(left, |r, l| r.covers(l))
-        }
-        SjoinPredicate::IntersectsBbox => index.sjoin(left, |_, _| Ok(true)),
-        SjoinPredicate::Intersects => index.sjoin(left, |r, l| r.intersects(l)),
-        SjoinPredicate::Within => index.sjoin(left, |r, l| r.within(l)),
-        SjoinPredicate::Contains => index.sjoin(left, |r, l| r.contains(l)),
-        SjoinPredicate::Overlaps => index.sjoin(left, |r, l| r.overlaps(l)),
-        SjoinPredicate::Crosses => index.sjoin(left, |r, l| r.crosses(l)),
-        SjoinPredicate::Touches => index.sjoin(left, |r, l| r.touches(l)),
-        SjoinPredicate::Covers => index.sjoin(left, |r, l| r.covers(l)),
-        SjoinPredicate::CoveredBy => index.sjoin(left, |r, l| r.covered_by(l)),
-        SjoinPredicate::ContainsProperly => index.sjoin(left, |r, l| r.contains_properly(l)),
-        SjoinPredicate::Dwithin(distance) => index.sjoin_dwithin(left, distance),
-        SjoinPredicate::RelatePattern(pattern) => index.sjoin_relate_pattern(left, pattern),
-    }?;
-    if swap {
-        Ok((right_indices, left_indices))
+    let predicate = if prepare_right {
+        predicate.transposed()
     } else {
-        Ok((left_indices, right_indices))
-    }
+        predicate
+    };
+    let (right_indices, left_indices) = index.join(left, &predicate, prepare_right)?;
+    Ok((left_indices, right_indices))
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {
