@@ -187,3 +187,58 @@ def test_sjoin_predicate(
     result = left.st.sjoin(right, predicate=predicate, how="inner", **kwargs)
 
     assert len(result) == (1 if expected else 0)
+
+
+# Small geometries against detailed polygons: the polygons are the larger geometries and, with the
+# small ones repeated, each of them is reused many times, so `sjoin` prepares the right side when
+# they are on the right (transposing the predicate) and the left side when they are on the left.
+# Both must give the pairs the element-wise predicate gives on every pair.
+small = [
+    "POINT (1 1)",  # inside the first polygon
+    "POINT (0 2)",  # on its boundary
+    "POINT (5 5)",  # inside its hole
+    "POINT (12 1)",  # inside the second part of the multipolygon
+    "POINT (20 20)",  # in nothing
+    "LINESTRING (9 5, 11 5)",  # crosses the first polygon's boundary
+    "LINESTRING (13 0, 13 2)",  # lies on the multipolygon's boundary
+    "POLYGON ((9 9, 11 9, 11 11, 9 11, 9 9))",  # overlaps the first polygon
+]
+polygons = [
+    "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (4 4, 6 4, 6 6, 4 6, 4 4))",
+    "MULTIPOLYGON (((11 0, 13 0, 13 2, 11 2, 11 0)), ((20 0, 22 0, 22 2, 20 2, 20 0)))",
+]
+predicates: list[tuple[SjoinPredicate, SjoinKwargs]] = [
+    ("intersects", {}),
+    ("within", {}),
+    ("contains", {}),
+    ("covers", {}),
+    ("covered_by", {}),
+    ("contains_properly", {}),
+    ("overlaps", {}),
+    ("crosses", {}),
+    ("touches", {}),
+    ("dwithin", {"distance": 1.5}),
+    ("relate_pattern", {"pattern": "T*F**F***"}),
+]
+
+
+@pytest.mark.parametrize(("predicate", "kwargs"), predicates)
+@pytest.mark.parametrize("small_on_left", [True, False])
+def test_sjoin_matches_elementwise_predicate(
+    predicate: SjoinPredicate, kwargs: SjoinKwargs, small_on_left: bool
+) -> None:
+    repeated = small * 1000
+    smalls = st.GeoDataFrame({"p": range(len(repeated)), "geometry": repeated})
+    polys = st.GeoDataFrame(
+        st.GeoDataFrame({"z": range(len(polygons)), "geometry": polygons}).with_columns(
+            st.geom().st.segmentize(0.1)
+        )
+    )
+    left, right = (smalls, polys) if small_on_left else (polys, smalls)
+
+    joined = left.st.sjoin(right, predicate=predicate, how="inner", **kwargs)
+    expected = left.join(right, how="cross").filter(
+        getattr(st.geom("geometry").st, predicate)(st.geom("geometry_right"), **kwargs)
+    )
+
+    assert sorted(joined.select("p", "z").rows()) == sorted(expected.select("p", "z").rows())
