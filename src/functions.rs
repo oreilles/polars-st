@@ -2127,8 +2127,12 @@ pub fn sjoin(
     right: &BinaryChunked,
     predicate: SjoinPredicate,
 ) -> SindexQueryResult {
-    // Build the index on `right` and query with `left`, so that the predicate closures below
-    // naturally evaluate as `left.predicate(right)` (index.sjoin's first arg is the queried side).
+    let swap = left.len() < right.len();
+    let (left, right, predicate) = if swap {
+        (right, left, predicate.transposed())
+    } else {
+        (left, right, predicate)
+    };
     let index = SIndex::try_new(right)?;
     // GEOS can only prepare one side of a predicate. Prepare the right side when its geometries
     // are the larger ones (WKB grows with the number of coordinates, so the mean value size is a
@@ -2167,7 +2171,11 @@ pub fn sjoin(
         SjoinPredicate::Dwithin(distance) => index.sjoin_dwithin(left, distance),
         SjoinPredicate::RelatePattern(pattern) => index.sjoin_relate_pattern(left, pattern),
     }?;
-    Ok((left_indices, right_indices))
+    if swap {
+        Ok((right_indices, left_indices))
+    } else {
+        Ok((left_indices, right_indices))
+    }
 }
 
 fn apply_proj_transform(src: &Proj, dst: &Proj, geom: &Geometry) -> GResult<Geometry> {
