@@ -194,7 +194,7 @@ where
         .captures(&pattern)
         .and_then(|captures| captures.get(1))
         .map(|matched| matched.as_str().to_owned())
-        .ok_or_else(|| serde::de::Error::custom("relate pattern must match ^[TF*012]{9}$"))
+        .ok_or_else(|| serde::de::Error::custom("Invalid DE-9IM pattern"))
 }
 
 impl SjoinPredicate {
