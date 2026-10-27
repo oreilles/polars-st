@@ -80,6 +80,10 @@ lint.ignore = [
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
+"resources/*" = [
+    "INP001", # Scripts, not a package
+    "T201",   # Print: the scripts report what they measure
+]
 "tests/*" = [
     "S101", # Assert
     "ANN",  # Type annotations
