@@ -1924,16 +1924,22 @@ struct SIndex {
 type SindexQueryResult = GResult<(Vec<u32>, Vec<u32>)>;
 
 impl SIndex {
-    fn try_new(geom: &BinaryChunked) -> GResult<Self> {
-        let data = geom
-            .iter()
-            .enumerate()
-            .filter_map(|(i, w)| w.map(|w| Geometry::new_from_wkb(w).map(|g| (i, g))))
+    fn try_new(geom: &BinaryChunked, padding: f64) -> GResult<Self> {
+        let data = (0..geom.len())
+            .into_par_iter()
+            .filter_map(|i| {
+                let w = unsafe { geom.get_unchecked(i) };
+                w.map(|w| Geometry::new_from_wkb(w).map(|g| (i, g)))
+            })
             .collect::<GResult<Vec<_>>>()?;
         let mut tree = RTreeBuilder::new(data.len() as u32);
         for (_, geometry) in &data {
             let extent = geometry.get_extent()?;
-            tree.add(extent[0], extent[1], extent[2], extent[3]);
+            let xmin = extent[0] - padding;
+            let ymin = extent[1] - padding;
+            let xmax = extent[2] + padding;
+            let ymax = extent[3] + padding;
+            tree.add(xmin, ymin, xmax, ymax);
         }
         let tree = tree.finish::<STRSort>();
         Ok(Self { data, tree })
@@ -1942,7 +1948,7 @@ impl SIndex {
     // `self` is the indexed (tree-built) side and `other` is the queried side. The predicate is
     // called as `predicate(other, indexed)`, so callers must build the index from whichever side
     // should end up on the right of the predicate (e.g. `a.contains(b)` requires indexing `b`).
-    fn sjoin<F>(&self, other: &BinaryChunked, predicate: F, padding: f64) -> SindexQueryResult
+    fn sjoin<F>(&self, other: &BinaryChunked, predicate: F) -> SindexQueryResult
     where
         F: Fn(&PreparedGeometry<'_>, &Geometry) -> GResult<bool> + Sync,
     {
@@ -1959,11 +1965,7 @@ impl SIndex {
                 }
                 let other_geom_prepared = other_geom.to_prepared_geom()?;
                 let extent = other_geom.get_extent()?;
-                let xmin = extent[0] - padding;
-                let ymin = extent[1] - padding;
-                let xmax = extent[2] + padding;
-                let ymax = extent[3] + padding;
-                for hit in self.tree.search(xmin, ymin, xmax, ymax) {
+                for hit in self.tree.search(extent[0], extent[1], extent[2], extent[3]) {
                     let (indexed_index, indexed_geom) = &self.data[hit as usize];
                     if predicate(&other_geom_prepared, indexed_geom)? {
                         pairs.push((*indexed_index as u32, index as u32));
@@ -1998,20 +2000,24 @@ pub fn sjoin(
     } else {
         (left, right, predicate)
     };
-    let index = SIndex::try_new(right)?;
+    let padding = match predicate {
+        SjoinPredicate::Dwithin(d) => d,
+        _ => 0.0,
+    };
+    let index = SIndex::try_new(right, padding)?;
     let (right_indices, left_indices) = match predicate {
-        SjoinPredicate::IntersectsBbox => index.sjoin(left, |_, _| Ok(true), 0.0),
-        SjoinPredicate::Intersects => index.sjoin(left, |l, r| l.intersects(r), 0.0),
-        SjoinPredicate::Within => index.sjoin(left, |l, r| l.within(r), 0.0),
-        SjoinPredicate::Contains => index.sjoin(left, |l, r| l.contains(r), 0.0),
-        SjoinPredicate::Overlaps => index.sjoin(left, |l, r| l.overlaps(r), 0.0),
-        SjoinPredicate::Crosses => index.sjoin(left, |l, r| l.crosses(r), 0.0),
-        SjoinPredicate::Touches => index.sjoin(left, |l, r| l.touches(r), 0.0),
-        SjoinPredicate::Covers => index.sjoin(left, |l, r| l.covers(r), 0.0),
-        SjoinPredicate::CoveredBy => index.sjoin(left, |r, l| r.covered_by(l), 0.0),
-        SjoinPredicate::ContainsProperly => index.sjoin(left, |l, r| l.contains_properly(r), 0.0),
-        SjoinPredicate::Dwithin(d) => index.sjoin(left, |l, r| l.dwithin(r, d), d),
-        SjoinPredicate::RelatePattern(p) => index.sjoin(left, |l, r| l.relate_pattern(r, &p), 0.0),
+        SjoinPredicate::IntersectsBbox => index.sjoin(left, |_, _| Ok(true)),
+        SjoinPredicate::Intersects => index.sjoin(left, |l, r| l.intersects(r)),
+        SjoinPredicate::Within => index.sjoin(left, |l, r| l.within(r)),
+        SjoinPredicate::Contains => index.sjoin(left, |l, r| l.contains(r)),
+        SjoinPredicate::Overlaps => index.sjoin(left, |l, r| l.overlaps(r)),
+        SjoinPredicate::Crosses => index.sjoin(left, |l, r| l.crosses(r)),
+        SjoinPredicate::Touches => index.sjoin(left, |l, r| l.touches(r)),
+        SjoinPredicate::Covers => index.sjoin(left, |l, r| l.covers(r)),
+        SjoinPredicate::CoveredBy => index.sjoin(left, |r, l| r.covered_by(l)),
+        SjoinPredicate::ContainsProperly => index.sjoin(left, |l, r| l.contains_properly(r)),
+        SjoinPredicate::Dwithin(d) => index.sjoin(left, |l, r| l.dwithin(r, d)),
+        SjoinPredicate::RelatePattern(p) => index.sjoin(left, |l, r| l.relate_pattern(r, &p)),
     }?;
     if swap {
         Ok((right_indices, left_indices))
