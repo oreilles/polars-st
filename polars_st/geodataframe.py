@@ -356,7 +356,7 @@ class GeoDataFrameNameSpace:
 
     def write_file(
         self,
-        path: str | BytesIO,
+        path: str | Path | BytesIO,
         layer: str | None = None,
         driver: str | None = None,
         geometry_name: str | None = "geometry",
