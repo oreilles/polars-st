@@ -165,7 +165,7 @@ pub struct LineMergeKwargs {
     pub directed: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type", content = "param")]
 pub enum SjoinPredicate {
@@ -180,7 +180,42 @@ pub enum SjoinPredicate {
     CoveredBy,
     ContainsProperly,
     Dwithin(f64),
-    RelatePattern(String),
+    RelatePattern(#[serde(deserialize_with = "deserialize_relate_pattern")] String),
+}
+
+fn deserialize_relate_pattern<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    static DE_9IM_PATTERN: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"^([TF*012]{9})$").unwrap());
+    let pattern = String::deserialize(deserializer)?;
+    DE_9IM_PATTERN
+        .captures(&pattern)
+        .and_then(|captures| captures.get(1))
+        .map(|matched| matched.as_str().to_owned())
+        .ok_or_else(|| serde::de::Error::custom("relate pattern must match ^[TF*012]{9}$"))
+}
+
+impl SjoinPredicate {
+    pub fn transposed(&self) -> Self {
+        match self {
+            Self::Within => Self::Contains,
+            Self::Contains => Self::Within,
+            Self::Covers => Self::CoveredBy,
+            Self::CoveredBy => Self::Covers,
+            Self::ContainsProperly => Self::RelatePattern("TFF*FF***".into()),
+            Self::RelatePattern(pattern) => {
+                let bytes = pattern.as_bytes();
+                let transposed = [0, 3, 6, 1, 4, 7, 2, 5, 8]
+                    .into_iter()
+                    .map(|index| char::from(bytes[index]))
+                    .collect();
+                Self::RelatePattern(transposed)
+            }
+            predicate => predicate.clone(),
+        }
+    }
 }
 
 #[derive(Deserialize)]

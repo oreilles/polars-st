@@ -92,6 +92,7 @@ class GeoLazyFrameNameSpace:
             msg = """Use of `how="cross" not supported on sjoin.`"""
             raise ValueError(msg)
 
+        param: float | str | None = None
         if predicate == "dwithin":
             param = distance
             if param is None:
@@ -127,7 +128,7 @@ class GeoLazyFrameNameSpace:
                     plugin_path=Path(__file__).parent,
                     function_name="sjoin",
                     args=["_sjoin_geom_left", "_sjoin_geom_right"],
-                    kwargs={"predicate": {"type": predicate, "param": distance}},
+                    kwargs={"predicate": {"type": predicate, "param": param}},
                     is_elementwise=False,
                     changes_length=True,
                 ),
