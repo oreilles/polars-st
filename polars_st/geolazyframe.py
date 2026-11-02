@@ -102,6 +102,8 @@ class GeoLazyFrameNameSpace:
             if param is None:
                 msg = """pattern must be set for predicate `relate_pattern`"""
                 raise ValueError(msg)
+        else:
+            param = None
 
         left_expr = left_on or on
         right_expr = right_on or on
@@ -127,7 +129,7 @@ class GeoLazyFrameNameSpace:
                     plugin_path=Path(__file__).parent,
                     function_name="sjoin",
                     args=["_sjoin_geom_left", "_sjoin_geom_right"],
-                    kwargs={"predicate": {"type": predicate, "param": distance}},
+                    kwargs={"predicate": {"type": predicate, "param": param}},
                     is_elementwise=False,
                     changes_length=True,
                 ),
